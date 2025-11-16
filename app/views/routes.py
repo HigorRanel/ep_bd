@@ -27,6 +27,14 @@ def register_routes(app):
     def login():
         return AuthController.login()
 
+    @app.route('/api/auth/cadastrar-e-logar/cliente', methods=['POST'])
+    def cadastrar_e_logar_cliente():
+        return AuthController.registrar_e_logar_cliente()
+
+    @app.route('/api/auth/cadastrar-e-logar/barbeiro', methods=['POST'])
+    def cadastrar_e_logar_barbeiro():
+        return AuthController.registrar_e_logar_barbeiro()
+
     # =============================================================================
     # ROTAS DE CLIENTES
     # =============================================================================

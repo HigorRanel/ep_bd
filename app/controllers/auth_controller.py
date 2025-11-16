@@ -133,3 +133,103 @@ class AuthController:
 
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+
+    @staticmethod
+    def registrar_e_logar_cliente():
+        try:
+            dados = request.get_json()
+
+            # Validações básicas
+            campos_obrigatorios = ['cpf', 'nome_completo', 'data_nascimento', 'email', 'senha']
+            for campo in campos_obrigatorios:
+                if campo not in dados:
+                    return jsonify({'error': f'Campo {campo} é obrigatório'}), 400
+
+            # Verificar se já existe
+            if Pessoa.buscar_por_cpf(dados['cpf']):
+                return jsonify({'error': 'CPF já cadastrado'}), 400
+
+            if Pessoa.buscar_por_email(dados['email']):
+                return jsonify({'error': 'Email já cadastrado'}), 400
+
+            # Criar pessoa
+            Pessoa.criar(
+                dados['cpf'],
+                dados['nome_completo'],
+                dados['data_nascimento'],
+                dados.get('telefone'),
+                dados.get('endereco'),
+                dados['email'],
+                dados['senha']
+            )
+
+            # Criar cliente
+            Cliente.criar(dados['cpf'])
+
+            # Buscar pessoa criada para gerar token
+            pessoa = Pessoa.buscar_por_cpf(dados['cpf'])
+
+            # Gerar token e retornar
+            resultado = AuthController._gerar_token(pessoa, 'cliente')
+
+            return jsonify({
+                'message': 'Cliente cadastrado com sucesso',
+                **resultado  # Inclui 'token' e 'user'
+            }), 201
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @staticmethod
+    def registrar_e_logar_barbeiro():
+
+        try:
+            dados = request.get_json()
+
+            # Validações básicas
+            campos_obrigatorios = ['cpf', 'nome_completo', 'data_nascimento', 'email', 'senha', 'data_inicio']
+            for campo in campos_obrigatorios:
+                if campo not in dados:
+                    return jsonify({'error': f'Campo {campo} é obrigatório'}), 400
+
+            # Verificar se já existe
+            if Pessoa.buscar_por_cpf(dados['cpf']):
+                return jsonify({'error': 'CPF já cadastrado'}), 400
+
+            if Pessoa.buscar_por_email(dados['email']):
+                return jsonify({'error': 'Email já cadastrado'}), 400
+
+            # Criar pessoa
+            Pessoa.criar(
+                dados['cpf'],
+                dados['nome_completo'],
+                dados['data_nascimento'],
+                dados.get('telefone'),
+                dados.get('endereco'),
+                dados['email'],
+                dados['senha']
+            )
+
+            # Criar barbeiro
+            Barbeiro.criar(dados['cpf'], dados['data_inicio'])
+
+            # Se for chefe
+            if dados.get('is_chefe'):
+                Barbeiro.criar_chefe(dados['cpf'])
+
+            # Buscar pessoa criada
+            pessoa = Pessoa.buscar_por_cpf(dados['cpf'])
+
+            # Determinar tipo
+            tipo = 'barbeiro_chefe' if dados.get('is_chefe') else 'barbeiro'
+
+            # Gerar token e retornar
+            resultado = AuthController._gerar_token(pessoa, tipo)
+
+            return jsonify({
+                'message': 'Barbeiro cadastrado com sucesso',
+                **resultado  # Inclui 'token' e 'user'
+            }), 201
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
