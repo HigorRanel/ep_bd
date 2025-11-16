@@ -11,9 +11,6 @@ from flask import request
 
 
 def register_routes(app):
-    # =============================================================================
-    # ROTAS DE AUTENTICAÇÃO (Públicas)
-    # =============================================================================
 
     @app.route('/api/auth/registrar/cliente', methods=['POST'])
     def registrar_cliente():
@@ -34,10 +31,6 @@ def register_routes(app):
     @app.route('/api/auth/cadastrar-e-logar/barbeiro', methods=['POST'])
     def cadastrar_e_logar_barbeiro():
         return AuthController.registrar_e_logar_barbeiro()
-
-    # =============================================================================
-    # ROTAS DE CLIENTES
-    # =============================================================================
 
     @app.route('/api/clientes', methods=['GET'])
     @token_required
@@ -65,9 +58,6 @@ def register_routes(app):
     def meus_agendamentos():
         return ClienteController.meus_agendamentos(request.user_cpf)
 
-    # =============================================================================
-    # ROTAS DE BARBEIROS
-    # =============================================================================
 
     @app.route('/api/barbeiros', methods=['GET'])
     @token_required
@@ -84,10 +74,6 @@ def register_routes(app):
     @barbeiro_required
     def meus_servicos():
         return BarbeiroController.meus_servicos(request.user_cpf)
-
-    # =============================================================================
-    # ROTAS DE AGENDAMENTOS
-    # =============================================================================
 
     @app.route('/api/agendamentos', methods=['POST'])
     @token_required
@@ -119,10 +105,6 @@ def register_routes(app):
     def avaliar_agendamento(id_agendamento):
         return AgendamentoController.avaliar(id_agendamento)
 
-    # =============================================================================
-    # ROTAS DE SERVIÇOS
-    # =============================================================================
-
     @app.route('/api/servicos', methods=['POST'])
     @token_required
     @barbeiro_required
@@ -150,10 +132,6 @@ def register_routes(app):
     @barbeiro_chefe_required
     def deletar_servico(id_servico):
         return ServicoController.deletar(id_servico)
-
-    # =============================================================================
-    # ROTAS DE PRODUTOS
-    # =============================================================================
 
     @app.route('/api/produtos', methods=['POST'])
     @token_required
@@ -193,10 +171,6 @@ def register_routes(app):
     def listar_minhas_reservas():
         return ProdutoController.minhas_reservas(request.user_cpf)
 
-    # =============================================================================
-    # ROTAS DE PLANOS MENSAIS
-    # =============================================================================
-
     @app.route('/api/planos', methods=['POST'])
     @token_required
     @barbeiro_chefe_required
@@ -218,22 +192,14 @@ def register_routes(app):
     def listar_minhas_assinaturas():
         return PlanoController.minhas_assinaturas(request.user_cpf)
 
-    # =============================================================================
-    # ROTA DE HEALTH CHECK
-    # =============================================================================
 
     @app.route('/api/health', methods=['GET'])
     def health_check():
         return {'status': 'ok', 'message': 'API Barbearia funcionando'}, 200
 
-    # =============================================================================
-    # ROTAS PARA ASSINA (Assinaturas de Planos)
-    # =============================================================================
-
     @app.route('/api/assinaturas/cancelar/<int:id_plano>', methods=['DELETE'])
     @token_required
     def cancelar_assinatura(id_plano):
-        """Cancela uma assinatura de plano do cliente logado"""
         try:
             from app.models.plano_mensal import PlanoMensal
             PlanoMensal.cancelar_assinatura(request.user_cpf, id_plano)
@@ -244,7 +210,6 @@ def register_routes(app):
     @app.route('/api/assinaturas/verificar/<int:id_plano>', methods=['GET'])
     @token_required
     def verificar_assinatura_ativa(id_plano):
-        """Verifica se o cliente logado tem assinatura ativa para um plano"""
         try:
             from app.models.plano_mensal import PlanoMensal
             assinatura = PlanoMensal.verificar_assinatura_ativa(request.user_cpf, id_plano)
@@ -259,14 +224,10 @@ def register_routes(app):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
-    # =============================================================================
-    # ROTAS PARA CONTEM (Serviços em Agendamentos)
-    # =============================================================================
 
     @app.route('/api/agendamentos/<int:id_agendamento>/servico', methods=['GET'])
     @token_required
     def buscar_servico_agendamento(id_agendamento):
-        """Busca o serviço associado a um agendamento"""
         try:
             from app.models.agendamento import Agendamento
             servico = Agendamento.buscar_servico_agendamento(id_agendamento)
@@ -282,7 +243,6 @@ def register_routes(app):
     @token_required
     @barbeiro_required
     def atualizar_servico_agendamento(id_agendamento):
-        """Altera o serviço de um agendamento (apenas barbeiro)"""
         try:
             dados = request.get_json()
 
@@ -296,14 +256,10 @@ def register_routes(app):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
-    # =============================================================================
-    # ROTAS PARA AVALIACAO (Sistema de Avaliações)
-    # =============================================================================
 
     @app.route('/api/avaliacoes/agendamento/<int:id_agendamento>', methods=['GET'])
     @token_required
     def buscar_avaliacao_agendamento(id_agendamento):
-        """Busca a avaliação de um agendamento específico"""
         try:
             from app.models.agendamento import Agendamento
             avaliacao = Agendamento.buscar_avaliacao(id_agendamento)
@@ -318,7 +274,6 @@ def register_routes(app):
     @app.route('/api/avaliacoes/barbeiro/<cpf_barbeiro>', methods=['GET'])
     @token_required
     def listar_avaliacoes_barbeiro(cpf_barbeiro):
-        """Lista todas as avaliações de um barbeiro"""
         try:
             from app.models.agendamento import Agendamento
             avaliacoes = Agendamento.listar_avaliacoes_barbeiro(cpf_barbeiro)

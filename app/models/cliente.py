@@ -28,7 +28,7 @@ class Cliente:
     def buscar_por_cpf(cpf):
         with Database.get_cursor() as cursor:
             cursor.execute("""
-                SELECT p.*, c.cpf as cliente_cpf
+                SELECT *
                 FROM Cliente c
                 JOIN Pessoa p ON c.cpf = p.cpf
                 WHERE c.cpf = %s

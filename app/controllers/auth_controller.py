@@ -8,6 +8,26 @@ from app.models.barbeiro import Barbeiro
 
 
 class AuthController:
+
+    @staticmethod
+    def _gerar_token(pessoa, tipo_usuario):
+        token = jwt.encode({
+            'cpf': pessoa['cpf'],
+            'email': pessoa['email'],
+            'tipo': tipo_usuario,
+            'exp': datetime.utcnow() + timedelta(hours=Config.JWT_EXPIRATION_HOURS)
+        }, Config.SECRET_KEY, algorithm='HS256')
+
+        return {
+            'token': token,
+            'user': {
+                'cpf': pessoa['cpf'],
+                'nome': pessoa['nome_completo'],
+                'email': pessoa['email'],
+                'tipo': tipo_usuario
+            }
+        }
+
     @staticmethod
     def registrar_cliente():
         try:
