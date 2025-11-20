@@ -54,7 +54,22 @@ class ProdutoController:
             if 'quantidade' not in dados:
                 return jsonify({'error': 'Campo quantidade é obrigatório'}), 400
 
-            resultado = Produto.atualizar_estoque(id_produto, dados['quantidade'])
+            # Buscar produto atual para validar estoque
+            produto_atual = Produto.buscar_por_id(id_produto)
+            if not produto_atual:
+                return jsonify({'error': 'Produto não encontrado'}), 404
+
+            quantidade_ajuste = int(dados['quantidade'])
+            estoque_atual = produto_atual['quantidade_estoque']
+            estoque_final = estoque_atual + quantidade_ajuste
+
+            # Validar se o estoque ficaria negativo
+            if estoque_final < 0:
+                return jsonify({
+                    'error': f'Operação inválida: o estoque não pode ficar negativo. Estoque atual: {estoque_atual}, ajuste solicitado: {quantidade_ajuste}'
+                }), 400
+
+            resultado = Produto.atualizar_estoque(id_produto, quantidade_ajuste)
             return jsonify(resultado), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
@@ -87,4 +102,3 @@ class ProdutoController:
             return jsonify(reservas), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-
