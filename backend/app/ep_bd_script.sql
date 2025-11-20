@@ -1,4 +1,5 @@
--- Status de agendamento
+ALTER DATABASE barbearia SET TIMEZONE TO 'America/Sao_Paulo';
+
 CREATE DOMAIN dom_status_agendamento AS VARCHAR(20)
     CHECK (VALUE IN ('pendente', 'confirmado', 'cancelado', 'concluido'));
 
@@ -79,6 +80,7 @@ CREATE TABLE Agendamento (
         ON DELETE SET NULL ON UPDATE CASCADE
 );
 
+ALTER TABLE agendamento ALTER COLUMN data_hora_agendamento TYPE timestamp with time zone ;
 
 CREATE TABLE Contem (
     id_serv INT REFERENCES Servico(id_servico)
@@ -452,8 +454,3 @@ INSERT INTO Barbeiro_Chefe (cpf_barbeiro) VALUES
 ('00000000053'),
 ('00000000054'),
 ('00000000055');
-
-ALTER DATABASE barbearia SET TIMEZONE TO 'America/Sao_Paulo';
-
-ALTER TABLE public.agendamento
-    ALTER COLUMN data_hora_agendamento TYPE time with time zone ;
