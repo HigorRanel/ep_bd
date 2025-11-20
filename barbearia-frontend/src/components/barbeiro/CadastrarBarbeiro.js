@@ -17,10 +17,12 @@ const CadastrarBarbeiro = () => {
     data_inicio: '',
     is_chefe: false,
   });
+
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Atualiza campos comuns
   const handleChange = (e) => {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
     setFormData({
@@ -30,13 +32,16 @@ const CadastrarBarbeiro = () => {
     setError('');
   };
 
-  const formatCPF = (value) => {
-    return value.replace(/\D/g, '').slice(0, 11);
-  };
-
+  // Formata CPF com máscara
   const handleCPFChange = (e) => {
-    const formatted = formatCPF(e.target.value);
-    setFormData({ ...formData, cpf: formatted });
+    let v = e.target.value.replace(/\D/g, '').slice(0, 11);
+
+    v = v
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+
+    setFormData({ ...formData, cpf: v });
   };
 
   const handleSubmit = async (e) => {
@@ -50,14 +55,20 @@ const CadastrarBarbeiro = () => {
       return;
     }
 
-    if (formData.cpf.length !== 11) {
+    if (formData.cpf.replace(/\D/g, '').length !== 11) {
       setError('CPF deve ter 11 dígitos');
       return;
     }
 
     setLoading(true);
 
-    const { confirmarSenha, ...dadosCadastro } = formData;
+    // Remove máscara antes de enviar
+    const { confirmarSenha, cpf, ...resto } = formData;
+    const dadosCadastro = {
+      ...resto,
+      cpf: cpf.replace(/\D/g, ''), // somente números
+    };
+
     const result = await cadastrarBarbeiro(dadosCadastro);
 
     if (result.success) {
@@ -77,7 +88,7 @@ const CadastrarBarbeiro = () => {
     } else {
       setError(result.error);
     }
-    
+
     setLoading(false);
   };
 
@@ -116,8 +127,8 @@ const CadastrarBarbeiro = () => {
                   value={formData.cpf}
                   onChange={handleCPFChange}
                   required
-                  placeholder="00000000000"
-                  maxLength="11"
+                  placeholder="000.000.000-00"
+                  maxLength="14"
                 />
               </div>
             </div>

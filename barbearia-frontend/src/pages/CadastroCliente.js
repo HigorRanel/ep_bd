@@ -29,13 +29,17 @@ const CadastroCliente = () => {
     setError('');
   };
 
-  const formatCPF = (value) => {
-    return value.replace(/\D/g, '').slice(0, 11);
-  };
-
+  
   const handleCPFChange = (e) => {
-    const formatted = formatCPF(e.target.value);
-    setFormData({ ...formData, cpf: formatted });
+    let v = e.target.value.replace(/\D/g, '').slice(0, 11);
+
+    // Aplica máscara
+    v = v
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+
+    setFormData({ ...formData, cpf: v });
   };
 
   const handleSubmit = async (e) => {
@@ -48,14 +52,20 @@ const CadastroCliente = () => {
       return;
     }
 
-    if (formData.cpf.length !== 11) {
-      setError('CPF deve ter 11 dígitos');
-      return;
+    if (formData.cpf.replace(/\D/g, '').length !== 11) {
+    setError('CPF deve ter 11 dígitos');
+    return;
     }
 
     setLoading(true);
 
-    const { confirmarSenha, ...dadosCadastro } = formData;
+    const { confirmarSenha, cpf, ...resto } = formData;
+
+    const dadosCadastro = {
+    ...resto,
+    cpf: cpf.replace(/\D/g, ''), // remove máscara antes de enviar
+    };
+
     const result = await cadastrarCliente(dadosCadastro);
 
     if (result.success) {
@@ -100,8 +110,8 @@ const CadastroCliente = () => {
                   value={formData.cpf}
                   onChange={handleCPFChange}
                   required
-                  placeholder="00000000000"
-                  maxLength="11"
+                  placeholder="000.000.000-00"
+                  maxLength="14"
                 />
               </div>
             </div>
