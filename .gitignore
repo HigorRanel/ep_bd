@@ -1,42 +1,84 @@
-# Dependências
-node_modules/
+# ==========================
+# BACKEND (Python + Node)
+# ==========================
 
-# Logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# --- Python ---
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
 
-# Ambiente
+# Virtual envs
+venv/
+env/
+.venv/
+ENV/
+
+# Arquivos de config sensíveis
+*.env
 .env
-.env.local
 .env.*.local
 
-# Diretórios de build
+# Cache e temporários
+*.egg-info/
+.eggs/
+.build/
 dist/
 build/
 tmp/
 temp/
+*.sqlite3
+*.db
 
-# Diretórios do sistema operacional
-.DS_Store
-Thumbs.db
+# Logs
+logs/
+*.log
 
-# Arquivos de cache
+# Ferramentas de teste
+.coverage
+coverage/
+.pytest_cache/
+
+# MyPy e outros linters
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+
+# ==========================
+# FRONTEND (Node)
+# ==========================
+
+# Dependências
+node_modules/
+
+# Build
+dist/
+build/
+
+# Cache do frontend
 .cache/
 *.tsbuildinfo
 
-# Diretórios do editor
+# Logs do npm/yarn
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ==========================
+# EDITORES
+# ==========================
+
+# VSCode
 .vscode/
+
+# JetBrains (WebStorm, PyCharm)
 .idea/
 
-# Arquivos de testes
-coverage/
+# SO
+.DS_Store
+Thumbs.db
 
 # Outros
 *.swp
 *.swo
-
-__pycache__/
-*.pyc
