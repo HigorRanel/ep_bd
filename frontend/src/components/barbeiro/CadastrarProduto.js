@@ -96,7 +96,7 @@ const CadastrarProduto = () => {
       carregarProdutos();
       carregarBaixoEstoque();
     } catch (error) {
-      setMessage({ type: 'error', text: 'Erro ao atualizar estoque' });
+      setMessage({ type: 'error', text: error.response?.data?.error || 'Erro ao atualizar produto' });
     }
   };
 
