@@ -5,6 +5,7 @@ import '../../styles/forms.css';
 
 const CadastrarBarbeiro = () => {
   const { cadastrarBarbeiro } = useAuth();
+
   const [formData, setFormData] = useState({
     cpf: '',
     nome_completo: '',
@@ -24,15 +25,18 @@ const CadastrarBarbeiro = () => {
 
   // Atualiza campos comuns
   const handleChange = (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    const value =
+      e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+
     setFormData({
       ...formData,
       [e.target.name]: value,
     });
+
     setError('');
   };
 
-  // Formata CPF com máscara
+  // === CPF MASK ===
   const handleCPFChange = (e) => {
     let v = e.target.value.replace(/\D/g, '').slice(0, 11);
 
@@ -44,12 +48,30 @@ const CadastrarBarbeiro = () => {
     setFormData({ ...formData, cpf: v });
   };
 
+  // === TELEFONE MASK ===
+  const handleTelefoneChange = (e) => {
+    let v = e.target.value.replace(/\D/g, '').slice(0, 11);
+
+    if (v.length <= 10) {
+      // Telefone fixo
+      v = v
+        .replace(/(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{4})(\d)/, '$1-$2');
+    } else {
+      // Celular
+      v = v
+        .replace(/(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{5})(\d)/, '$1-$2');
+    }
+
+    setFormData({ ...formData, telefone: v });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
-    // Validações
     if (formData.senha !== formData.confirmarSenha) {
       setError('As senhas não coincidem');
       return;
@@ -62,11 +84,12 @@ const CadastrarBarbeiro = () => {
 
     setLoading(true);
 
-    // Remove máscara antes de enviar
-    const { confirmarSenha, cpf, ...resto } = formData;
+    // Remove máscaras antes de enviar
+    const { confirmarSenha, cpf, telefone, ...resto } = formData;
     const dadosCadastro = {
       ...resto,
-      cpf: cpf.replace(/\D/g, ''), // somente números
+      cpf: cpf.replace(/\D/g, ''),
+      telefone: telefone.replace(/\D/g, ''), // apenas números
     };
 
     const result = await cadastrarBarbeiro(dadosCadastro);
@@ -104,6 +127,7 @@ const CadastrarBarbeiro = () => {
           {success && <div className="alert alert-success">{success}</div>}
 
           <form onSubmit={handleSubmit}>
+
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="nome_completo">Nome Completo *</label>
@@ -167,8 +191,9 @@ const CadastrarBarbeiro = () => {
                   id="telefone"
                   name="telefone"
                   value={formData.telefone}
-                  onChange={handleChange}
+                  onChange={handleTelefoneChange}
                   placeholder="(11) 98888-0000"
+                  maxLength="15"
                 />
               </div>
 
@@ -228,7 +253,14 @@ const CadastrarBarbeiro = () => {
             </div>
 
             <div className="form-group">
-              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  cursor: 'pointer',
+                }}
+              >
                 <input
                   type="checkbox"
                   name="is_chefe"
@@ -236,15 +268,13 @@ const CadastrarBarbeiro = () => {
                   onChange={handleChange}
                   style={{ width: 'auto', margin: 0 }}
                 />
-                <span>Este barbeiro será chefe (poderá gerenciar outros barbeiros e produtos)</span>
+                <span>
+                  Este barbeiro será chefe (poderá gerenciar outros barbeiros e produtos)
+                </span>
               </label>
             </div>
 
-            <button
-              type="submit"
-              className="btn btn-primary btn-block"
-              disabled={loading}
-            >
+            <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
               {loading ? 'Cadastrando...' : 'Cadastrar Barbeiro'}
             </button>
           </form>

@@ -15,6 +15,7 @@ const CadastroCliente = () => {
     senha: '',
     confirmarSenha: '',
   });
+  
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -29,41 +30,60 @@ const CadastroCliente = () => {
     setError('');
   };
 
-  
+  // === MÁSCARA CPF ===
   const handleCPFChange = (e) => {
     let v = e.target.value.replace(/\D/g, '').slice(0, 11);
 
-    // Aplica máscara
     v = v
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
 
     setFormData({ ...formData, cpf: v });
+  };
+
+  // === MÁSCARA TELEFONE ===
+  const handleTelefoneChange = (e) => {
+    let v = e.target.value.replace(/\D/g, '').slice(0, 11);
+
+    if (v.length <= 10) {
+      // Formato fixo: (00) 0000-0000
+      v = v
+        .replace(/(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{4})(\d)/, '$1-$2');
+    } else {
+      // Formato celular: (00) 00000-0000
+      v = v
+        .replace(/(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{5})(\d)/, '$1-$2');
+    }
+
+    setFormData({ ...formData, telefone: v });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    // Validações
     if (formData.senha !== formData.confirmarSenha) {
       setError('As senhas não coincidem');
       return;
     }
 
     if (formData.cpf.replace(/\D/g, '').length !== 11) {
-    setError('CPF deve ter 11 dígitos');
-    return;
+      setError('CPF deve ter 11 dígitos');
+      return;
     }
 
     setLoading(true);
 
-    const { confirmarSenha, cpf, ...resto } = formData;
+    // Remove as máscaras antes de enviar
+    const { confirmarSenha, cpf, telefone, ...resto } = formData;
 
     const dadosCadastro = {
-    ...resto,
-    cpf: cpf.replace(/\D/g, ''), // remove máscara antes de enviar
+      ...resto,
+      cpf: cpf.replace(/\D/g, ''),
+      telefone: telefone.replace(/\D/g, ''), // só números no envio
     };
 
     const result = await cadastrarCliente(dadosCadastro);
@@ -136,8 +156,9 @@ const CadastroCliente = () => {
                   id="telefone"
                   name="telefone"
                   value={formData.telefone}
-                  onChange={handleChange}
+                  onChange={handleTelefoneChange}
                   placeholder="(11) 98888-0000"
+                  maxLength="15"
                 />
               </div>
             </div>
