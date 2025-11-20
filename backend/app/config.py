@@ -1,7 +1,11 @@
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
-load_dotenv('./.env')
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+if not os.path.exists(dotenv_path):
+    dotenv_path = find_dotenv()
+if dotenv_path:
+    load_dotenv(dotenv_path)
 
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
