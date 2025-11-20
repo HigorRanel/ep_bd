@@ -40,14 +40,13 @@ const ConsultarReservas = () => {
 
   const carregarDados = async () => {
     try {
-      // NOVA ROTA OTIMIZADA - Uma única chamada busca TODAS as reservas
+    
       const response = await api.get('/reservas/todas');
       const todasReservas = response.data;
       
       setReservas(todasReservas);
       calcularEstatisticas(todasReservas);
       
-      console.log(`✓ ${todasReservas.length} reservas carregadas em 1 request!`);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       setMessage({ type: 'error', text: 'Erro ao carregar reservas' });
@@ -150,7 +149,6 @@ const ConsultarReservas = () => {
     if (!window.confirm(`Deseja cancelar a reserva de ${nomeCliente}?`)) return;
 
     try {
-      // NOVA ROTA OTIMIZADA
       await api.delete('/reservas/cancelar', {
         data: {
           id_cliente: idCliente,
@@ -213,11 +211,6 @@ const ConsultarReservas = () => {
             {message.text}
           </div>
         )}
-
-        {/* Indicador de Performance */}
-        <div className="alert alert-info" style={{ marginBottom: '20px' }}>
-          <strong>⚡ Sistema Otimizado:</strong> {reservas.length} reservas carregadas em 1 requisição!
-        </div>
 
         {/* Estatísticas */}
         <div className="stats-grid">
