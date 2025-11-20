@@ -24,6 +24,7 @@ import CadastrarProduto from './components/barbeiro/CadastrarProduto';
 import CadastrarPlano from './components/barbeiro/CadastrarPlano';
 import CadastrarBarbeiro from './components/barbeiro/CadastrarBarbeiro';
 import MinhasAvaliacoes from './components/barbeiro/MinhasAvaliacoes';
+import ConsultarReservas from './components/barbeiro/ConsultarReservas'; // NOVO
 
 // Common
 import PrivateRoute from './components/common/PrivateRoute';
@@ -110,6 +111,16 @@ function App() {
             element={
               <PrivateRoute requiredType="barbeiro">
                 <MinhasAvaliacoes />
+              </PrivateRoute>
+            }
+          />
+          
+          {/* NOVA ROTA - Consultar Reservas */}
+          <Route
+            path="/barbeiro/reservas"
+            element={
+              <PrivateRoute requiredType="barbeiro">
+                <ConsultarReservas />
               </PrivateRoute>
             }
           />

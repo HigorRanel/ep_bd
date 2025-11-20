@@ -13,6 +13,7 @@ const DashboardBarbeiro = () => {
     mediaAvaliacoes: 0,
     totalAvaliacoes: 0,
     proximosAgendamentos: 0,
+    reservasPendentes: 0, // NOVO
   });
   const [proximosAgendamentos, setProximosAgendamentos] = useState([]);
   const [produtosBaixoEstoque, setProdutosBaixoEstoque] = useState([]);
@@ -69,19 +70,36 @@ const DashboardBarbeiro = () => {
       
       setProximosAgendamentos(proximos);
 
+      // NOVO - Buscar reservas pendentes
+      let reservasPendentes = 0;
+      try {
+        const produtosRes = await api.get('/produtos');
+        for (const produto of produtosRes.data) {
+          try {
+            const reservasRes = await api.get(`/reservas/produto/${produto.id_produto}`);
+            reservasPendentes += reservasRes.data.filter(r => r.status === 'reservado').length;
+          } catch (error) {
+            // Produto sem reservas
+          }
+        }
+      } catch (error) {
+        console.log('Erro ao buscar reservas:', error);
+      }
+
       setStats({
         agendamentosHoje: agendamentosHoje.length,
         agendamentosSemana: agendamentosSemana.length,
         mediaAvaliacoes: parseFloat(avaliacoesRes.data.media_nota || 0).toFixed(1),
         totalAvaliacoes: avaliacoesRes.data.total_avaliacoes || 0,
         proximosAgendamentos: proximos.length,
+        reservasPendentes, // NOVO
       });
 
       // Se for barbeiro chefe, buscar produtos com estoque baixo
       if (isBarbeiroChefe()) {
         try {
           const estoqueBaixoRes = await api.get('/produtos/estoque-baixo');
-          setProdutosBaixoEstoque(estoqueBaixoRes.data.slice(0, 3)); // Mostrar apenas 3
+          setProdutosBaixoEstoque(estoqueBaixoRes.data.slice(0, 3));
         } catch (error) {
           console.log('Erro ao buscar estoque baixo:', error);
         }
@@ -144,6 +162,16 @@ const DashboardBarbeiro = () => {
         </div>
 
         {/* Alertas */}
+        {/* NOVO - Alerta de Reservas Pendentes */}
+        {stats.reservasPendentes > 0 && (
+          <div className="alert alert-info">
+            <strong>🔖 Atenção:</strong> Você tem {stats.reservasPendentes} reserva(s) de produto(s) pendente(s).
+            <Link to="/barbeiro/reservas" style={{ marginLeft: '10px', textDecoration: 'underline' }}>
+              Ver reservas
+            </Link>
+          </div>
+        )}
+        
         {isBarbeiroChefe() && produtosBaixoEstoque.length > 0 && (
           <div className="alert alert-warning">
             <strong>⚠️ Alerta de Estoque:</strong> {produtosBaixoEstoque.length} produto(s) com estoque baixo.
@@ -188,11 +216,12 @@ const DashboardBarbeiro = () => {
             </div>
           </div>
 
-          <div className="stat-card">
-            <div className="stat-icon">⏰</div>
+          {/* NOVO - Card de Reservas */}
+          <div className="stat-card" onClick={() => window.location.href = '/barbeiro/reservas'} style={{ cursor: 'pointer' }}>
+            <div className="stat-icon">🔖</div>
             <div className="stat-content">
-              <h3>{stats.proximosAgendamentos}</h3>
-              <p>Próximos Agendamentos</p>
+              <h3>{stats.reservasPendentes}</h3>
+              <p>Reservas Pendentes</p>
             </div>
           </div>
         </div>
@@ -217,6 +246,13 @@ const DashboardBarbeiro = () => {
               <span className="action-icon">⭐</span>
               <h3>Minhas Avaliações</h3>
               <p>Ver feedback dos clientes</p>
+            </Link>
+
+            {/* NOVO - Card de Reservas */}
+            <Link to="/barbeiro/reservas" className="action-card">
+              <span className="action-icon">🔖</span>
+              <h3>Consultar Reservas</h3>
+              <p>Gerenciar reservas de produtos</p>
             </Link>
 
             {isBarbeiroChefe() && (
@@ -343,6 +379,7 @@ const DashboardBarbeiro = () => {
             <li>Mantenha sua agenda atualizada para evitar conflitos</li>
             <li>Responda às avaliações dos clientes para melhorar o relacionamento</li>
             <li>Atualize o status dos agendamentos após cada atendimento</li>
+            <li>Gerencie as reservas de produtos regularmente</li>
             {isBarbeiroChefe() && (
               <>
                 <li>Monitore o estoque regularmente para evitar falta de produtos</li>
