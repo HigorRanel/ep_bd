@@ -49,7 +49,7 @@ class Produto:
             return cursor.fetchall()
 
     @staticmethod
-    def criar_reserva(cpf_cliente, id_produto, status='pendente'):
+    def criar_reserva(cpf_cliente, id_produto, status='reservado'):
         with Database.get_cursor() as cursor:
             cursor.execute("""
                 INSERT INTO Reserva (id_cliente, id_prod, data_reserva, status)

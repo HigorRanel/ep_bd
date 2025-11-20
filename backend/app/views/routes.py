@@ -7,6 +7,7 @@ from backend.app.controllers.servico_controller import ServicoController
 from backend.app.controllers.produto_controller import ProdutoController
 from backend.app.controllers.plano_controller import PlanoController
 from backend.app.utils.decorators import token_required, barbeiro_required, barbeiro_chefe_required
+from backend.app.controllers.reserva_controller import ReservaController
 from flask import request
 
 
@@ -436,3 +437,39 @@ def register_routes(app):
             return jsonify({'valor_total': float(valor_total)}), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/reservas/todas', methods=['GET'])
+    @token_required
+    @barbeiro_required
+    def listar_todas_reservas_otimizado():  # Nome único
+        return ReservaController.listar_todas()
+
+    @app.route('/api/reservas/status/<status>', methods=['GET'])
+    @token_required
+    @barbeiro_required
+    def listar_reservas_por_status_v2(status):  # Nome único
+        return ReservaController.listar_por_status(status)
+
+    @app.route('/api/reservas/periodo', methods=['GET'])
+    @token_required
+    @barbeiro_required
+    def listar_reservas_por_periodo_v2():  # Nome único
+        return ReservaController.listar_por_periodo()
+
+    @app.route('/api/reservas/estatisticas', methods=['GET'])
+    @token_required
+    @barbeiro_required
+    def estatisticas_reservas_v2():  # Nome único
+        return ReservaController.estatisticas()
+
+    @app.route('/api/reservas/atualizar-status', methods=['PUT'])
+    @token_required
+    @barbeiro_required
+    def atualizar_status_reserva_v2():  # Nome único - MUDOU AQUI
+        return ReservaController.atualizar_status()
+
+    @app.route('/api/reservas/cancelar', methods=['DELETE'])
+    @token_required
+    @barbeiro_required
+    def cancelar_reserva_v2():  # Nome único
+        return ReservaController.cancelar()
