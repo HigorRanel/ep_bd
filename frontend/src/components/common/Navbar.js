@@ -45,7 +45,9 @@ const Navbar = () => {
                   <Link to="/barbeiro/agenda" className="navbar-link">Agenda</Link>
                   <Link to="/barbeiro/servicos/novo" className="navbar-link">Novo Serviço</Link>
                   <Link to="/barbeiro/avaliacoes" className="navbar-link">Avaliações</Link>
-                  {/* NOVO LINK - Consultar Reservas */}
+                
+                  <Link to="/barbeiro/produtos" className="navbar-link">Produtos</Link>
+                
                   <Link to="/barbeiro/reservas" className="navbar-link">Reservas</Link>
                   
                   {isBarbeiroChefe() && (

@@ -24,7 +24,8 @@ import CadastrarProduto from './components/barbeiro/CadastrarProduto';
 import CadastrarPlano from './components/barbeiro/CadastrarPlano';
 import CadastrarBarbeiro from './components/barbeiro/CadastrarBarbeiro';
 import MinhasAvaliacoes from './components/barbeiro/MinhasAvaliacoes';
-import ConsultarReservas from './components/barbeiro/ConsultarReservas'; // NOVO
+import ConsultarReservas from './components/barbeiro/ConsultarReservas';
+import ListarProdutos from './components/barbeiro/ListarProdutos';
 
 // Common
 import PrivateRoute from './components/common/PrivateRoute';
@@ -150,7 +151,15 @@ function App() {
               </PrivateRoute>
             }
           />
-
+          <Route
+            path="/barbeiro/produtos"
+            element={
+              <PrivateRoute requiredType="barbeiro">
+                <ListarProdutos />
+              </PrivateRoute>
+            }
+          />
+          
           {/* 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>

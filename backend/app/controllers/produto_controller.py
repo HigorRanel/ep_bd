@@ -37,6 +37,58 @@ class ProdutoController:
             return jsonify({'error': str(e)}), 500
 
     @staticmethod
+    def listar_paginado():
+
+        try:
+            # Obter parâmetros da query string
+            pagina = int(request.args.get('pagina', 1))
+            por_pagina = int(request.args.get('por_pagina', 10))
+            nome_filtro = request.args.get('nome', None)
+            categoria_filtro = request.args.get('categoria', None)
+            status_filtro = request.args.get('status', None)
+
+            # Validações
+            if pagina < 1:
+                pagina = 1
+            if por_pagina < 1 or por_pagina > 100:
+                por_pagina = 10
+
+            # Buscar produtos
+            resultado = Produto.listar_paginado(
+                pagina=pagina,
+                por_pagina=por_pagina,
+                nome_filtro=nome_filtro,
+                categoria_filtro=categoria_filtro,
+                status_filtro=status_filtro
+            )
+
+            return jsonify(resultado), 200
+        except ValueError:
+            return jsonify({'error': 'Parâmetros de paginação inválidos'}), 400
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @staticmethod
+    def buscar_por_nome():
+
+        try:
+            termo = request.args.get('q', '')
+            limite = int(request.args.get('limite', 10))
+
+            if not termo:
+                return jsonify({'error': 'Parâmetro q (termo de busca) é obrigatório'}), 400
+
+            if len(termo) < 2:
+                return jsonify({'error': 'Termo de busca deve ter pelo menos 2 caracteres'}), 400
+
+            produtos = Produto.buscar_por_nome(termo, limite)
+            return jsonify(produtos), 200
+        except ValueError:
+            return jsonify({'error': 'Parâmetro limite inválido'}), 400
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @staticmethod
     def buscar(id_produto):
         try:
             produto = Produto.buscar_por_id(id_produto)
@@ -100,5 +152,22 @@ class ProdutoController:
         try:
             reservas = Produto.listar_reservas_cliente(cpf_usuario)
             return jsonify(reservas), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @staticmethod
+    def listar_categorias():
+
+        try:
+            categorias = Produto.obter_categorias()
+            return jsonify(categorias), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @staticmethod
+    def obter_estatisticas():
+        try:
+            stats = Produto.obter_estatisticas()
+            return jsonify(stats), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500

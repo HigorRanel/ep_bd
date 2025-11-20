@@ -473,3 +473,37 @@ def register_routes(app):
     @barbeiro_required
     def cancelar_reserva_v2():  # Nome único
         return ReservaController.cancelar()
+
+    @app.route('/api/produtos/paginado', methods=['GET'])
+    @token_required
+    @barbeiro_required
+    def listar_produtos_paginado():
+        return ProdutoController.listar_paginado()
+
+
+    @app.route('/api/produtos/buscar', methods=['GET'])
+    @token_required
+    @barbeiro_required
+    def buscar_produtos_por_nome():
+        return ProdutoController.buscar_por_nome()
+
+    @app.route('/api/produtos/categorias', methods=['GET'])
+    @token_required
+    def listar_categorias_produtos():
+        return ProdutoController.listar_categorias()
+
+    @app.route('/api/produtos/estatisticas', methods=['GET'])
+    @token_required
+    @barbeiro_required
+    def obter_estatisticas_produtos():
+        return ProdutoController.obter_estatisticas()
+
+    @app.route('/api/agendamentos/horarios-disponiveis', methods=['GET'])
+    @token_required
+    def obter_horarios_disponiveis():
+        return AgendamentoController.obter_horarios_disponiveis()
+
+    @app.route('/api/agendamentos/verificar-disponibilidade', methods=['GET'])
+    @token_required
+    def verificar_disponibilidade_horario():
+        return AgendamentoController.verificar_disponibilidade()
