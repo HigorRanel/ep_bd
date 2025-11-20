@@ -6,7 +6,6 @@ import '../../styles/dashboard.css';
 const ConsultarReservas = () => {
   const [reservas, setReservas] = useState([]);
   const [reservasFiltradas, setReservasFiltradas] = useState([]);
-  const [produtos, setProdutos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ type: '', text: '' });
   
@@ -14,7 +13,6 @@ const ConsultarReservas = () => {
   const [filtros, setFiltros] = useState({
     status: 'todos',
     categoria: 'todas',
-    produto: 'todos',
     dataInicio: '',
     dataFim: '',
     nomeCliente: '',
@@ -42,23 +40,14 @@ const ConsultarReservas = () => {
 
   const carregarDados = async () => {
     try {
-      // Buscar todos os produtos
-      const produtosRes = await api.get('/produtos');
-      setProdutos(produtosRes.data);
-
-      // Buscar todas as reservas de todos os produtos
-      const todasReservas = [];
-      for (const produto of produtosRes.data) {
-        try {
-          const reservasProduto = await api.get(`/reservas/produto/${produto.id_produto}`);
-          todasReservas.push(...reservasProduto.data);
-        } catch (error) {
-          console.log(`Erro ao buscar reservas do produto ${produto.id_produto}`);
-        }
-      }
-
+      // NOVA ROTA OTIMIZADA - Uma única chamada busca TODAS as reservas
+      const response = await api.get('/reservas/todas');
+      const todasReservas = response.data;
+      
       setReservas(todasReservas);
       calcularEstatisticas(todasReservas);
+      
+      console.log(`✓ ${todasReservas.length} reservas carregadas em 1 request!`);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       setMessage({ type: 'error', text: 'Erro ao carregar reservas' });
@@ -86,15 +75,7 @@ const ConsultarReservas = () => {
 
     // Filtro por categoria
     if (filtros.categoria !== 'todas') {
-      const produtosCategoria = produtos
-        .filter(p => p.categoria === filtros.categoria)
-        .map(p => p.id_produto);
-      filtradas = filtradas.filter(r => produtosCategoria.includes(r.id_prod));
-    }
-
-    // Filtro por produto específico
-    if (filtros.produto !== 'todos') {
-      filtradas = filtradas.filter(r => r.id_prod === parseInt(filtros.produto));
+      filtradas = filtradas.filter(r => r.categoria === filtros.categoria);
     }
 
     // Filtro por data início
@@ -131,7 +112,6 @@ const ConsultarReservas = () => {
     setFiltros({
       status: 'todos',
       categoria: 'todas',
-      produto: 'todos',
       dataInicio: '',
       dataFim: '',
       nomeCliente: '',
@@ -147,7 +127,10 @@ const ConsultarReservas = () => {
     if (!modalEditar || !novoStatus) return;
 
     try {
-      await api.put(`/reservas/${modalEditar.id_prod}/status`, {
+      // NOVA ROTA OTIMIZADA
+      await api.put('/reservas/atualizar-status', {
+        id_cliente: modalEditar.id_cliente,
+        id_produto: modalEditar.id_prod,
         status: novoStatus,
       });
 
@@ -163,11 +146,18 @@ const ConsultarReservas = () => {
     }
   };
 
-  const cancelarReserva = async (idProduto, nomeCliente) => {
+  const cancelarReserva = async (idCliente, idProduto, nomeCliente) => {
     if (!window.confirm(`Deseja cancelar a reserva de ${nomeCliente}?`)) return;
 
     try {
-      await api.delete(`/reservas/${idProduto}`);
+      // NOVA ROTA OTIMIZADA
+      await api.delete('/reservas/cancelar', {
+        data: {
+          id_cliente: idCliente,
+          id_produto: idProduto,
+        }
+      });
+      
       setMessage({ type: 'success', text: 'Reserva cancelada com sucesso!' });
       carregarDados();
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
@@ -195,13 +185,16 @@ const ConsultarReservas = () => {
   };
 
   // Obter categorias únicas
-  const categorias = [...new Set(produtos.map(p => p.categoria))];
+  const categorias = [...new Set(reservas.map(r => r.categoria))];
 
   if (loading) {
     return (
       <div className="page-container">
         <Navbar />
-        <div className="loading-container">Carregando reservas...</div>
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Carregando reservas...</p>
+        </div>
       </div>
     );
   }
@@ -220,6 +213,11 @@ const ConsultarReservas = () => {
             {message.text}
           </div>
         )}
+
+        {/* Indicador de Performance */}
+        <div className="alert alert-info" style={{ marginBottom: '20px' }}>
+          <strong>⚡ Sistema Otimizado:</strong> {reservas.length} reservas carregadas em 1 requisição!
+        </div>
 
         {/* Estatísticas */}
         <div className="stats-grid">
@@ -286,30 +284,12 @@ const ConsultarReservas = () => {
               <label>Categoria</label>
               <select
                 value={filtros.categoria}
-                onChange={(e) => setFiltros({ ...filtros, categoria: e.target.value, produto: 'todos' })}
+                onChange={(e) => setFiltros({ ...filtros, categoria: e.target.value })}
               >
                 <option value="todas">Todas</option>
                 {categorias.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
-              </select>
-            </div>
-
-            {/* Filtro Produto */}
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label>Produto</label>
-              <select
-                value={filtros.produto}
-                onChange={(e) => setFiltros({ ...filtros, produto: e.target.value })}
-              >
-                <option value="todos">Todos</option>
-                {produtos
-                  .filter(p => filtros.categoria === 'todas' || p.categoria === filtros.categoria)
-                  .map(produto => (
-                    <option key={produto.id_produto} value={produto.id_produto}>
-                      {produto.nome_produto}
-                    </option>
-                  ))}
               </select>
             </div>
 
@@ -359,7 +339,6 @@ const ConsultarReservas = () => {
           <div className="grid-2">
             {reservasFiltradas.map((reserva) => {
               const statusInfo = getStatusInfo(reserva.status);
-              const produto = produtos.find(p => p.id_produto === reserva.id_prod);
               
               return (
                 <div key={`${reserva.id_cliente}-${reserva.id_prod}`} className="card">
@@ -379,22 +358,23 @@ const ConsultarReservas = () => {
                   </div>
 
                   <div className="card-body">
-                    <p><strong>Produto:</strong> {produto?.nome_produto || 'N/A'}</p>
-                    <p><strong>Categoria:</strong> {produto?.categoria || 'N/A'}</p>
-                    <p><strong>Preço:</strong> R$ {produto ? parseFloat(produto.preco_venda).toFixed(2) : '0.00'}</p>
+                    <p><strong>Produto:</strong> {reserva.nome_produto}</p>
+                    <p><strong>Categoria:</strong> {reserva.categoria}</p>
+                    <p><strong>Preço:</strong> R$ {parseFloat(reserva.preco_venda).toFixed(2)}</p>
+                    <p><strong>Estoque disponível:</strong> {reserva.quantidade_estoque}</p>
                     
                     <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #ecf0f1' }}>
                       <p style={{ fontSize: '13px', marginBottom: '5px' }}>
                         <strong>Contato:</strong>
                       </p>
-                      {reserva.telefone && (
+                      {reserva.cliente_telefone && (
                         <p style={{ fontSize: '13px', margin: '2px 0' }}>
-                          📞 {reserva.telefone}
+                          📞 {reserva.cliente_telefone}
                         </p>
                       )}
-                      {reserva.email && (
+                      {reserva.cliente_email && (
                         <p style={{ fontSize: '13px', margin: '2px 0' }}>
-                          📧 {reserva.email}
+                          📧 {reserva.cliente_email}
                         </p>
                       )}
                     </div>
@@ -410,7 +390,7 @@ const ConsultarReservas = () => {
                           Alterar Status
                         </button>
                         <button
-                          onClick={() => cancelarReserva(reserva.id_prod, reserva.cliente_nome)}
+                          onClick={() => cancelarReserva(reserva.id_cliente, reserva.id_prod, reserva.cliente_nome)}
                           className="btn btn-danger btn-sm"
                         >
                           Cancelar
@@ -441,7 +421,7 @@ const ConsultarReservas = () => {
 
               <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
                 <p><strong>Cliente:</strong> {modalEditar.cliente_nome}</p>
-                <p><strong>Produto:</strong> {produtos.find(p => p.id_produto === modalEditar.id_prod)?.nome_produto}</p>
+                <p><strong>Produto:</strong> {modalEditar.nome_produto}</p>
                 <p><strong>Data da Reserva:</strong> {formatarData(modalEditar.data_reserva)}</p>
                 <p style={{ marginBottom: 0 }}>
                   <strong>Status Atual:</strong> {getStatusInfo(modalEditar.status).label}
