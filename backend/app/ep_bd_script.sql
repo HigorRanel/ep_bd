@@ -453,4 +453,7 @@ INSERT INTO Barbeiro_Chefe (cpf_barbeiro) VALUES
 ('00000000054'),
 ('00000000055');
 
-select * from pessoa
+ALTER DATABASE barbearia SET TIMEZONE TO 'America/Sao_Paulo';
+
+ALTER TABLE public.agendamento
+    ALTER COLUMN data_hora_agendamento TYPE time with time zone ;
