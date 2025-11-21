@@ -80,11 +80,11 @@ const CadastroCliente = () => {
     // Remove as máscaras antes de enviar
     const { confirmarSenha, cpf, telefone, ...resto } = formData;
 
-    const dadosCadastro = {
-      ...resto,
-      cpf: cpf.replace(/\D/g, ''),
-      telefone: telefone.replace(/\D/g, ''), // só números no envio
-    };
+  const dadosCadastro = {
+    ...resto,
+    cpf: cpf.replace(/\D/g, ''),
+    telefone: telefone, // <--- Envia o telefone como está no formulário (com máscara)
+  };
 
     const result = await cadastrarCliente(dadosCadastro);
 
