@@ -79,6 +79,22 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Nova função adicionada
+  const alterarSenha = async (senhaAtual, novaSenha) => {
+    try {
+      await api.post('/auth/alterar-senha', {
+        senha_atual: senhaAtual,
+        nova_senha: novaSenha
+      });
+      return { success: true, message: 'Senha alterada com sucesso!' };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.error || 'Erro ao alterar senha' 
+      };
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -98,6 +114,7 @@ export const AuthProvider = ({ children }) => {
         logout,
         cadastrarCliente,
         cadastrarBarbeiro,
+        alterarSenha, // Adicionado ao value
         isCliente,
         isBarbeiro,
         isBarbeiroChefe,

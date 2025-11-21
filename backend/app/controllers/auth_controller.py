@@ -253,3 +253,35 @@ class AuthController:
 
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+        
+        # Adicione este método dentro da classe AuthController em backend/app/controllers/auth_controller.py
+
+    @staticmethod
+    def alterar_senha():
+        try:
+            # O CPF vem do token JWT decodificado pelo decorator @token_required
+            cpf = request.user_cpf
+            dados = request.get_json()
+            
+            senha_atual = dados.get('senha_atual')
+            nova_senha = dados.get('nova_senha')
+
+            if not senha_atual or not nova_senha:
+                return jsonify({'error': 'Senha atual e nova senha são obrigatórias'}), 400
+
+            # Buscar dados do usuário para pegar o hash atual
+            pessoa = Pessoa.buscar_por_cpf(cpf)
+            if not pessoa:
+                return jsonify({'error': 'Usuário não encontrado'}), 404
+
+            # Verificar se a senha atual está correta
+            if not Pessoa.verificar_senha(senha_atual, pessoa['senha']):
+                return jsonify({'error': 'A senha atual está incorreta'}), 400
+
+            # Atualizar para a nova senha
+            Pessoa.atualizar_senha(cpf, nova_senha)
+
+            return jsonify({'message': 'Senha alterada com sucesso'}), 200
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500

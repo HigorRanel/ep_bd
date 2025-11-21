@@ -507,3 +507,8 @@ def register_routes(app):
     @token_required
     def verificar_disponibilidade_horario():
         return AgendamentoController.verificar_disponibilidade()
+    
+    @app.route('/api/auth/alterar-senha', methods=['POST'])
+    @token_required
+    def alterar_senha():
+        return AuthController.alterar_senha()

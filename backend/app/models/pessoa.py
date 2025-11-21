@@ -1,7 +1,6 @@
 from backend.app.utils.database import Database
 import bcrypt
 
-
 class Pessoa:
     @staticmethod
     def criar(cpf, nome_completo, data_nascimento, telefone, endereco, email, senha):
@@ -50,3 +49,14 @@ class Pessoa:
         with Database.get_cursor() as cursor:
             cursor.execute(query, valores)
             return cursor.fetchone()
+        
+    @staticmethod
+    def atualizar_senha(cpf, nova_senha):
+        senha_hash = bcrypt.hashpw(nova_senha.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
+        with Database.get_cursor() as cursor:
+            cursor.execute(
+                "UPDATE Pessoa SET senha = %s WHERE cpf = %s", 
+                (senha_hash, cpf)
+            )
+            return True    

@@ -1,5 +1,5 @@
 from backend.app.utils.database import Database
-
+import bcrypt
 
 class Cliente:
     @staticmethod
@@ -50,3 +50,4 @@ class Cliente:
                 ORDER BY a.data_hora_agendamento DESC
             """, (cpf_cliente,))
             return cursor.fetchall()
+        

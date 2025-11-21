@@ -1,6 +1,6 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
 import './styles/global.css';
 
 // Pages
@@ -8,6 +8,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import CadastroCliente from './pages/CadastroCliente';
 import NotFound from './pages/NotFound';
+import Perfil from './pages/Perfil'; // <--- 1. Importação Adicionada
 
 // Cliente Components
 import DashboardCliente from './components/cliente/DashBoardCliente';
@@ -39,6 +40,17 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/cadastro" element={<CadastroCliente />} />
+
+          {/* Rotas Comuns (Autenticadas) */}
+          <Route
+            path="/perfil"
+            element={
+              /* Note que não passamos 'requiredType', permitindo qualquer usuário logado */
+              <PrivateRoute>
+                <Perfil />
+              </PrivateRoute>
+            }
+          />
 
           {/* Rotas Cliente */}
           <Route
@@ -116,7 +128,6 @@ function App() {
             }
           />
           
-          {/* NOVA ROTA - Consultar Reservas */}
           <Route
             path="/barbeiro/reservas"
             element={
