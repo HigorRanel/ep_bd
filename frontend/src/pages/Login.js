@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/common/Navbar';
 import '../styles/forms.css';
@@ -7,19 +7,20 @@ import '../styles/forms.css';
 const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
-    senha: ''
+    senha: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  const navigate = useNavigate();
+
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
+    setError('');
   };
 
   const handleSubmit = async (e) => {
@@ -27,85 +28,85 @@ const Login = () => {
     setError('');
     setLoading(true);
 
-    const resultado = await login(formData.email, formData.senha);
+    const result = await login(formData.email, formData.senha);
 
-    if (resultado.success) {
-      if (resultado.user.tipo === 'cliente') {
+    if (result.success) {
+      // Redireciona baseado no tipo de usuário
+      if (result.user.tipo === 'cliente') {
         navigate('/cliente/dashboard');
-      } else {
+      } else if (['barbeiro', 'barbeiro_chefe'].includes(result.user.tipo)) {
         navigate('/barbeiro/dashboard');
       }
     } else {
-      setError(resultado.error);
+      setError(result.error);
       setLoading(false);
     }
   };
 
   return (
-    <>
+    <div className="page-container">
       <Navbar />
-      <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
-        <div className="form-container" style={{ width: '100%', maxWidth: '400px', padding: '2rem' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '2rem', color: '#2c3e50' }}>Login</h2>
-          
-          {error && <div className="alert alert-danger">{error}</div>}
+      <div className="form-container">
+        <div className="form-card">
+          <h2>Login</h2>
+          <p className="form-subtitle">Entre com sua conta</p>
+
+          {error && <div className="alert alert-error">{error}</div>}
 
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label>Email</label>
+              <label htmlFor="email">Email</label>
               <input
                 type="email"
+                id="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="form-control"
                 placeholder="seu@email.com"
               />
             </div>
 
-            <div className="form-group" style={{ marginBottom: '1rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                <label style={{ margin: 0 }}>Senha</label>
-                {/* Link movido para a linha do label para economizar espaço e ficar elegante */}
-                <Link 
-                  to="/esqueci-senha" 
-                  style={{ 
-                    fontSize: '0.85rem', 
-                    color: '#3498db', 
-                    textDecoration: 'none' 
-                  }}
-                >
-                  Esqueci minha senha
-                </Link>
-              </div>
+            <div className="form-group">
+              <label htmlFor="senha">Senha</label>
               <input
                 type="password"
+                id="senha"
                 name="senha"
                 value={formData.senha}
                 onChange={handleChange}
                 required
-                className="form-control"
-                placeholder="Sua senha"
+                placeholder="••••••••"
               />
+              {/* Link adicionado discretamente abaixo do input */}
+              <div style={{ textAlign: 'right', marginTop: '0.5rem' }}>
+                <Link 
+                  to="/esqueci-senha" 
+                  style={{ fontSize: '0.85rem', color: '#666', textDecoration: 'none' }}
+                >
+                  Esqueci minha senha
+                </Link>
+              </div>
             </div>
 
             <button 
               type="submit" 
-              className="btn-primary" 
+              className="btn btn-primary btn-block"
               disabled={loading}
-              style={{ width: '100%', marginTop: '1rem' }}
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
 
-          <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.9rem' }}>
-            <p>Ainda não tem conta? <Link to="/cadastro" style={{ color: '#3498db', fontWeight: 'bold' }}>Cadastre-se</Link></p>
+          <div className="form-footer">
+            <p>
+              Não tem uma conta? 
+              <Link to="/cadastro"> Cadastre-se aqui</Link>
+            </p>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

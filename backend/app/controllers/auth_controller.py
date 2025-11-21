@@ -122,11 +122,11 @@ class AuthController:
             pessoa = Pessoa.buscar_por_email(dados['email'])
 
             if not pessoa:
-                return jsonify({'error': 'Credenciais inválidas'}), 401
+                return jsonify({'error': 'Credenciais inválidas'}), 400
 
             # Verificar senha
             if not Pessoa.verificar_senha(dados['senha'], pessoa['senha']):
-                return jsonify({'error': 'Credenciais inválidas'}), 401
+                return jsonify({'error': 'Credenciais inválidas'}), 400
 
             # Determinar tipo de usuário
             barbeiro = Barbeiro.buscar_por_cpf(pessoa['cpf'])
