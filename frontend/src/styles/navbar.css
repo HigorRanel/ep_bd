@@ -1,108 +1,220 @@
+:root {
+  /* NOVA PALETA AZUL */
+  --primary-bg: #1e272e;       /* Um azul bem escuro (quase preto) para o fundo da navbar */
+  --primary-blue: #2980b9;     /* O azul do cabeçalho do seu card */
+  --accent-blue: #3498db;      /* Um azul mais claro para hover e botões */
+  --white: #ffffff;
+  --text-gray: #bdc3c7;        /* Cinza claro para texto secundário */
+  --danger: #e74c3c;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --transition: all 0.3s ease;
+}
+
 .navbar {
-  background-color: var(--primary);
-  color: var(--white);
-  padding: 0;
-  box-shadow: var(--shadow);
+  background: var(--primary-bg);
+  /* Adiciona um gradiente sutil para ficar mais moderno */
+  background: linear-gradient(to right, #141e30, #243b55); 
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 999;
+  box-shadow: var(--shadow);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .navbar-container {
-  max-width: 1200px;
-  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
+  height: 100%; /* Garante altura total para centralizar itens */
+  width: 100%;
+  max-width: 1200px;
+  padding: 0 24px;
 }
 
+/* --- Logo --- */
 .navbar-logo {
-  font-size: 1.5rem;
-  font-weight: bold;
   color: var(--white);
   text-decoration: none;
-  transition: var(--transition);
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  letter-spacing: 0.5px;
 }
 
 .navbar-logo:hover {
-  opacity: 0.9;
+  color: var(--accent-blue);
+  transition: var(--transition);
 }
 
+.logo-icon {
+  font-size: 1.8rem; /* Ícone um pouco maior */
+}
+
+/* --- Menu Links --- */
 .navbar-menu {
   display: flex;
   align-items: center;
-  gap: 15px;
-  flex-wrap: wrap;
+  list-style: none;
+  gap: 20px;
+  height: 100%; /* Importante para alinhamento vertical */
 }
 
 .navbar-link {
-  color: var(--white);
+  color: var(--text-gray);
   text-decoration: none;
-  padding: 8px 16px;
-  border-radius: var(--border-radius);
-  transition: var(--transition);
+  padding: 0.5rem 0;
+  font-size: 0.95rem;
   font-weight: 500;
-  font-size: 14px;
+  position: relative;
+  transition: var(--transition);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Underline Azul */
+.navbar-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 3px; /* Um pouco mais grosso */
+  bottom: -5px;
+  left: 0;
+  background-color: var(--accent-blue);
+  transition: width 0.3s ease;
+  border-radius: 2px;
 }
 
 .navbar-link:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--white);
 }
 
-.navbar-user {
-  color: var(--light);
-  font-weight: 500;
-  padding: 8px 12px;
+.navbar-link:hover::after {
+  width: 100%;
 }
 
-.btn-primary.navbar-link {
-  background-color: var(--accent);
+.navbar-link.active {
+  color: var(--white);
+  font-weight: 700;
 }
 
-.btn-primary.navbar-link:hover {
-  background-color: #2980b9;
+.navbar-link.active::after {
+  width: 100%;
 }
 
+/* --- CORREÇÃO DO ALINHAMENTO DA SAUDAÇÃO --- */
+.user-info {
+  display: flex;
+  align-items: center; /* Centraliza verticalmente texto e link */
+  gap: 15px;
+  border-right: 1px solid rgba(255, 255, 255, 0.15);
+  padding-right: 20px;
+  margin-right: 10px;
+  height: 40px; /* Altura fixa para garantir centralização com o botão */
+}
+
+.user-greeting {
+  color: var(--text-gray);
+  font-size: 0.9rem;
+  line-height: 1; /* Remove espaçamento de linha extra */
+  display: flex;
+  align-items: center;
+}
+
+.user-greeting strong {
+  color: var(--accent-blue); /* Destaca o nome em azul claro */
+  margin-left: 4px;
+}
+
+/* Link "Meu Perfil" dentro do user-info */
+.user-info .navbar-link {
+    /* Ajuste fino para garantir que o texto do link alinhe com o "Olá" */
+    display: flex;
+    align-items: center; 
+}
+
+/* --- Botões --- */
 .btn-logout {
-  background-color: var(--danger);
-  border: none;
-  cursor: pointer;
+  color: var(--white);
+  border: 1px solid rgba(231, 76, 60, 0.5); /* Borda vermelha sutil */
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
 }
 
 .btn-logout:hover {
-  background-color: #c0392b;
+  background-color: var(--danger);
+  border-color: var(--danger);
+  color: white;
+  box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
 }
 
-@media (max-width: 968px) {
-  .navbar-container {
+.btn-logout::after {
+  display: none; /* Sem underline no botão */
+}
+
+.btn-highlight {
+  background-color: var(--primary-blue);
+  color: white;
+  padding: 8px 24px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.btn-highlight:hover {
+  background-color: var(--accent-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+}
+
+/* Mobile Icon */
+.mobile-menu-icon {
+  display: none;
+  color: var(--white);
+  cursor: pointer;
+}
+
+/* --- RESPONSIVIDADE --- */
+@media screen and (max-width: 960px) {
+  .navbar-menu {
+    background: linear-gradient(to bottom, #141e30, #243b55);
     flex-direction: column;
-    gap: 15px;
-    padding: 1rem;
-  }
-  
-  .navbar-menu {
-    justify-content: center;
-    gap: 10px;
-  }
-  
-  .navbar-link {
-    padding: 6px 12px;
-    font-size: 13px;
-  }
-}
-
-@media (max-width: 640px) {
-  .navbar-logo {
-    font-size: 1.2rem;
-  }
-  
-  .navbar-menu {
     width: 100%;
+    height: 100vh; /* Tela toda */
+    position: absolute;
+    top: 80px;
+    left: -100%;
+    opacity: 0;
+    transition: all 0.5s ease;
+    padding-top: 2rem;
+    gap: 2rem;
+  }
+
+  .navbar-menu.active {
+    left: 0;
+    opacity: 1;
+  }
+
+  .user-info {
+    flex-direction: column;
+    border-right: none;
+    padding-right: 0;
+    margin-right: 0;
+    height: auto;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 1.5rem;
+    width: 80%;
   }
   
-  .navbar-link {
-    flex: 1 1 auto;
-    text-align: center;
+  .mobile-menu-icon {
+    display: block;
   }
 }
