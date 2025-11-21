@@ -12,7 +12,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { login, isCliente, isBarbeiro } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -78,6 +78,15 @@ const Login = () => {
                 required
                 placeholder="••••••••"
               />
+              {/* Link adicionado discretamente abaixo do input */}
+              <div style={{ textAlign: 'right', marginTop: '0.5rem' }}>
+                <Link 
+                  to="/esqueci-senha" 
+                  style={{ fontSize: '0.85rem', color: '#666', textDecoration: 'none' }}
+                >
+                  Esqueci minha senha
+                </Link>
+              </div>
             </div>
 
             <button 

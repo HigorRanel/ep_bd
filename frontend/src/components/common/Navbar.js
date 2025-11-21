@@ -27,7 +27,10 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              <span className="navbar-user">Olá, {user.nome}</span>
+              {/* Link para o Perfil */}
+              <Link to="/perfil" className="navbar-user navbar-link">
+                Meu Perfil
+              </Link>
               
               {isCliente() && (
                 <>
@@ -50,12 +53,23 @@ const Navbar = () => {
                 
                   <Link to="/barbeiro/reservas" className="navbar-link">Reservas</Link>
                   
+                  {/* AQUI ESTAVA O PROBLEMA: Recolocamos o grupo para o CSS funcionar */}
                   {isBarbeiroChefe() && (
-                    <>
-                      <Link to="/barbeiro/produtos/novo" className="navbar-link">Novo Produto</Link>
-                      <Link to="/barbeiro/planos/novo" className="navbar-link">Novo Plano</Link>
-                      <Link to="/barbeiro/cadastrar-barbeiro" className="navbar-link">Cadastrar Barbeiro</Link>
-                    </>
+                    <div className="navbar-admin-group">
+                      <span className="admin-label">Gestão</span>
+                      
+                      <Link to="/barbeiro/produtos/novo" className="navbar-link admin-link">
+                        + Produto
+                      </Link>
+                      
+                      <Link to="/barbeiro/planos/novo" className="navbar-link admin-link">
+                        + Plano
+                      </Link>
+                      
+                      <Link to="/barbeiro/cadastrar-barbeiro" className="navbar-link admin-link">
+                        + Barbeiro
+                      </Link>
+                    </div>
                   )}
                 </>
               )}

@@ -79,6 +79,40 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const alterarSenha = async (senhaAtual, novaSenha) => {
+    try {
+      await api.post('/auth/alterar-senha', {
+        senha_atual: senhaAtual,
+        nova_senha: novaSenha
+      });
+      return { success: true, message: 'Senha alterada com sucesso!' };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.error || 'Erro ao alterar senha' 
+      };
+    }
+  };
+
+  // Funções de Recuperação de Senha
+  const solicitarRecuperacaoEmail = async (email) => {
+    try {
+      await api.post('/auth/recuperar-senha-email', { email });
+      return { success: true, message: 'Se o e-mail existir, enviamos um link para você.' };
+    } catch (error) {
+      return { success: false, error: 'Erro ao enviar e-mail.' };
+    }
+  };
+
+  const redefinirSenhaToken = async (token, novaSenha) => {
+    try {
+      await api.post('/auth/redefinir-senha-token', { token, nova_senha: novaSenha });
+      return { success: true, message: 'Senha redefinida com sucesso!' };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.error || 'Link inválido' };
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -98,6 +132,11 @@ export const AuthProvider = ({ children }) => {
         logout,
         cadastrarCliente,
         cadastrarBarbeiro,
+        alterarSenha,
+        // --- ADICIONE ESTAS DUAS LINHAS ABAIXO ---
+        solicitarRecuperacaoEmail, 
+        redefinirSenhaToken,
+        // -----------------------------------------
         isCliente,
         isBarbeiro,
         isBarbeiroChefe,

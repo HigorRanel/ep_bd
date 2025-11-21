@@ -198,3 +198,17 @@ class Produto:
                 FROM Produto
             """)
             return cursor.fetchone()
+        
+    @staticmethod
+    def listar_com_reservas():
+        with Database.get_cursor() as cursor:
+            # Esta query traz os dados do produto E conta as reservas pendentes em uma única ida ao banco
+            cursor.execute("""
+                SELECT p.*, 
+                       COALESCE(COUNT(r.id) FILTER (WHERE r.status = 'pendente'), 0) as qtd_reservas
+                FROM Produto p
+                LEFT JOIN Reserva r ON p.id = r.id_produto
+                GROUP BY p.id
+                ORDER BY p.nome
+            """)
+            return cursor.fetchall()    

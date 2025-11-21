@@ -89,7 +89,7 @@ const CadastrarBarbeiro = () => {
     const dadosCadastro = {
       ...resto,
       cpf: cpf.replace(/\D/g, ''),
-      telefone: telefone.replace(/\D/g, ''), // apenas números
+      telefone: telefone, // <--- Envia o telefone como está no formulário (com máscara)
     };
 
     const result = await cadastrarBarbeiro(dadosCadastro);

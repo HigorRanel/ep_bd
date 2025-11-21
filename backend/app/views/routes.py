@@ -507,3 +507,22 @@ def register_routes(app):
     @token_required
     def verificar_disponibilidade_horario():
         return AgendamentoController.verificar_disponibilidade()
+    
+    @app.route('/api/auth/alterar-senha', methods=['POST'])
+    @token_required
+    def alterar_senha():
+        return AuthController.alterar_senha()
+    
+    @app.route('/api/auth/recuperar-senha-email', methods=['POST'])
+    def recuperar_senha_email():
+        return AuthController.solicitar_recuperacao_email()
+
+    @app.route('/api/auth/redefinir-senha-token', methods=['POST'])
+    def redefinir_senha_token():
+        return AuthController.redefinir_senha_token()
+    
+    @app.route('/api/produtos/dashboard', methods=['GET'])
+    @token_required
+    @barbeiro_required
+    def listar_produtos_dashboard():
+        return ProdutoController.listar_dashboard()
