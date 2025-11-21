@@ -512,3 +512,11 @@ def register_routes(app):
     @token_required
     def alterar_senha():
         return AuthController.alterar_senha()
+    
+    @app.route('/api/auth/recuperar-senha-email', methods=['POST'])
+    def recuperar_senha_email():
+        return AuthController.solicitar_recuperacao_email()
+
+    @app.route('/api/auth/redefinir-senha-token', methods=['POST'])
+    def redefinir_senha_token():
+        return AuthController.redefinir_senha_token()

@@ -15,3 +15,12 @@ class Config:
     DB_PASSWORD = os.getenv('DB_PASSWORD')
     DB_PORT = os.getenv('DB_PORT', '5432')
     JWT_EXPIRATION_HOURS = 24
+
+    # Configurações de Email
+    MAIL_SERVER = 'smtp.gmail.com'
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
+    # Coloque suas credenciais reais aqui ou use variáveis de ambiente
+    MAIL_USERNAME = 'epbd222@gmail.com'
+    MAIL_PASSWORD = 'uwiu apmk xrmj cbxj'
+    MAIL_DEFAULT_SENDER = 'epbd222@gmail.com'

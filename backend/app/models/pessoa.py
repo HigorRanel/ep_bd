@@ -60,3 +60,12 @@ class Pessoa:
                 (senha_hash, cpf)
             )
             return True    
+        
+    @staticmethod
+    def validar_para_recuperacao(cpf, email, data_nascimento):
+        with Database.get_cursor() as cursor:
+            cursor.execute("""
+                SELECT cpf FROM Pessoa 
+                WHERE cpf = %s AND email = %s AND data_nascimento = %s
+            """, (cpf, email, data_nascimento))
+            return cursor.fetchone() is not None
