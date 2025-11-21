@@ -79,7 +79,8 @@ class PlanoController:
             if 'servicos' not in dados:
                 return jsonify({'error': 'Campo servicos é obrigatório'}), 400
 
-            resultado = PlanoMensal.atualizar_servicos(id_plano, dados['servicos'])
+            # CORREÇÃO: usar método atualizar do modelo
+            resultado = PlanoMensal.atualizar(id_plano, dados['servicos'])
             return jsonify(resultado), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500

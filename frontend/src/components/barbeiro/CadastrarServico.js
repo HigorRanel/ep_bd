@@ -18,6 +18,10 @@ const CadastrarServico = () => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const navigate = useNavigate();
 
+  // Estados para edição
+  const [modalEditar, setModalEditar] = useState(false);
+  const [servicoEditando, setServicoEditando] = useState(null);
+
   useEffect(() => {
     carregarMeusServicos();
   }, []);
@@ -59,6 +63,7 @@ const CadastrarServico = () => {
         descricao: '',
       });
       carregarMeusServicos();
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
       setMessage({
         type: 'error',
@@ -76,8 +81,34 @@ const CadastrarServico = () => {
       await api.delete(`/servicos/${idServico}`);
       setMessage({ type: 'success', text: 'Serviço deletado!' });
       carregarMeusServicos();
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
-      setMessage({ type: 'error', text: 'Erro ao deletar serviço' });
+      setMessage({ type: 'error', text: error.response?.data?.error || 'Erro ao deletar serviço' });
+    }
+  };
+
+  // NOVO: Abrir modal de edição
+  const abrirModalEditar = (servico) => {
+    setModalEditar(true);
+    setServicoEditando({...servico});
+  };
+
+  // NOVO: Salvar edição
+  const salvarEdicao = async () => {
+    try {
+      await api.put(`/servicos/${servicoEditando.id_servico}`, {
+        nome: servicoEditando.nome,
+        preco: parseFloat(servicoEditando.preco),
+        duracao_estimada_min: parseInt(servicoEditando.duracao_estimada_min),
+        descricao: servicoEditando.descricao
+      });
+      setMessage({ type: 'success', text: 'Serviço atualizado com sucesso!' });
+      setModalEditar(false);
+      setServicoEditando(null);
+      carregarMeusServicos();
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      setMessage({ type: 'error', text: error.response?.data?.error || 'Erro ao atualizar serviço' });
     }
   };
 
@@ -180,14 +211,83 @@ const CadastrarServico = () => {
                   </div>
                   <div className="card-footer">
                     <button
+                      onClick={() => abrirModalEditar(servico)}
+                      className="btn btn-primary btn-sm"
+                    >
+                      ✏️ Editar
+                    </button>
+                    <button
                       onClick={() => deletarServico(servico.id_servico)}
                       className="btn btn-danger btn-sm"
                     >
-                      Deletar
+                      🗑️ Deletar
                     </button>
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Edição */}
+        {modalEditar && servicoEditando && (
+          <div className="modal-overlay" onClick={() => setModalEditar(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <h3>Editar Serviço</h3>
+              
+              <div className="form-group">
+                <label>Nome do Serviço *</label>
+                <input
+                  type="text"
+                  value={servicoEditando.nome}
+                  onChange={(e) => setServicoEditando({...servicoEditando, nome: e.target.value})}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Descrição</label>
+                <textarea
+                  value={servicoEditando.descricao || ''}
+                  onChange={(e) => setServicoEditando({...servicoEditando, descricao: e.target.value})}
+                  rows="4"
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Preço (R$) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={servicoEditando.preco}
+                    onChange={(e) => setServicoEditando({...servicoEditando, preco: e.target.value})}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Duração (minutos) *</label>
+                  <input
+                    type="number"
+                    step="5"
+                    min="5"
+                    value={servicoEditando.duracao_estimada_min}
+                    onChange={(e) => setServicoEditando({...servicoEditando, duracao_estimada_min: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button onClick={salvarEdicao} className="btn btn-primary">
+                  💾 Salvar Alterações
+                </button>
+                <button onClick={() => setModalEditar(false)} className="btn btn-secondary">
+                  ✕ Cancelar
+                </button>
+              </div>
             </div>
           </div>
         )}

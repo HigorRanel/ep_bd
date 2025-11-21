@@ -213,19 +213,17 @@ def register_routes(app):
     def listar_planos():
         return PlanoController.listar()
 
-    # NOVO: Atualizar plano
     @app.route('/api/planos/<int:id_plano>', methods=['PUT'])
     @token_required
     @barbeiro_chefe_required
     def atualizar_plano(id_plano):
-        return PlanoController.atualizar(id_plano)
+        return PlanoController.atualizar(id_plano, request.user_cpf)
 
-    # NOVO: Deletar plano
     @app.route('/api/planos/<int:id_plano>', methods=['DELETE'])
     @token_required
     @barbeiro_chefe_required
     def deletar_plano(id_plano):
-        return PlanoController.deletar(id_plano)
+        return PlanoController.deletar(id_plano, request.user_cpf)
 
     @app.route('/api/planos/assinar', methods=['POST'])
     @token_required

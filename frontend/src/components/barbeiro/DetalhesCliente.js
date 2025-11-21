@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import Navbar from '../common/Navbar';
 import api from '../../services/api';
 import '../../styles/dashboard.css';
 
 const DetalhesCliente = () => {
   const { cpf } = useParams();
+  const { user } = useAuth(); 
   const navigate = useNavigate();
   const [cliente, setCliente] = useState(null);
   const [historico, setHistorico] = useState([]);
@@ -58,8 +60,9 @@ const DetalhesCliente = () => {
   const carregarHorariosDisponiveis = async () => {
     try {
       setLoadingHorarios(true);
-      const meRes = await api.get('/clientes/me');
-      const cpf_barbeiro = meRes.data.cpf;
+      
+      // CORREÇÃO: usar user.cpf do contexto diretamente
+      const cpf_barbeiro = user.cpf;
       
       const servico = servicos.find(s => s.id_servico === parseInt(formEncaixe.id_servico));
       
@@ -87,8 +90,8 @@ const DetalhesCliente = () => {
     }
 
     try {
-      const meRes = await api.get('/clientes/me');
-      const cpf_barbeiro = meRes.data.cpf;
+      // CORREÇÃO: usar user.cpf diretamente
+      const cpf_barbeiro = user.cpf;
       
       await api.post('/agendamentos', {
         data_hora_agendamento: `${formEncaixe.data} ${formEncaixe.horario}:00`,

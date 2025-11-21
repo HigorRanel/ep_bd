@@ -30,6 +30,10 @@ const ListarProdutos = () => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
 
+  // NOVO: Modal de edição
+  const [modalEditar, setModalEditar] = useState(null);
+  const [produtoEditando, setProdutoEditando] = useState(null);
+
   // Carregar categorias na montagem do componente
   useEffect(() => {
     carregarCategorias();
@@ -158,6 +162,48 @@ const ListarProdutos = () => {
         text: error.response?.data?.error || 'Erro ao atualizar estoque' 
       });
       setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+    }
+  };
+
+  // NOVO: Abrir modal de edição
+  const abrirModalEditar = (produto) => {
+    setModalEditar(true);
+    setProdutoEditando({...produto});
+  };
+
+  // NOVO: Salvar edição
+  const salvarEdicao = async () => {
+    try {
+      await api.put(`/produtos/${produtoEditando.id_produto}`, produtoEditando);
+      setMessage({ type: 'success', text: 'Produto atualizado com sucesso!' });
+      setModalEditar(false);
+      setProdutoEditando(null);
+      carregarProdutos();
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.error || 'Erro ao atualizar produto'
+      });
+    }
+  };
+
+  // NOVO: Deletar produto
+  const deletarProduto = async (idProduto, nomeProduto) => {
+    if (!window.confirm(`Deseja realmente deletar o produto "${nomeProduto}"? Esta ação não pode ser desfeita.`)) {
+      return;
+    }
+
+    try {
+      await api.delete(`/produtos/${idProduto}`);
+      setMessage({ type: 'success', text: 'Produto deletado com sucesso!' });
+      carregarProdutos();
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.error || 'Erro ao deletar produto'
+      });
     }
   };
 
@@ -387,6 +433,18 @@ const ListarProdutos = () => {
                     >
                       📦 Ajustar Estoque
                     </button>
+                    <button
+                      onClick={() => abrirModalEditar(produto)}
+                      className="btn btn-secondary btn-sm"
+                    >
+                      ✏️ Editar
+                    </button>
+                    <button
+                      onClick={() => deletarProduto(produto.id_produto, produto.nome_produto)}
+                      className="btn btn-danger btn-sm"
+                    >
+                      🗑️ Deletar
+                    </button>
                   </div>
                 </div>
               ))}
@@ -474,6 +532,98 @@ const ListarProdutos = () => {
               </div>
             </div>
           </>
+        )}
+
+        {/* NOVO: Modal de Edição */}
+        {modalEditar && produtoEditando && (
+          <div className="modal-overlay" onClick={() => setModalEditar(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <h3>Editar Produto</h3>
+              
+              <div className="form-group">
+                <label>Nome do Produto</label>
+                <input
+                  type="text"
+                  value={produtoEditando.nome_produto}
+                  onChange={(e) => setProdutoEditando({...produtoEditando, nome_produto: e.target.value})}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Descrição</label>
+                <textarea
+                  value={produtoEditando.descricao || ''}
+                  onChange={(e) => setProdutoEditando({...produtoEditando, descricao: e.target.value})}
+                  rows="3"
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Preço Compra</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={produtoEditando.preco_compra}
+                    onChange={(e) => setProdutoEditando({...produtoEditando, preco_compra: e.target.value})}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Preço Venda</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={produtoEditando.preco_venda}
+                    onChange={(e) => setProdutoEditando({...produtoEditando, preco_venda: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Categoria</label>
+                  <select
+                    value={produtoEditando.categoria}
+                    onChange={(e) => setProdutoEditando({...produtoEditando, categoria: e.target.value})}
+                  >
+                    {categorias.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Estoque Mínimo</label>
+                  <input
+                    type="number"
+                    value={produtoEditando.minimo_estoque}
+                    onChange={(e) => setProdutoEditando({...produtoEditando, minimo_estoque: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Status</label>
+                <select
+                  value={produtoEditando.status}
+                  onChange={(e) => setProdutoEditando({...produtoEditando, status: e.target.value})}
+                >
+                  <option value="disponivel">Disponível</option>
+                  <option value="indisponivel">Indisponível</option>
+                </select>
+              </div>
+
+              <div className="modal-footer">
+                <button onClick={salvarEdicao} className="btn btn-primary">
+                  Salvar Alterações
+                </button>
+                <button onClick={() => setModalEditar(false)} className="btn btn-secondary">
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

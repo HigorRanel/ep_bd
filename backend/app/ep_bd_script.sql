@@ -1,7 +1,7 @@
 ALTER DATABASE barbearia SET TIMEZONE TO 'America/Sao_Paulo';
 
 CREATE DOMAIN dom_status_agendamento AS VARCHAR(20)
-    CHECK (VALUE IN ('pendente', 'confirmado', 'cancelado', 'concluido'));
+    CHECK (VALUE IN ('pendente', 'confirmado', 'cancelado', 'concluido', 'falta'));
 
 CREATE TABLE Pessoa (
     cpf VARCHAR(11) PRIMARY KEY,
