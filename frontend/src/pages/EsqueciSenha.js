@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import '../styles/perfil.css'; // Reutilizando estilo
+import Navbar from '../components/common/Navbar'; // Adicionado
+import '../styles/forms.css'; // Usando o estilo padrão
 
 const EsqueciSenha = () => {
   const { solicitarRecuperacaoEmail } = useAuth();
@@ -11,52 +12,73 @@ const EsqueciSenha = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // 1. Limpa qualquer mensagem anterior (Resolve o "acúmulo")
+    setStatus({ type: '', message: '' });
+    
     setLoading(true);
     const res = await solicitarRecuperacaoEmail(email);
     setLoading(false);
     
     if (res.success) {
       setStatus({ type: 'success', message: res.message });
-      setEmail('');
+      setEmail(''); // Limpa o campo após sucesso
     } else {
       setStatus({ type: 'error', message: res.error });
     }
   };
 
+  // Limpa o erro quando o usuário começa a digitar novamente
+  const handleChange = (e) => {
+    setEmail(e.target.value);
+    if (status.message) setStatus({ type: '', message: '' });
+  };
+
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f7fa' }}>
-      <div className="perfil-card" style={{ maxWidth: '400px', width: '100%' }}>
-        <div className="perfil-header" style={{ justifyContent: 'center' }}>
-          <h2>✉️ Recuperar Senha</h2>
-        </div>
-        <div className="perfil-content" style={{ display: 'block' }}>
-          <p style={{ marginBottom: '1rem', color: '#666' }}>
-            Digite seu e-mail e enviaremos um link para você redefinir sua senha.
+    <div className="page-container">
+      <Navbar /> {/* Adicionado a Navbar */}
+      
+      <div className="form-container">
+        <div className="form-card">
+          <h2>Recuperar Senha</h2>
+          <p className="form-subtitle">
+            Digite seu e-mail para receber o link de redefinição
           </p>
 
+          {/* Renderização condicional da mensagem */}
           {status.message && (
-            <div className={`custom-alert ${status.type === 'error' ? 'alert-error' : 'alert-success'}`}>
+            <div className={`alert ${status.type === 'error' ? 'alert-error' : 'alert-success'}`}>
               {status.message}
             </div>
           )}
 
           <form onSubmit={handleSubmit}>
-            <div className="form-group" style={{ marginBottom: '1rem' }}>
+            <div className="form-group">
+              <label htmlFor="email">Email Cadastrado</label>
               <input
                 type="email"
-                placeholder="Seu e-mail cadastrado"
+                id="email"
                 className="modern-input"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleChange}
                 required
+                placeholder="seu@email.com"
               />
             </div>
-            <button type="submit" className="btn-update" disabled={loading}>
+            
+            <button 
+              type="submit" 
+              className="btn btn-primary btn-block" 
+              disabled={loading}
+            >
               {loading ? 'Enviando...' : 'Enviar Link'}
             </button>
           </form>
-          <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-            <Link to="/login" style={{ color: '#3498db' }}>Voltar ao Login</Link>
+          
+          <div className="form-footer">
+            <Link to="/login" className="btn-link">
+              ← Voltar para o Login
+            </Link>
           </div>
         </div>
       </div>

@@ -13,7 +13,7 @@ const DashboardBarbeiro = () => {
     mediaAvaliacoes: 0,
     totalAvaliacoes: 0,
     proximosAgendamentos: 0,
-    reservasPendentes: 0, // NOVO
+    reservasPendentes: 0,
   });
   const [proximosAgendamentos, setProximosAgendamentos] = useState([]);
   const [produtosBaixoEstoque, setProdutosBaixoEstoque] = useState([]);
@@ -25,10 +25,11 @@ const DashboardBarbeiro = () => {
 
   const carregarDados = async () => {
     try {
+      setLoading(true);
       const hoje = new Date();
       const hojeStr = hoje.toISOString().split('T')[0];
       
-      // Calcular início e fim da semana
+      // Calcular datas da semana
       const diaSemana = hoje.getDay();
       const inicioSemana = new Date(hoje);
       inicioSemana.setDate(hoje.getDate() - diaSemana);
@@ -38,27 +39,40 @@ const DashboardBarbeiro = () => {
       const inicioSemanaStr = inicioSemana.toISOString().split('T')[0];
       const fimSemanaStr = fimSemana.toISOString().split('T')[0];
 
-      // Buscar agenda
-      const agendaRes = await api.get(`/agendamentos/barbeiro/${user.cpf}`);
+      // --- OTIMIZAÇÃO AQUI: Promise.all para fazer requisições em PARALELO ---
+      // Ao invés de esperar uma acabar para começar a outra, disparamos todas juntas.
+      const promises = [
+        api.get(`/agendamentos/barbeiro/${user.cpf}`), // 0: Agenda
+        api.get('/avaliacoes/me/media'),               // 1: Avaliações
+        api.get('/reservas/estatisticas')              // 2: Estatísticas (Substitui o loop lento)
+      ];
+
+      // Se for chefe, adiciona a requisição de estoque
+      if (isBarbeiroChefe()) {
+        promises.push(api.get('/produtos/estoque-baixo')); // 3: Estoque (opcional)
+      }
+
+      const results = await Promise.all(promises);
+
+      const agendaRes = results[0];
+      const avaliacoesRes = results[1];
+      const estatisticasRes = results[2];
+      const estoqueBaixoRes = isBarbeiroChefe() ? results[3] : null;
+
+      // --- Processamento dos Agendamentos ---
       const todosAgendamentos = agendaRes.data;
       
-      // Filtrar agendamentos de hoje
       const agendamentosHoje = todosAgendamentos.filter(a => 
         a.data_hora_agendamento.startsWith(hojeStr) && 
         (a.status === 'pendente' || a.status === 'confirmado')
       );
 
-      // Filtrar agendamentos da semana
       const agendamentosSemana = todosAgendamentos.filter(a => {
         const dataAg = a.data_hora_agendamento.split('T')[0];
         return dataAg >= inicioSemanaStr && dataAg <= fimSemanaStr &&
                (a.status === 'pendente' || a.status === 'confirmado');
       });
 
-      // Buscar média de avaliações
-      const avaliacoesRes = await api.get('/avaliacoes/me/media');
-      
-      // Próximos agendamentos (futuros, ordenados)
       const agora = new Date();
       const proximos = todosAgendamentos
         .filter(a => {
@@ -70,40 +84,21 @@ const DashboardBarbeiro = () => {
       
       setProximosAgendamentos(proximos);
 
-      // NOVO - Buscar reservas pendentes
-      let reservasPendentes = 0;
-      try {
-        const produtosRes = await api.get('/produtos');
-        for (const produto of produtosRes.data) {
-          try {
-            const reservasRes = await api.get(`/reservas/produto/${produto.id_produto}`);
-            reservasPendentes += reservasRes.data.filter(r => r.status === 'reservado').length;
-          } catch (error) {
-            // Produto sem reservas
-          }
-        }
-      } catch (error) {
-        console.log('Erro ao buscar reservas:', error);
+      // --- Processamento do Estoque (se houver) ---
+      if (estoqueBaixoRes) {
+        setProdutosBaixoEstoque(estoqueBaixoRes.data.slice(0, 3));
       }
 
+      // --- Atualização do Estado ---
       setStats({
         agendamentosHoje: agendamentosHoje.length,
         agendamentosSemana: agendamentosSemana.length,
         mediaAvaliacoes: parseFloat(avaliacoesRes.data.media_nota || 0).toFixed(1),
         totalAvaliacoes: avaliacoesRes.data.total_avaliacoes || 0,
         proximosAgendamentos: proximos.length,
-        reservasPendentes, // NOVO
+        // AQUI ESTÁ A MÁGICA: Pegamos direto do endpoint de estatísticas
+        reservasPendentes: estatisticasRes.data.reservados || 0, 
       });
-
-      // Se for barbeiro chefe, buscar produtos com estoque baixo
-      if (isBarbeiroChefe()) {
-        try {
-          const estoqueBaixoRes = await api.get('/produtos/estoque-baixo');
-          setProdutosBaixoEstoque(estoqueBaixoRes.data.slice(0, 3));
-        } catch (error) {
-          console.log('Erro ao buscar estoque baixo:', error);
-        }
-      }
       
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
@@ -112,6 +107,7 @@ const DashboardBarbeiro = () => {
     }
   };
 
+  // ... (Funções auxiliares formatarDataHora e calcularTempoRestante mantidas iguais) ...
   const formatarDataHora = (dataString) => {
     const data = new Date(dataString);
     return {
@@ -142,7 +138,10 @@ const DashboardBarbeiro = () => {
     return (
       <div className="page-container">
         <Navbar />
-        <div className="loading-container">Carregando dashboard...</div>
+        <div className="loading-container">
+            <div className="spinner"></div> {/* Adicione classe spinner no CSS se não tiver */}
+            <p>Carregando dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -162,7 +161,6 @@ const DashboardBarbeiro = () => {
         </div>
 
         {/* Alertas */}
-        {/* NOVO - Alerta de Reservas Pendentes */}
         {stats.reservasPendentes > 0 && (
           <div className="alert alert-info">
             <strong>🔖 Atenção:</strong> Você tem {stats.reservasPendentes} reserva(s) de produto(s) pendente(s).
@@ -216,7 +214,6 @@ const DashboardBarbeiro = () => {
             </div>
           </div>
 
-          {/* NOVO - Card de Reservas */}
           <div className="stat-card" onClick={() => window.location.href = '/barbeiro/reservas'} style={{ cursor: 'pointer' }}>
             <div className="stat-icon">🔖</div>
             <div className="stat-content">
@@ -248,7 +245,6 @@ const DashboardBarbeiro = () => {
               <p>Ver feedback dos clientes</p>
             </Link>
 
-            {/* NOVO - Card de Reservas */}
             <Link to="/barbeiro/reservas" className="action-card">
               <span className="action-icon">🔖</span>
               <h3>Consultar Reservas</h3>
@@ -317,9 +313,9 @@ const DashboardBarbeiro = () => {
                         marginTop: '10px', 
                         padding: '8px', 
                         backgroundColor: '#e3f2fd', 
-                        borderRadius: '4px',
-                        fontSize: '13px',
-                        fontWeight: 'bold',
+                        borderRadius: '4px', 
+                        fontSize: '13px', 
+                        fontWeight: 'bold', 
                         color: '#1976d2'
                       }}>
                         ⏰ {tempoRestante}
@@ -372,7 +368,7 @@ const DashboardBarbeiro = () => {
           </div>
         )}
 
-        {/* Dicas e Informações */}
+        {/* Dicas */}
         <div className="card" style={{ marginTop: '40px', backgroundColor: '#f8f9fa' }}>
           <h3>💡 Dicas do Sistema</h3>
           <ul style={{ paddingLeft: '20px', marginTop: '15px', marginBottom: 0 }}>

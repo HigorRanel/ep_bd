@@ -8,7 +8,12 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import CadastroCliente from './pages/CadastroCliente';
 import NotFound from './pages/NotFound';
-import Perfil from './pages/Perfil'; // <--- MUDANÇA: Import do Perfil
+import Perfil from './pages/Perfil';
+
+// --- NOVOS IMPORTS (Adicione isto) ---
+import EsqueciSenha from './pages/EsqueciSenha';
+import RedefinirSenha from './pages/RedefinirSenha';
+// -------------------------------------
 
 // Cliente Components
 import DashboardCliente from './components/cliente/DashBoardCliente';
@@ -36,12 +41,17 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          {/* Rotas públicas */}
+          {/* --- ROTAS PÚBLICAS --- */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/cadastro" element={<CadastroCliente />} />
+          
+          {/* --- NOVAS ROTAS (Adicione isto) --- */}
+          <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+          <Route path="/redefinir-senha/:token" element={<RedefinirSenha />} />
+          {/* ----------------------------------- */}
 
-          {/* MUDANÇA: Rota de Perfil (Acessível para qualquer usuário logado) */}
+          {/* --- ROTA DE PERFIL (Para usuários logados) --- */}
           <Route
             path="/perfil"
             element={
@@ -51,7 +61,7 @@ function App() {
             }
           />
 
-          {/* Rotas Cliente */}
+          {/* --- ROTAS CLIENTE --- */}
           <Route
             path="/cliente/dashboard"
             element={
@@ -93,7 +103,7 @@ function App() {
             }
           />
 
-          {/* Rotas Barbeiro */}
+          {/* --- ROTAS BARBEIRO --- */}
           <Route
             path="/barbeiro/dashboard"
             element={
@@ -126,8 +136,6 @@ function App() {
               </PrivateRoute>
             }
           />
-          
-          {/* Rota de Consultar Reservas */}
           <Route
             path="/barbeiro/reservas"
             element={
@@ -136,8 +144,16 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route
+            path="/barbeiro/produtos"
+            element={
+              <PrivateRoute requiredType="barbeiro">
+                <ListarProdutos />
+              </PrivateRoute>
+            }
+          />
 
-          {/* Rotas Barbeiro Chefe */}
+          {/* --- ROTAS BARBEIRO CHEFE --- */}
           <Route
             path="/barbeiro/produtos/novo"
             element={
@@ -162,16 +178,8 @@ function App() {
               </PrivateRoute>
             }
           />
-          <Route
-            path="/barbeiro/produtos"
-            element={
-              <PrivateRoute requiredType="barbeiro">
-                <ListarProdutos />
-              </PrivateRoute>
-            }
-          />
           
-          {/* 404 */}
+          {/* 404 - Página não encontrada */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>

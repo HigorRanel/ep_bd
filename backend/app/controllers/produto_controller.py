@@ -171,3 +171,12 @@ class ProdutoController:
             return jsonify(stats), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+        
+    @staticmethod
+    def listar_dashboard():
+        try:
+            produtos = Produto.listar_com_reservas()
+            # O 'qtd_reservas' já virá dentro de cada objeto produto
+            return jsonify(produtos), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500    

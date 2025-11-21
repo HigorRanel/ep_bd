@@ -520,3 +520,9 @@ def register_routes(app):
     @app.route('/api/auth/redefinir-senha-token', methods=['POST'])
     def redefinir_senha_token():
         return AuthController.redefinir_senha_token()
+    
+    @app.route('/api/produtos/dashboard', methods=['GET'])
+    @token_required
+    @barbeiro_required
+    def listar_produtos_dashboard():
+        return ProdutoController.listar_dashboard()
