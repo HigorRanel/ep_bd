@@ -21,6 +21,6 @@ class Config:
     MAIL_PORT = 587
     MAIL_USE_TLS = True
     # Coloque suas credenciais reais aqui ou use variáveis de ambiente
-    MAIL_USERNAME = 'epbd222@gmail.com'
-    MAIL_PASSWORD = 'uwiu apmk xrmj cbxj'
-    MAIL_DEFAULT_SENDER = 'epbd222@gmail.com'
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
