@@ -171,7 +171,7 @@ class ProdutoController:
             return jsonify(stats), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-        
+
     @staticmethod
     def listar_dashboard():
         try:
@@ -179,4 +179,46 @@ class ProdutoController:
             # O 'qtd_reservas' já virá dentro de cada objeto produto
             return jsonify(produtos), 200
         except Exception as e:
-            return jsonify({'error': str(e)}), 500    
+            return jsonify({'error': str(e)}), 500
+
+    # NOVO: Atualizar produto completo
+    @staticmethod
+    def atualizar(id_produto):
+        try:
+            dados = request.get_json()
+
+            # Validar campos
+            campos_atualizaveis = ['nome_produto', 'descricao', 'preco_compra', 'preco_venda',
+                                   'categoria', 'quantidade_estoque', 'minimo_estoque', 'status']
+
+            dados_filtrados = {k: v for k, v in dados.items() if k in campos_atualizaveis}
+
+            if not dados_filtrados:
+                return jsonify({'error': 'Nenhum campo válido para atualizar'}), 400
+
+            resultado = Produto.atualizar(id_produto, dados_filtrados)
+
+            if not resultado:
+                return jsonify({'error': 'Produto não encontrado'}), 404
+
+            return jsonify(resultado), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    # NOVO: Deletar produto
+    @staticmethod
+    def deletar(id_produto):
+        try:
+            # Verificar se produto tem reservas ativas
+            reservas = Produto.listar_reservas_por_produto(id_produto)
+            reservas_ativas = [r for r in reservas if r['status'] in ['reservado', 'pendente']]
+
+            if reservas_ativas:
+                return jsonify({
+                    'error': 'Não é possível deletar produto com reservas ativas'
+                }), 400
+
+            Produto.deletar(id_produto)
+            return jsonify({'message': 'Produto deletado com sucesso'}), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500

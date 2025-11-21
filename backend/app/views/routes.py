@@ -1,4 +1,4 @@
-from flask import jsonify
+from flask import jsonify, request
 from backend.app.controllers.auth_controller import AuthController
 from backend.app.controllers.cliente_controller import ClienteController
 from backend.app.controllers.barbeiro_controller import BarbeiroController
@@ -8,11 +8,10 @@ from backend.app.controllers.produto_controller import ProdutoController
 from backend.app.controllers.plano_controller import PlanoController
 from backend.app.utils.decorators import token_required, barbeiro_required, barbeiro_chefe_required
 from backend.app.controllers.reserva_controller import ReservaController
-from flask import request
+from backend.app.controllers.cliente_stats_controller import ClienteStatsController
 
 
 def register_routes(app):
-
     @app.route('/api/auth/registrar/cliente', methods=['POST'])
     def registrar_cliente():
         return AuthController.registrar_cliente()
@@ -33,11 +32,26 @@ def register_routes(app):
     def cadastrar_e_logar_barbeiro():
         return AuthController.registrar_e_logar_barbeiro()
 
+    # === CLIENTES ===
     @app.route('/api/clientes', methods=['GET'])
     @token_required
     @barbeiro_required
     def listar_clientes():
         return ClienteController.listar()
+
+    # NOVO: Clientes com estatísticas
+    @app.route('/api/clientes/estatisticas', methods=['GET'])
+    @token_required
+    @barbeiro_required
+    def listar_clientes_stats():
+        return ClienteStatsController.listar_com_estatisticas()
+
+    # NOVO: Detalhes do cliente
+    @app.route('/api/clientes/<cpf>/detalhes', methods=['GET'])
+    @token_required
+    @barbeiro_required
+    def detalhes_cliente(cpf):
+        return ClienteStatsController.detalhes_cliente(cpf)
 
     @app.route('/api/clientes/<cpf>', methods=['GET'])
     @token_required
@@ -58,7 +72,6 @@ def register_routes(app):
     @token_required
     def meus_agendamentos():
         return ClienteController.meus_agendamentos(request.user_cpf)
-
 
     @app.route('/api/barbeiros', methods=['GET'])
     @token_required
@@ -106,6 +119,7 @@ def register_routes(app):
     def avaliar_agendamento(id_agendamento):
         return AgendamentoController.avaliar(id_agendamento)
 
+    # === SERVIÇOS ===
     @app.route('/api/servicos', methods=['POST'])
     @token_required
     @barbeiro_required
@@ -134,6 +148,7 @@ def register_routes(app):
     def deletar_servico(id_servico):
         return ServicoController.deletar(id_servico)
 
+    # === PRODUTOS ===
     @app.route('/api/produtos', methods=['POST'])
     @token_required
     @barbeiro_chefe_required
@@ -149,6 +164,20 @@ def register_routes(app):
     @token_required
     def buscar_produto(id_produto):
         return ProdutoController.buscar(id_produto)
+
+    # NOVO: Atualizar produto completo
+    @app.route('/api/produtos/<int:id_produto>', methods=['PUT'])
+    @token_required
+    @barbeiro_chefe_required
+    def atualizar_produto(id_produto):
+        return ProdutoController.atualizar(id_produto)
+
+    # NOVO: Deletar produto
+    @app.route('/api/produtos/<int:id_produto>', methods=['DELETE'])
+    @token_required
+    @barbeiro_chefe_required
+    def deletar_produto(id_produto):
+        return ProdutoController.deletar(id_produto)
 
     @app.route('/api/produtos/<int:id_produto>/estoque', methods=['PUT'])
     @token_required
@@ -172,6 +201,7 @@ def register_routes(app):
     def listar_minhas_reservas():
         return ProdutoController.minhas_reservas(request.user_cpf)
 
+    # === PLANOS ===
     @app.route('/api/planos', methods=['POST'])
     @token_required
     @barbeiro_chefe_required
@@ -183,6 +213,20 @@ def register_routes(app):
     def listar_planos():
         return PlanoController.listar()
 
+    # NOVO: Atualizar plano
+    @app.route('/api/planos/<int:id_plano>', methods=['PUT'])
+    @token_required
+    @barbeiro_chefe_required
+    def atualizar_plano(id_plano):
+        return PlanoController.atualizar(id_plano)
+
+    # NOVO: Deletar plano
+    @app.route('/api/planos/<int:id_plano>', methods=['DELETE'])
+    @token_required
+    @barbeiro_chefe_required
+    def deletar_plano(id_plano):
+        return PlanoController.deletar(id_plano)
+
     @app.route('/api/planos/assinar', methods=['POST'])
     @token_required
     def assinar_plano():
@@ -192,7 +236,6 @@ def register_routes(app):
     @token_required
     def listar_minhas_assinaturas():
         return PlanoController.minhas_assinaturas(request.user_cpf)
-
 
     @app.route('/api/health', methods=['GET'])
     def health_check():
@@ -225,7 +268,6 @@ def register_routes(app):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
-
     @app.route('/api/agendamentos/<int:id_agendamento>/servico', methods=['GET'])
     @token_required
     def buscar_servico_agendamento(id_agendamento):
@@ -257,7 +299,6 @@ def register_routes(app):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
-
     @app.route('/api/avaliacoes/agendamento/<int:id_agendamento>', methods=['GET'])
     @token_required
     def buscar_avaliacao_agendamento(id_agendamento):
@@ -277,7 +318,18 @@ def register_routes(app):
     def listar_avaliacoes_barbeiro(cpf_barbeiro):
         try:
             from backend.app.models.agendamento import Agendamento
-            avaliacoes = Agendamento.listar_avaliacoes_barbeiro(cpf_barbeiro)
+
+            # Paginação
+            page = int(request.args.get('page', 1))
+            per_page = int(request.args.get('per_page', 10))
+
+            # Filtro de data
+            data_inicio = request.args.get('data_inicio')
+            data_fim = request.args.get('data_fim')
+
+            avaliacoes = Agendamento.listar_avaliacoes_barbeiro_paginado(
+                cpf_barbeiro, page, per_page, data_inicio, data_fim
+            )
             return jsonify(avaliacoes), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
@@ -298,7 +350,18 @@ def register_routes(app):
     def minhas_avaliacoes():
         try:
             from backend.app.models.agendamento import Agendamento
-            avaliacoes = Agendamento.listar_avaliacoes_barbeiro(request.user_cpf)
+
+            # Paginação
+            page = int(request.args.get('page', 1))
+            per_page = int(request.args.get('per_page', 10))
+
+            # Filtro de data
+            data_inicio = request.args.get('data_inicio')
+            data_fim = request.args.get('data_fim')
+
+            avaliacoes = Agendamento.listar_avaliacoes_barbeiro_paginado(
+                request.user_cpf, page, per_page, data_inicio, data_fim
+            )
             return jsonify(avaliacoes), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
@@ -441,37 +504,37 @@ def register_routes(app):
     @app.route('/api/reservas/todas', methods=['GET'])
     @token_required
     @barbeiro_required
-    def listar_todas_reservas_otimizado():  # Nome único
+    def listar_todas_reservas_otimizado():
         return ReservaController.listar_todas()
 
     @app.route('/api/reservas/status/<status>', methods=['GET'])
     @token_required
     @barbeiro_required
-    def listar_reservas_por_status_v2(status):  # Nome único
+    def listar_reservas_por_status_v2(status):
         return ReservaController.listar_por_status(status)
 
     @app.route('/api/reservas/periodo', methods=['GET'])
     @token_required
     @barbeiro_required
-    def listar_reservas_por_periodo_v2():  # Nome único
+    def listar_reservas_por_periodo_v2():
         return ReservaController.listar_por_periodo()
 
     @app.route('/api/reservas/estatisticas', methods=['GET'])
     @token_required
     @barbeiro_required
-    def estatisticas_reservas_v2():  # Nome único
+    def estatisticas_reservas_v2():
         return ReservaController.estatisticas()
 
     @app.route('/api/reservas/atualizar-status', methods=['PUT'])
     @token_required
     @barbeiro_required
-    def atualizar_status_reserva_v2():  # Nome único - MUDOU AQUI
+    def atualizar_status_reserva_v2():
         return ReservaController.atualizar_status()
 
     @app.route('/api/reservas/cancelar', methods=['DELETE'])
     @token_required
     @barbeiro_required
-    def cancelar_reserva_v2():  # Nome único
+    def cancelar_reserva_v2():
         return ReservaController.cancelar()
 
     @app.route('/api/produtos/paginado', methods=['GET'])
@@ -479,7 +542,6 @@ def register_routes(app):
     @barbeiro_required
     def listar_produtos_paginado():
         return ProdutoController.listar_paginado()
-
 
     @app.route('/api/produtos/buscar', methods=['GET'])
     @token_required
@@ -507,12 +569,12 @@ def register_routes(app):
     @token_required
     def verificar_disponibilidade_horario():
         return AgendamentoController.verificar_disponibilidade()
-    
+
     @app.route('/api/auth/alterar-senha', methods=['POST'])
     @token_required
     def alterar_senha():
         return AuthController.alterar_senha()
-    
+
     @app.route('/api/auth/recuperar-senha-email', methods=['POST'])
     def recuperar_senha_email():
         return AuthController.solicitar_recuperacao_email()
@@ -520,7 +582,7 @@ def register_routes(app):
     @app.route('/api/auth/redefinir-senha-token', methods=['POST'])
     def redefinir_senha_token():
         return AuthController.redefinir_senha_token()
-    
+
     @app.route('/api/produtos/dashboard', methods=['GET'])
     @token_required
     @barbeiro_required

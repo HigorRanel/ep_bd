@@ -323,3 +323,65 @@ class Agendamento:
                 ORDER BY a.data_hora_agendamento DESC
             """, (cpf_barbeiro,))
             return cursor.fetchall()
+
+    @staticmethod
+    def listar_avaliacoes_paginado(cpf_barbeiro, pagina=1, por_pagina=10, data_inicio=None, data_fim=None,
+                                   nota_min=None):
+        """Lista avaliações com paginação e filtros"""
+        with Database.get_cursor() as cursor:
+            # Query base
+            query_base = """
+                FROM Avaliacao av
+                JOIN Agendamento a ON av.id_agen = a.id_agendamento
+                JOIN Cliente c ON a.client_id = c.cpf
+                JOIN Pessoa pc ON c.cpf = pc.cpf
+                JOIN Contem ct ON a.id_agendamento = ct.id_agen
+                JOIN Servico s ON ct.id_serv = s.id_servico
+                WHERE a.barbeiro_id = %s
+            """
+
+            params = [cpf_barbeiro]
+
+            # Filtros
+            if data_inicio:
+                query_base += " AND DATE(a.data_hora_agendamento) >= %s"
+                params.append(data_inicio)
+
+            if data_fim:
+                query_base += " AND DATE(a.data_hora_agendamento) <= %s"
+                params.append(data_fim)
+
+            if nota_min:
+                query_base += " AND av.nota >= %s"
+                params.append(nota_min)
+
+            # Contar total
+            cursor.execute(f"SELECT COUNT(*) as total {query_base}", params)
+            total_avaliacoes = cursor.fetchone()['total']
+
+            # Buscar avaliacoes paginadas
+            offset = (pagina - 1) * por_pagina
+            query_avaliacoes = f"""
+                SELECT av.*, a.data_hora_agendamento, 
+                       pc.nome_completo as cliente_nome,
+                       s.nome as servico_nome
+                {query_base}
+                ORDER BY a.data_hora_agendamento DESC
+                LIMIT %s OFFSET %s
+            """
+
+            params.extend([por_pagina, offset])
+            cursor.execute(query_avaliacoes, params)
+            avaliacoes = cursor.fetchall()
+
+            total_paginas = (total_avaliacoes + por_pagina - 1) // por_pagina
+
+            return {
+                'avaliacoes': avaliacoes,
+                'total_avaliacoes': total_avaliacoes,
+                'total_paginas': total_paginas,
+                'pagina_atual': pagina,
+                'por_pagina': por_pagina,
+                'tem_proxima': pagina < total_paginas,
+                'tem_anterior': pagina > 1
+            }

@@ -46,20 +46,22 @@ const Navbar = () => {
                 <>
                   <Link to="/barbeiro/dashboard" className="navbar-link">Dashboard</Link>
                   <Link to="/barbeiro/agenda" className="navbar-link">Agenda</Link>
-                  <Link to="/barbeiro/servicos/novo" className="navbar-link">Novo Serviço</Link>
+                  <Link to="/barbeiro/clientes" className="navbar-link">Clientes</Link>
+                  <Link to="/barbeiro/servicos/novo" className="navbar-link">Serviços</Link>
                   <Link to="/barbeiro/avaliacoes" className="navbar-link">Avaliações</Link>
-                
                   <Link to="/barbeiro/produtos" className="navbar-link">Produtos</Link>
-                
                   <Link to="/barbeiro/reservas" className="navbar-link">Reservas</Link>
                   
-                  {/* AQUI ESTAVA O PROBLEMA: Recolocamos o grupo para o CSS funcionar */}
                   {isBarbeiroChefe() && (
                     <div className="navbar-admin-group">
                       <span className="admin-label">Gestão</span>
                       
                       <Link to="/barbeiro/produtos/novo" className="navbar-link admin-link">
                         + Produto
+                      </Link>
+                      
+                      <Link to="/barbeiro/planos/gerenciar" className="navbar-link admin-link">
+                       + Planos
                       </Link>
                       
                       <Link to="/barbeiro/planos/novo" className="navbar-link admin-link">

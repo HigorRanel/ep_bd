@@ -41,8 +41,48 @@ class AgendamentoController:
             return jsonify({'error': str(e)}), 500
 
     @staticmethod
-    def obter_horarios_disponiveis():
+    def criar_encaixe(cpf_usuario):
+        """Cria um agendamento como encaixe (barbeiro agenda para cliente)"""
+        try:
+            dados = request.get_json()
 
+            campos_obrigatorios = ['data_hora_agendamento', 'cpf_cliente', 'id_servico']
+            for campo in campos_obrigatorios:
+                if campo not in dados:
+                    return jsonify({'error': f'Campo {campo} é obrigatório'}), 400
+
+            # Validar se a data/hora não é no passado
+            try:
+                data_hora_agendamento = datetime.strptime(dados['data_hora_agendamento'], '%Y-%m-%d %H:%M:%S')
+                agora = datetime.now()
+
+                if data_hora_agendamento <= agora:
+                    return jsonify({'error': 'Não é possível agendar para uma data/hora no passado'}), 400
+            except ValueError:
+                return jsonify({'error': 'Formato de data/hora inválido. Use: YYYY-MM-DD HH:MM:SS'}), 400
+
+            # Barbeiro está fazendo o encaixe para si mesmo
+            cpf_barbeiro = cpf_usuario
+            cpf_origem = cpf_usuario
+
+            resultado = Agendamento.criar(
+                dados['data_hora_agendamento'],
+                dados['cpf_cliente'],
+                cpf_barbeiro,
+                dados['id_servico'],
+                cpf_origem,
+                'confirmado'  # Encaixe já inicia confirmado
+            )
+
+            return jsonify({
+                **resultado,
+                'message': 'Encaixe realizado com sucesso'
+            }), 201
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @staticmethod
+    def obter_horarios_disponiveis():
         try:
             cpf_barbeiro = request.args.get('cpf_barbeiro')
             data = request.args.get('data')  # Formato: YYYY-MM-DD
@@ -167,5 +207,28 @@ class AgendamentoController:
             )
 
             return jsonify(resultado), 201
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @staticmethod
+    def listar_avaliacoes_paginado(cpf_barbeiro):
+        """Lista avaliações com paginação e filtros"""
+        try:
+            pagina = int(request.args.get('pagina', 1))
+            por_pagina = int(request.args.get('por_pagina', 10))
+            data_inicio = request.args.get('data_inicio')
+            data_fim = request.args.get('data_fim')
+            nota_min = request.args.get('nota_min')
+
+            avaliacoes = Agendamento.listar_avaliacoes_paginado(
+                cpf_barbeiro,
+                pagina,
+                por_pagina,
+                data_inicio,
+                data_fim,
+                nota_min
+            )
+
+            return jsonify(avaliacoes), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
