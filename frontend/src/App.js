@@ -1,28 +1,27 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import './styles/global.css';
+import PrivateRoute from './components/common/PrivateRoute';
 
-// Pages
+// Páginas públicas
 import Home from './pages/Home';
 import Login from './pages/Login';
 import CadastroCliente from './pages/CadastroCliente';
-import NotFound from './pages/NotFound';
-import Perfil from './pages/Perfil';
-
-// --- NOVOS IMPORTS (Adicione isto) ---
 import EsqueciSenha from './pages/EsqueciSenha';
 import RedefinirSenha from './pages/RedefinirSenha';
-// -------------------------------------
+import NotFound from './pages/NotFound';
 
-// Cliente Components
+// Páginas comuns (qualquer usuário logado)
+import Perfil from './pages/Perfil';
+
+// Páginas do Cliente
 import DashboardCliente from './components/cliente/DashBoardCliente';
 import AgendarServico from './components/cliente/AgendarServico';
 import MeusAgendamentos from './components/cliente/MeusAgendamentos';
 import MinhasReservas from './components/cliente/MinhasReservas';
 import MeusPlanos from './components/cliente/MeusPlanos';
 
-// Barbeiro Components
+// Páginas do Barbeiro
 import DashboardBarbeiro from './components/barbeiro/DashBoardBarbeiro';
 import AgendaBarbeiro from './components/barbeiro/AgendaBarbeiro';
 import CadastrarServico from './components/barbeiro/CadastrarServico';
@@ -32,36 +31,35 @@ import CadastrarBarbeiro from './components/barbeiro/CadastrarBarbeiro';
 import MinhasAvaliacoes from './components/barbeiro/MinhasAvaliacoes';
 import ConsultarReservas from './components/barbeiro/ConsultarReservas';
 import ListarProdutos from './components/barbeiro/ListarProdutos';
+import GerenciarClientes from './components/barbeiro/GerenciarClientes';
+import DetalhesCliente from './components/barbeiro/DetalhesCliente';
+import GerenciarPlanos from './components/barbeiro/GerenciarPlanos';
 
-// Common
-import PrivateRoute from './components/common/PrivateRoute';
+import './styles/global.css';
 
 function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
-          {/* --- ROTAS PÚBLICAS --- */}
+          {/* Rotas Públicas */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/cadastro" element={<CadastroCliente />} />
-          
-          {/* --- NOVAS ROTAS (Adicione isto) --- */}
           <Route path="/esqueci-senha" element={<EsqueciSenha />} />
           <Route path="/redefinir-senha/:token" element={<RedefinirSenha />} />
-          {/* ----------------------------------- */}
 
-          {/* --- ROTA DE PERFIL (Para usuários logados) --- */}
-          <Route
-            path="/perfil"
+          {/* Rota do Perfil (qualquer usuário logado) */}
+          <Route 
+            path="/perfil" 
             element={
               <PrivateRoute>
                 <Perfil />
               </PrivateRoute>
-            }
+            } 
           />
 
-          {/* --- ROTAS CLIENTE --- */}
+          {/* Rotas do Cliente */}
           <Route
             path="/cliente/dashboard"
             element={
@@ -103,7 +101,7 @@ function App() {
             }
           />
 
-          {/* --- ROTAS BARBEIRO --- */}
+          {/* Rotas do Barbeiro */}
           <Route
             path="/barbeiro/dashboard"
             element={
@@ -120,6 +118,25 @@ function App() {
               </PrivateRoute>
             }
           />
+          
+          {/* NOVA: Gestão de Clientes */}
+          <Route
+            path="/barbeiro/clientes"
+            element={
+              <PrivateRoute requiredType="barbeiro">
+                <GerenciarClientes />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/barbeiro/clientes/:cpf"
+            element={
+              <PrivateRoute requiredType="barbeiro">
+                <DetalhesCliente />
+              </PrivateRoute>
+            }
+          />
+          
           <Route
             path="/barbeiro/servicos/novo"
             element={
@@ -137,14 +154,6 @@ function App() {
             }
           />
           <Route
-            path="/barbeiro/reservas"
-            element={
-              <PrivateRoute requiredType="barbeiro">
-                <ConsultarReservas />
-              </PrivateRoute>
-            }
-          />
-          <Route
             path="/barbeiro/produtos"
             element={
               <PrivateRoute requiredType="barbeiro">
@@ -152,8 +161,28 @@ function App() {
               </PrivateRoute>
             }
           />
+          {/* Gerenciar Planos */}
+          <Route
+            path="/barbeiro/planos/gerenciar"
+            element={
+              <PrivateRoute requiredType="barbeiro_chefe">
+                <GerenciarPlanos />
+              </PrivateRoute>
+            }
+          />
+          
+          <Route
+            path="/barbeiro/reservas"
+            element={
+              <PrivateRoute requiredType="barbeiro">
+                <ConsultarReservas />
+              </PrivateRoute>
+            }
+          />
 
-          {/* --- ROTAS BARBEIRO CHEFE --- */}
+
+
+          {/* Rotas do Barbeiro Chefe */}
           <Route
             path="/barbeiro/produtos/novo"
             element={
@@ -170,6 +199,7 @@ function App() {
               </PrivateRoute>
             }
           />
+          
           <Route
             path="/barbeiro/cadastrar-barbeiro"
             element={
@@ -178,8 +208,8 @@ function App() {
               </PrivateRoute>
             }
           />
-          
-          {/* 404 - Página não encontrada */}
+
+          {/* 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>

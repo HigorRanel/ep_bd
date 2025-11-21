@@ -198,7 +198,7 @@ class Produto:
                 FROM Produto
             """)
             return cursor.fetchone()
-        
+
     @staticmethod
     def listar_com_reservas():
         with Database.get_cursor() as cursor:
@@ -211,4 +211,29 @@ class Produto:
                 GROUP BY p.id
                 ORDER BY p.nome
             """)
-            return cursor.fetchall()    
+            return cursor.fetchall()
+
+    @staticmethod
+    def atualizar(id_produto, dados):
+        with Database.get_cursor() as cursor:
+            campos = []
+            valores = []
+
+            for campo, valor in dados.items():
+                campos.append(f"{campo} = %s")
+                valores.append(valor)
+
+            if not campos:
+                return None
+
+            valores.append(id_produto)
+            query = f"UPDATE Produto SET {', '.join(campos)} WHERE id_produto = %s RETURNING *"
+
+            cursor.execute(query, valores)
+            return cursor.fetchone()
+
+    @staticmethod
+    def deletar(id_produto):
+        with Database.get_cursor() as cursor:
+            cursor.execute("DELETE FROM Produto WHERE id_produto = %s", (id_produto,))
+            return True

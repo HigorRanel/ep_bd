@@ -50,10 +50,22 @@ class ServicoController:
     def atualizar(id_servico):
         try:
             dados = request.get_json()
-            resultado = Servico.atualizar(id_servico, dados)
+
+            # Campos permitidos para atualização
+            campos_permitidos = ['nome', 'preco', 'duracao_estimada_min', 'descricao']
+            dados_atualizacao = {}
+
+            for campo in campos_permitidos:
+                if campo in dados:
+                    dados_atualizacao[campo] = dados[campo]
+
+            if not dados_atualizacao:
+                return jsonify({'error': 'Nenhum dado para atualizar'}), 400
+
+            resultado = Servico.atualizar(id_servico, dados_atualizacao)
 
             if not resultado:
-                return jsonify({'error': 'Nenhum dado para atualizar'}), 400
+                return jsonify({'error': 'Serviço não encontrado'}), 404
 
             return jsonify(resultado), 200
         except Exception as e:
@@ -62,6 +74,23 @@ class ServicoController:
     @staticmethod
     def deletar(id_servico):
         try:
+            # Verificar se há agendamentos ativos com este serviço
+            from backend.app.utils.database import Database
+            with Database.get_cursor() as cursor:
+                cursor.execute("""
+                    SELECT COUNT(*) as total
+                    FROM Agendamento a
+                    JOIN Contem c ON a.id_agendamento = c.id_agen
+                    WHERE c.id_serv = %s 
+                    AND a.status IN ('pendente', 'confirmado')
+                """, (id_servico,))
+
+                result = cursor.fetchone()
+                if result['total'] > 0:
+                    return jsonify({
+                        'error': 'Não é possível deletar serviço com agendamentos ativos'
+                    }), 400
+
             Servico.deletar(id_servico)
             return jsonify({'message': 'Serviço deletado com sucesso'}), 200
         except Exception as e:

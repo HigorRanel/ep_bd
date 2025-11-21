@@ -148,3 +148,50 @@ class PlanoMensal:
             """, (id_plano, id_servico))
             return True
 
+    # NOVO: Contar assinaturas ativas
+    @staticmethod
+    def contar_assinaturas_ativas(id_plano):
+        with Database.get_cursor() as cursor:
+            cursor.execute("""
+                SELECT COUNT(*) as total
+                FROM Assina
+                WHERE id_plano = %s AND data_fim >= CURRENT_DATE
+            """, (id_plano,))
+            return cursor.fetchone()['total']
+
+    # NOVO: Contar todas assinaturas
+    @staticmethod
+    def contar_assinaturas(id_plano):
+        with Database.get_cursor() as cursor:
+            cursor.execute("""
+                SELECT COUNT(*) as total
+                FROM Assina
+                WHERE id_plano = %s
+            """, (id_plano,))
+            return cursor.fetchone()['total']
+
+    # NOVO: Atualizar plano
+    @staticmethod
+    def atualizar(id_plano, servicos):
+        with Database.get_cursor() as cursor:
+            # Remover serviços antigos
+            cursor.execute("DELETE FROM Possui WHERE id_plano = %s", (id_plano,))
+
+            # Adicionar novos serviços
+            for servico in servicos:
+                cursor.execute("""
+                    INSERT INTO Possui (id_serv, id_plano, quantidade)
+                    VALUES (%s, %s, %s)
+                """, (servico['id_servico'], id_plano, servico['quantidade']))
+
+            return {'id_plano_mensal': id_plano, 'message': 'Plano atualizado com sucesso'}
+
+    # NOVO: Deletar plano
+    @staticmethod
+    def deletar(id_plano):
+        with Database.get_cursor() as cursor:
+            # Deletar serviços do plano
+            cursor.execute("DELETE FROM Possui WHERE id_plano = %s", (id_plano,))
+            # Deletar plano
+            cursor.execute("DELETE FROM Plano_Mensal WHERE id_plano_mensal = %s", (id_plano,))
+            return True
