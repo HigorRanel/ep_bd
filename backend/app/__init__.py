@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 from backend.app.config import Config
-from backend.app.extensions import mail # <--- Importa do novo arquivo
+from backend.app.extensions import mail
 
 def create_app():
     app = Flask(__name__)

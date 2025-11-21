@@ -10,18 +10,26 @@ const MinhasReservas = () => {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ type: '', text: '' });
 
+  // Estados para filtros
+  const [filtroNome, setFiltroNome] = useState('');
+  const [filtroCategoria, setFiltroCategoria] = useState('todas');
+  const [categorias, setCategorias] = useState([]);
+
   useEffect(() => {
     carregarDados();
   }, []);
 
   const carregarDados = async () => {
     try {
-      const [produtosRes, reservasRes] = await Promise.all([
+      const [produtosRes, reservasRes, categoriasRes] = await Promise.all([
         api.get('/produtos'),
         api.get('/produtos/minhas-reservas'),
+        api.get('/produtos/categorias')
       ]);
+      
       setProdutos(produtosRes.data);
       setReservas(reservasRes.data);
+      setCategorias(categoriasRes.data);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
     } finally {
@@ -31,8 +39,6 @@ const MinhasReservas = () => {
 
   const reservarProduto = async (idProduto) => {
     try {
-      // AJUSTE: Backend agora cria com status 'reservado' automaticamente
-      // Não precisa passar status, o backend define como 'reservado' por padrão
       await api.post('/produtos/reservar', { id_produto: idProduto });
       setMessage({ type: 'success', text: 'Produto reservado com sucesso!' });
       carregarDados();
@@ -68,6 +74,38 @@ const MinhasReservas = () => {
     }
   };
 
+  // Função para filtrar produtos
+  const filtrarProdutos = () => {
+    let produtosFiltrados = produtos.filter(
+      p => p.quantidade_estoque > 0
+    );
+
+    // Filtro por nome
+    if (filtroNome.trim()) {
+      const termo = filtroNome.toLowerCase();
+      produtosFiltrados = produtosFiltrados.filter(p =>
+        p.nome_produto.toLowerCase().includes(termo) ||
+        (p.descricao && p.descricao.toLowerCase().includes(termo))
+      );
+    }
+
+    // Filtro por categoria
+    if (filtroCategoria !== 'todas') {
+      produtosFiltrados = produtosFiltrados.filter(
+        p => p.categoria === filtroCategoria
+      );
+    }
+
+    return produtosFiltrados;
+  };
+
+  const produtosFiltrados = filtrarProdutos();
+
+  const limparFiltros = () => {
+    setFiltroNome('');
+    setFiltroCategoria('todas');
+  };
+
   if (loading) {
     return (
       <div className="page-container">
@@ -81,7 +119,12 @@ const MinhasReservas = () => {
     <div className="page-container">
       <Navbar />
       <div className="dashboard-container">
-        <h1>Reservas de Produtos</h1>
+        <div className="dashboard-header">
+          <div>
+            <h1>Reservas de Produtos</h1>
+            <p>Reserve produtos para retirar na barbearia</p>
+          </div>
+        </div>
 
         {message.text && (
           <div className={`alert alert-${message.type}`}>
@@ -91,10 +134,13 @@ const MinhasReservas = () => {
 
         {/* Minhas Reservas */}
         <div className="dashboard-section">
-          <h2>Minhas Reservas</h2>
+          <h2>Minhas Reservas Ativas</h2>
           {reservas.length === 0 ? (
             <div className="empty-state">
               <p>Você não tem reservas ativas</p>
+              <p style={{ fontSize: '14px', color: '#666', marginTop: '10px' }}>
+                Navegue pelos produtos disponíveis abaixo e faça sua primeira reserva!
+              </p>
             </div>
           ) : (
             <div className="grid-2">
@@ -103,7 +149,7 @@ const MinhasReservas = () => {
                   <div className="card-header">
                     <h3>{reserva.nome_produto}</h3>
                     <span className={`badge badge-${reserva.status}`}>
-                      {reserva.status}
+                      {reserva.status === 'reservado' ? '🔖 Reservado' : '✅ Comprado'}
                     </span>
                   </div>
                   <div className="card-body">
@@ -111,7 +157,6 @@ const MinhasReservas = () => {
                     <p><strong>Preço:</strong> R$ {parseFloat(reserva.preco_venda).toFixed(2)}</p>
                     <p><strong>Reservado em:</strong> {new Date(reserva.data_reserva).toLocaleDateString('pt-BR')}</p>
                     
-                    {/* Informação sobre status */}
                     {reserva.status === 'reservado' && (
                       <div style={{ 
                         marginTop: '15px', 
@@ -172,14 +217,104 @@ const MinhasReservas = () => {
           )}
         </div>
 
-        {/* Produtos Disponíveis */}
+        {/* Filtros de Produtos */}
         <div className="dashboard-section">
           <h2>Produtos Disponíveis para Reserva</h2>
-          <div className="grid-3">
-            {produtos
-              .filter(p => p.status === 'ativo' && p.quantidade_estoque > 0)
-              .map((produto) => {
-                // Verificar se já está reservado
+          
+          <div className="card" style={{ marginBottom: '30px' }}>
+            <h3 style={{ marginBottom: '15px' }}>🔍 Filtrar Produtos</h3>
+            
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+              gap: '15px',
+              marginBottom: '15px'
+            }}>
+              {/* Filtro por Nome */}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label>Buscar por Nome</label>
+                <input
+                  type="text"
+                  placeholder="Digite o nome do produto..."
+                  value={filtroNome}
+                  onChange={(e) => setFiltroNome(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
+
+              {/* Filtro por Categoria */}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label>Categoria</label>
+                <select
+                  value={filtroCategoria}
+                  onChange={(e) => setFiltroCategoria(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '14px'
+                  }}
+                >
+                  <option value="todas">Todas as categorias</option>
+                  {categorias.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Botão Limpar Filtros e Info */}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              paddingTop: '15px',
+              borderTop: '1px solid #ecf0f1'
+            }}>
+              <div style={{ color: '#666', fontSize: '14px' }}>
+                {produtosFiltrados.length === produtos.filter(p => p.quantidade_estoque > 0).length ? (
+                  `Mostrando todos os ${produtosFiltrados.length} produtos disponíveis`
+                ) : (
+                  `Mostrando ${produtosFiltrados.length} de ${produtos.filter(p => p.quantidade_estoque > 0).length} produtos`
+                )}
+              </div>
+              
+              {(filtroNome || filtroCategoria !== 'todas') && (
+                <button
+                  onClick={limparFiltros}
+                  className="btn btn-secondary btn-sm"
+                >
+                  🔄 Limpar Filtros
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Lista de Produtos */}
+          {produtosFiltrados.length === 0 ? (
+            <div className="empty-state">
+              <p>
+                {filtroNome || filtroCategoria !== 'todas' 
+                  ? 'Nenhum produto encontrado com os filtros aplicados'
+                  : 'Nenhum produto disponível para reserva no momento'
+                }
+              </p>
+              {(filtroNome || filtroCategoria !== 'todas') && (
+                <button onClick={limparFiltros} className="btn btn-primary">
+                  Limpar Filtros
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid-3">
+              {produtosFiltrados.map((produto) => {
                 const jaReservado = reservas.some(r => 
                   r.id_prod === produto.id_produto && 
                   (r.status === 'reservado' || r.status === 'pendente')
@@ -189,17 +324,27 @@ const MinhasReservas = () => {
                   <div key={produto.id_produto} className="card">
                     <div className="card-header">
                       <h3>{produto.nome_produto}</h3>
-                      {produto.quantidade_estoque <= produto.minimo_estoque && (
-                        <span className="badge" style={{ backgroundColor: '#f39c12' }}>
-                          Estoque Baixo
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', alignItems: 'flex-end' }}>
+                        <span className="badge" style={{ 
+                          backgroundColor: '#3498db',
+                          fontSize: '11px'
+                        }}>
+                          {produto.categoria}
                         </span>
-                      )}
+                        {produto.quantidade_estoque <= produto.minimo_estoque && (
+                          <span className="badge" style={{ backgroundColor: '#f39c12' }}>
+                            Estoque Baixo
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="card-body">
-                      <p><strong>Categoria:</strong> {produto.categoria}</p>
                       {produto.descricao && (
-                        <p style={{ fontSize: '13px', color: '#666', marginTop: '10px' }}>
-                          {produto.descricao}
+                        <p style={{ fontSize: '13px', color: '#666', marginTop: '0', marginBottom: '10px' }}>
+                          {produto.descricao.length > 80 
+                            ? `${produto.descricao.substring(0, 80)}...` 
+                            : produto.descricao
+                          }
                         </p>
                       )}
                       <p style={{ marginTop: '10px' }}>
@@ -233,11 +378,6 @@ const MinhasReservas = () => {
                   </div>
                 );
               })}
-          </div>
-          
-          {produtos.filter(p => p.status === 'ativo' && p.quantidade_estoque > 0).length === 0 && (
-            <div className="empty-state">
-              <p>Nenhum produto disponível para reserva no momento</p>
             </div>
           )}
         </div>
@@ -250,7 +390,7 @@ const MinhasReservas = () => {
             <li><strong>Status Reservado:</strong> O produto está garantido e aguardando sua retirada na barbearia</li>
             <li><strong>Retirar:</strong> Vá até a barbearia e retire seu produto. Marque como "Retirado" após a retirada</li>
             <li><strong>Cancelar:</strong> Caso não queira mais o produto, você pode cancelar a reserva a qualquer momento</li>
-            <li><strong>Estoque:</strong> Produtos reservados não diminuem o estoque até serem marcados como retirados</li>
+            <li><strong>Busca:</strong> Use os filtros acima para encontrar produtos por nome ou categoria</li>
           </ul>
         </div>
       </div>
