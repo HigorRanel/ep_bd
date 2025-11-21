@@ -72,6 +72,18 @@ const AgendaBarbeiro = () => {
     return grupos;
   };
 
+  // NOVO: Função para obter info de status incluindo 'falta'
+  const getStatusInfo = (status) => {
+    const statusMap = {
+      pendente: { className: 'badge-pendente', color: '#f39c12', icon: '⏳' },
+      confirmado: { className: 'badge-confirmado', color: '#3498db', icon: '✓' },
+      concluido: { className: 'badge-concluido', color: '#27ae60', icon: '✓✓' },
+      cancelado: { className: 'badge-cancelado', color: '#e74c3c', icon: '✗' },
+      falta: { className: 'badge-falta', color: '#e67e22', icon: '⚠️' }
+    };
+    return statusMap[status] || statusMap.pendente;
+  };
+
   const agendamentosPorData = agruparPorData();
 
   if (loading) {
@@ -150,6 +162,13 @@ const AgendaBarbeiro = () => {
               <p>Concluídos</p>
             </div>
           </div>
+          <div className="stat-card">
+            <div className="stat-icon">⚠️</div>
+            <div className="stat-content">
+              <h3>{agendamentos.filter(a => a.status === 'falta').length}</h3>
+              <p>Faltas</p>
+            </div>
+          </div>
         </div>
 
         {/* Agenda Agrupada por Data */}
@@ -164,12 +183,17 @@ const AgendaBarbeiro = () => {
               <div className="grid-2">
                 {agendamentosPorData[data].map((agendamento) => {
                   const { hora } = formatarDataHora(agendamento.data_hora_agendamento);
+                  const statusInfo = getStatusInfo(agendamento.status);
+                  
                   return (
                     <div key={agendamento.id_agendamento} className="card">
                       <div className="card-header">
                         <h3>{hora} - {agendamento.cliente_nome}</h3>
-                        <span className={`badge badge-${agendamento.status}`}>
-                          {agendamento.status}
+                        <span 
+                          className={`badge ${statusInfo.className}`}
+                          style={{ backgroundColor: statusInfo.color }}
+                        >
+                          {statusInfo.icon} {agendamento.status}
                         </span>
                       </div>
                       <div className="card-body">
@@ -179,36 +203,98 @@ const AgendaBarbeiro = () => {
                         <p><strong>Telefone:</strong> {agendamento.cliente_telefone || 'Não informado'}</p>
                         <p><strong>Origem:</strong> {agendamento.cpf_origem === user.cpf ? 'Encaixe' : 'Cliente'}</p>
                       </div>
+
+                      {/* BOTÕES PARA STATUS PENDENTE */}
                       {agendamento.status === 'pendente' && (
                         <div className="card-footer">
                           <button
                             onClick={() => atualizarStatus(agendamento.id_agendamento, 'confirmado')}
                             className="btn btn-success btn-sm"
                           >
-                            Confirmar
+                            ✓ Confirmar
                           </button>
                           <button
                             onClick={() => atualizarStatus(agendamento.id_agendamento, 'concluido')}
                             className="btn btn-primary btn-sm"
                           >
-                            Concluir
+                            ✅ Concluir
                           </button>
                           <button
                             onClick={() => atualizarStatus(agendamento.id_agendamento, 'cancelado')}
                             className="btn btn-danger btn-sm"
                           >
-                            Cancelar
+                            ✗ Cancelar
                           </button>
                         </div>
                       )}
+
+                      {/* BOTÕES PARA STATUS CONFIRMADO - INCLUINDO FALTA */}
                       {agendamento.status === 'confirmado' && (
                         <div className="card-footer">
                           <button
                             onClick={() => atualizarStatus(agendamento.id_agendamento, 'concluido')}
                             className="btn btn-primary btn-sm"
                           >
-                            Marcar como Concluído
+                            ✅ Concluir
                           </button>
+                          <button
+                            onClick={() => atualizarStatus(agendamento.id_agendamento, 'falta')}
+                            className="btn btn-warning btn-sm"
+                            title="Cliente não compareceu"
+                          >
+                            ⚠️ Registrar Falta
+                          </button>
+                          <button
+                            onClick={() => atualizarStatus(agendamento.id_agendamento, 'cancelado')}
+                            className="btn btn-danger btn-sm"
+                          >
+                            ✗ Cancelar
+                          </button>
+                        </div>
+                      )}
+
+                      {/* MENSAGEM PARA AGENDAMENTOS COM FALTA */}
+                      {agendamento.status === 'falta' && (
+                        <div className="card-footer">
+                          <div style={{
+                            padding: '10px',
+                            backgroundColor: '#fff3cd',
+                            borderRadius: '4px',
+                            fontSize: '13px',
+                            color: '#856404'
+                          }}>
+                            ⚠️ <strong>Cliente não compareceu</strong> ao agendamento
+                          </div>
+                        </div>
+                      )}
+
+                      {/* MENSAGEM PARA AGENDAMENTOS CONCLUÍDOS */}
+                      {agendamento.status === 'concluido' && (
+                        <div className="card-footer">
+                          <div style={{
+                            padding: '10px',
+                            backgroundColor: '#d4edda',
+                            borderRadius: '4px',
+                            fontSize: '13px',
+                            color: '#155724'
+                          }}>
+                            ✅ Atendimento concluído
+                          </div>
+                        </div>
+                      )}
+
+                      {/* MENSAGEM PARA AGENDAMENTOS CANCELADOS */}
+                      {agendamento.status === 'cancelado' && (
+                        <div className="card-footer">
+                          <div style={{
+                            padding: '10px',
+                            backgroundColor: '#f8d7da',
+                            borderRadius: '4px',
+                            fontSize: '13px',
+                            color: '#721c24'
+                          }}>
+                            ✗ Agendamento cancelado
+                          </div>
                         </div>
                       )}
                     </div>

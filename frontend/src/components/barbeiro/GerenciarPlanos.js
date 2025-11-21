@@ -13,26 +13,28 @@ const GerenciarPlanos = () => {
   const [modalEditar, setModalEditar] = useState(null);
   const [servicosEditando, setServicosEditando] = useState([]);
 
+  // NOVO: Estado para busca
+  const [termoBusca, setTermoBusca] = useState('');
+
   useEffect(() => {
     carregarDados();
   }, []);
 
-    const carregarDados = async () => {
+  const carregarDados = async () => {
     try {
-        const [planosRes, servicosRes] = await Promise.all([
+      const [planosRes, servicosRes] = await Promise.all([
         api.get('/planos'),
         api.get('/servicos')
-        ]);
+      ]);
 
-        setPlanos(planosRes.data);
-        setServicos(servicosRes.data);
+      setPlanos(planosRes.data);
+      setServicos(servicosRes.data);
     } catch (error) {
-        console.error('Erro ao carregar dados:', error);
+      console.error('Erro ao carregar dados:', error);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-    };
-
+  };
 
   const abrirModalEditar = (plano) => {
     setModalEditar(plano);
@@ -129,6 +131,20 @@ const GerenciarPlanos = () => {
     }, 0);
   };
 
+  // NOVO: Função para filtrar planos
+  const planosFiltrados = planos.filter(plano => {
+    if (!termoBusca.trim()) return true;
+    
+    const termo = termoBusca.toLowerCase();
+    const idMatch = plano.id_plano_mensal.toString().includes(termo);
+    const criadorMatch = plano.criador_nome && plano.criador_nome.toLowerCase().includes(termo);
+    const servicosMatch = plano.servicos && plano.servicos.some(s => 
+      s && s.nome && s.nome.toLowerCase().includes(termo)
+    );
+    
+    return idMatch || criadorMatch || servicosMatch;
+  });
+
   if (loading) {
     return (
       <div className="page-container">
@@ -162,13 +178,52 @@ const GerenciarPlanos = () => {
         <div className="dashboard-section">
           <h2>Planos Cadastrados ({planos.length})</h2>
           
-          {planos.length === 0 ? (
+          {/* NOVO: Barra de Busca */}
+          <div className="card" style={{ marginBottom: '20px' }}>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label>🔍 Buscar Plano</label>
+              <input
+                type="text"
+                placeholder="Buscar por ID, criador ou serviço..."
+                value={termoBusca}
+                onChange={(e) => setTermoBusca(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '1px solid #ddd',
+                  borderRadius: '8px',
+                  fontSize: '14px'
+                }}
+              />
+              {termoBusca && (
+                <small style={{ color: '#666', marginTop: '5px', display: 'block' }}>
+                  Mostrando <strong>{planosFiltrados.length}</strong> de <strong>{planos.length}</strong> planos
+                </small>
+              )}
+            </div>
+          </div>
+
+          {planosFiltrados.length === 0 ? (
             <div className="empty-state">
-              <p>Nenhum plano cadastrado</p>
+              <p>
+                {termoBusca 
+                  ? 'Nenhum plano encontrado com os termos de busca' 
+                  : 'Nenhum plano cadastrado'
+                }
+              </p>
+              {termoBusca && (
+                <button 
+                  onClick={() => setTermoBusca('')} 
+                  className="btn btn-secondary"
+                  style={{ marginTop: '10px' }}
+                >
+                  Limpar Busca
+                </button>
+              )}
             </div>
           ) : (
             <div className="grid-2">
-              {planos.map(plano => {
+              {planosFiltrados.map(plano => {
                 const valorTotal = calcularValorTotal(plano.servicos);
                 
                 return (
@@ -334,10 +389,10 @@ const GerenciarPlanos = () => {
 
               <div className="modal-footer">
                 <button onClick={salvarEdicao} className="btn btn-primary">
-                  Salvar Alterações
+                  💾 Salvar Alterações
                 </button>
                 <button onClick={() => setModalEditar(null)} className="btn btn-secondary">
-                  Cancelar
+                  ✕ Cancelar
                 </button>
               </div>
             </div>
