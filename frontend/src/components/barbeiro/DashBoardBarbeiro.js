@@ -23,33 +23,44 @@ const DashboardBarbeiro = () => {
     carregarDados();
   }, []);
 
+  // Função auxiliar para comparar se duas datas são o mesmo dia (ignora hora)
+  const isMesmoDia = (data1, data2) => {
+    return data1.getDate() === data2.getDate() &&
+           data1.getMonth() === data2.getMonth() &&
+           data1.getFullYear() === data2.getFullYear();
+  };
+
+  // Função auxiliar para verificar se está dentro do intervalo (inclusivo)
+  const isEntreDatas = (dataAlvo, inicio, fim) => {
+    // Zera as horas para comparar apenas os dias
+    const alvo = new Date(dataAlvo.getFullYear(), dataAlvo.getMonth(), dataAlvo.getDate());
+    const ini = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate());
+    const f = new Date(fim.getFullYear(), fim.getMonth(), fim.getDate());
+    return alvo >= ini && alvo <= f;
+  };
+
   const carregarDados = async () => {
     try {
       setLoading(true);
-      const hoje = new Date();
-      const hojeStr = hoje.toISOString().split('T')[0];
       
-      // Calcular datas da semana
-      const diaSemana = hoje.getDay();
+      const hoje = new Date(); // Pega a data/hora atual do navegador (Local)
+
+      // Calcular início e fim da semana usando data Local
+      const diaSemana = hoje.getDay(); // 0 (Dom) a 6 (Sab)
       const inicioSemana = new Date(hoje);
       inicioSemana.setDate(hoje.getDate() - diaSemana);
+      
       const fimSemana = new Date(inicioSemana);
       fimSemana.setDate(inicioSemana.getDate() + 6);
-      
-      const inicioSemanaStr = inicioSemana.toISOString().split('T')[0];
-      const fimSemanaStr = fimSemana.toISOString().split('T')[0];
 
-      // --- OTIMIZAÇÃO AQUI: Promise.all para fazer requisições em PARALELO ---
-      // Ao invés de esperar uma acabar para começar a outra, disparamos todas juntas.
       const promises = [
-        api.get(`/agendamentos/barbeiro/${user.cpf}`), // 0: Agenda
-        api.get('/avaliacoes/me/media'),               // 1: Avaliações
-        api.get('/reservas/estatisticas')              // 2: Estatísticas (Substitui o loop lento)
+        api.get(`/agendamentos/barbeiro/${user.cpf}`),
+        api.get('/avaliacoes/me/media'),
+        api.get('/reservas/estatisticas')
       ];
 
-      // Se for chefe, adiciona a requisição de estoque
       if (isBarbeiroChefe()) {
-        promises.push(api.get('/produtos/estoque-baixo')); // 3: Estoque (opcional)
+        promises.push(api.get('/produtos/estoque-baixo'));
       }
 
       const results = await Promise.all(promises);
@@ -59,45 +70,45 @@ const DashboardBarbeiro = () => {
       const estatisticasRes = results[2];
       const estoqueBaixoRes = isBarbeiroChefe() ? results[3] : null;
 
-      // --- Processamento dos Agendamentos ---
       const todosAgendamentos = agendaRes.data;
       
-      const agendamentosHoje = todosAgendamentos.filter(a => 
-        a.data_hora_agendamento.startsWith(hojeStr) && 
-        (a.status === 'pendente' || a.status === 'confirmado')
-      );
-
-      const agendamentosSemana = todosAgendamentos.filter(a => {
-        const dataAg = a.data_hora_agendamento.split('T')[0];
-        return dataAg >= inicioSemanaStr && dataAg <= fimSemanaStr &&
+      // --- CORREÇÃO DO FILTRO DE HOJE ---
+      const agendamentosHoje = todosAgendamentos.filter(a => {
+        const dataAg = new Date(a.data_hora_agendamento);
+        // Usa a comparação de objetos de data (MUITO MAIS SEGURO)
+        return isMesmoDia(dataAg, hoje) && 
                (a.status === 'pendente' || a.status === 'confirmado');
       });
 
-      const agora = new Date();
+      // --- CORREÇÃO DO FILTRO DA SEMANA ---
+      const agendamentosSemana = todosAgendamentos.filter(a => {
+        const dataAg = new Date(a.data_hora_agendamento);
+        return isEntreDatas(dataAg, inicioSemana, fimSemana) &&
+               (a.status === 'pendente' || a.status === 'confirmado');
+      });
+
       const proximos = todosAgendamentos
         .filter(a => {
           const dataAg = new Date(a.data_hora_agendamento);
-          return dataAg > agora && (a.status === 'pendente' || a.status === 'confirmado');
+          // Compara timestamp para garantir que é futuro
+          return dataAg > new Date() && (a.status === 'pendente' || a.status === 'confirmado');
         })
         .sort((a, b) => new Date(a.data_hora_agendamento) - new Date(b.data_hora_agendamento))
         .slice(0, 5);
       
       setProximosAgendamentos(proximos);
 
-      // --- Processamento do Estoque (se houver) ---
       if (estoqueBaixoRes) {
         setProdutosBaixoEstoque(estoqueBaixoRes.data.slice(0, 3));
       }
 
-      // --- Atualização do Estado ---
       setStats({
         agendamentosHoje: agendamentosHoje.length,
         agendamentosSemana: agendamentosSemana.length,
         mediaAvaliacoes: parseFloat(avaliacoesRes.data.media_nota || 0).toFixed(1),
         totalAvaliacoes: avaliacoesRes.data.total_avaliacoes || 0,
         proximosAgendamentos: proximos.length,
-        // AQUI ESTÁ A MÁGICA: Pegamos direto do endpoint de estatísticas
-        reservasPendentes: estatisticasRes.data.reservados || 0, 
+        reservasPendentes: estatisticasRes.data.reservados || 0,
       });
       
     } catch (error) {
@@ -107,7 +118,6 @@ const DashboardBarbeiro = () => {
     }
   };
 
-  // ... (Funções auxiliares formatarDataHora e calcularTempoRestante mantidas iguais) ...
   const formatarDataHora = (dataString) => {
     const data = new Date(dataString);
     return {
@@ -139,7 +149,7 @@ const DashboardBarbeiro = () => {
       <div className="page-container">
         <Navbar />
         <div className="loading-container">
-            <div className="spinner"></div> {/* Adicione classe spinner no CSS se não tiver */}
+            <div className="spinner"></div>
             <p>Carregando dashboard...</p>
         </div>
       </div>
@@ -160,7 +170,6 @@ const DashboardBarbeiro = () => {
           </Link>
         </div>
 
-        {/* Alertas */}
         {stats.reservasPendentes > 0 && (
           <div className="alert alert-info">
             <strong>🔖 Atenção:</strong> Você tem {stats.reservasPendentes} reserva(s) de produto(s) pendente(s).
@@ -185,7 +194,6 @@ const DashboardBarbeiro = () => {
           </div>
         )}
 
-        {/* Estatísticas */}
         <div className="stats-grid">
           <div className="stat-card">
             <div className="stat-icon">📅</div>
@@ -223,7 +231,6 @@ const DashboardBarbeiro = () => {
           </div>
         </div>
 
-        {/* Ações Rápidas */}
         <div className="quick-actions">
           <h2>Ações Rápidas</h2>
           <div className="actions-grid">
@@ -275,7 +282,6 @@ const DashboardBarbeiro = () => {
           </div>
         </div>
 
-        {/* Próximos Atendimentos */}
         {proximosAgendamentos.length > 0 && (
           <div className="dashboard-section">
             <div className="section-header">
@@ -328,7 +334,6 @@ const DashboardBarbeiro = () => {
           </div>
         )}
 
-        {/* Produtos com Estoque Baixo (apenas para chefe) */}
         {isBarbeiroChefe() && produtosBaixoEstoque.length > 0 && (
           <div className="dashboard-section">
             <div className="section-header">
@@ -368,7 +373,6 @@ const DashboardBarbeiro = () => {
           </div>
         )}
 
-        {/* Dicas */}
         <div className="card" style={{ marginTop: '40px', backgroundColor: '#f8f9fa' }}>
           <h3>💡 Dicas do Sistema</h3>
           <ul style={{ paddingLeft: '20px', marginTop: '15px', marginBottom: 0 }}>
