@@ -42,8 +42,8 @@ class AgendamentoController:
                 id_plano_usado = verificacao['id_plano']
 
                 # Calcular desconto
-                valores_plano = PlanoMensal.calcular_desconto_plano(id_plano_usado)
-                desconto_aplicado = valores_plano.get('desconto_percentual', 0)
+                valores_plano = PlanoMensal.calcular_valores_plano(id_plano_usado)
+                desconto_aplicado = valores_plano.get('desconto_medio', 0)
 
             # CPF de origem é quem está fazendo o agendamento
             cpf_origem = cpf_usuario

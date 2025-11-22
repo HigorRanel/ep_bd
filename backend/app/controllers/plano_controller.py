@@ -246,7 +246,7 @@ class PlanoController:
     def calcular_valores_plano(id_plano):
         """Retorna valores do plano com desconto"""
         try:
-            valores = PlanoMensal.calcular_valores_plano(id_plano)  
+            valores = PlanoMensal.calcular_valores_plano(id_plano)
             return jsonify(valores), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
