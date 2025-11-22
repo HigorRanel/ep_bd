@@ -23,10 +23,10 @@ class RelatorioController:
                 # === RECEITAS (Agendamentos Concluídos) ===
                 query_receitas = """
                     SELECT 
-                        SUM(s.preco) as total_receitas,
+                        COALESCE(SUM(s.preco), 0) as total_receitas,
                         COUNT(DISTINCT a.id_agendamento) as total_atendimentos,
                         COUNT(DISTINCT a.client_id) as clientes_atendidos,
-                        AVG(s.preco) as ticket_medio
+                        COALESCE(AVG(s.preco), 0) as ticket_medio
                     FROM Agendamento a
                     JOIN Contem c ON a.id_agendamento = c.id_agen
                     JOIN Servico s ON c.id_serv = s.id_servico
@@ -45,7 +45,7 @@ class RelatorioController:
                 # === GASTOS (Produtos Comprados) ===
                 query_gastos = """
                     SELECT 
-                        SUM(p.preco_compra) as total_gastos_produtos,
+                        COALESCE(SUM(p.preco_compra), 0) as total_gastos_produtos,
                         COUNT(*) as total_produtos_comprados
                     FROM Reserva r
                     JOIN Produto p ON r.id_prod = p.id_produto
@@ -58,8 +58,8 @@ class RelatorioController:
                 # === VENDAS DE PRODUTOS (Receita de Produtos) ===
                 query_vendas_produtos = """
                     SELECT 
-                        SUM(p.preco_venda) as receita_produtos,
-                        SUM(p.preco_venda - p.preco_compra) as lucro_produtos,
+                        COALESCE(SUM(p.preco_venda), 0) as receita_produtos,
+                        COALESCE(SUM(p.preco_venda - p.preco_compra), 0) as lucro_produtos,
                         COUNT(*) as total_vendas
                     FROM Reserva r
                     JOIN Produto p ON r.id_prod = p.id_produto
@@ -69,13 +69,14 @@ class RelatorioController:
                 cursor.execute(query_vendas_produtos, [data_inicio, data_fim])
                 vendas_produtos = cursor.fetchone()
 
-                # === ASSINATURAS DE PLANOS ===
+                # === ASSINATURAS DE PLANOS (PostgreSQL otimizado) ===
                 query_planos = """
                     SELECT 
                         COUNT(*) as total_assinaturas,
                         COUNT(*) FILTER (WHERE DATE(data_inicio) BETWEEN %s AND %s) as novas_assinaturas,
                         COUNT(*) FILTER (WHERE DATE(data_fim) BETWEEN %s AND %s AND data_fim < CURRENT_DATE) as cancelamentos
                     FROM Assina
+                    WHERE data_fim >= CURRENT_DATE OR data_fim IS NULL
                 """
                 cursor.execute(query_planos, [data_inicio, data_fim, data_inicio, data_fim])
                 planos = cursor.fetchone()
@@ -83,12 +84,12 @@ class RelatorioController:
                 # Calcular receita de planos (estimada baseada nos valores dos planos ativos)
                 query_receita_planos = """
                     SELECT 
-                        SUM(
-                            (SELECT SUM(s.preco * ps.quantidade * (1 - ps.desconto/100.0))
+                        COALESCE(SUM(
+                            (SELECT COALESCE(SUM(s.preco * ps.quantidade * (1 - ps.desconto/100.0)), 0)
                              FROM Possui ps
                              JOIN Servico s ON ps.id_serv = s.id_servico
                              WHERE ps.id_plano = a.id_plano)
-                        ) as receita_planos
+                        ), 0) as receita_planos
                     FROM Assina a
                     WHERE DATE(a.data_inicio) BETWEEN %s AND %s
                 """
@@ -100,8 +101,8 @@ class RelatorioController:
                     SELECT 
                         s.nome as servico_nome,
                         COUNT(*) as quantidade,
-                        SUM(s.preco) as receita_total,
-                        AVG(s.preco) as preco_medio
+                        COALESCE(SUM(s.preco), 0) as receita_total,
+                        COALESCE(AVG(s.preco), 0) as preco_medio
                     FROM Agendamento a
                     JOIN Contem c ON a.id_agendamento = c.id_agen
                     JOIN Servico s ON c.id_serv = s.id_servico
@@ -169,6 +170,8 @@ class RelatorioController:
 
         except Exception as e:
             print(f"Erro ao gerar relatório financeiro: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return jsonify({'error': str(e)}), 500
 
     @staticmethod
@@ -197,7 +200,7 @@ class RelatorioController:
                         COUNT(*) as quantidade_vendida,
                         SUM(p.preco_venda) as receita_total,
                         SUM(p.preco_venda - p.preco_compra) as lucro_total,
-                        ROUND(AVG(p.preco_venda - p.preco_compra), 2) as lucro_medio_unitario
+                        ROUND(AVG(p.preco_venda - p.preco_compra)::numeric, 2) as lucro_medio_unitario
                     FROM Reserva r
                     JOIN Produto p ON r.id_prod = p.id_produto
                     WHERE r.status IN ('comprado', 'retirado')
@@ -283,6 +286,8 @@ class RelatorioController:
 
         except Exception as e:
             print(f"Erro ao gerar relatório de produtos: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return jsonify({'error': str(e)}), 500
 
     @staticmethod
@@ -300,15 +305,15 @@ class RelatorioController:
                 return jsonify({'error': 'data_inicio e data_fim são obrigatórios'}), 400
 
             with Database.get_cursor() as cursor:
-                # Clientes mais frequentes
+                # Clientes mais frequentes (PostgreSQL com STRING_AGG)
                 query_mais_frequentes = """
                     SELECT 
                         c.cpf,
                         p.nome_completo,
                         p.email,
                         COUNT(DISTINCT a.id_agendamento) as total_visitas,
-                        SUM(s.preco) as valor_gasto,
-                        AVG(s.preco) as ticket_medio,
+                        COALESCE(SUM(s.preco), 0) as valor_gasto,
+                        COALESCE(AVG(s.preco), 0) as ticket_medio,
                         MAX(a.data_hora_agendamento) as ultima_visita,
                         STRING_AGG(DISTINCT s.nome, ', ') as servicos_preferidos
                     FROM Cliente c
@@ -401,6 +406,8 @@ class RelatorioController:
 
         except Exception as e:
             print(f"Erro ao gerar relatório de clientes: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return jsonify({'error': str(e)}), 500
 
     @staticmethod
