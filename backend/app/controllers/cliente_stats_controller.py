@@ -13,7 +13,7 @@ class ClienteStatsController:
             search = request.args.get('search', '').strip()
 
             with Database.get_cursor() as cursor:
-                # Query base OTIMIZADA com índices
+                
                 where_clause = ""
                 params = []
 
@@ -21,7 +21,7 @@ class ClienteStatsController:
                     where_clause = "WHERE p.nome_completo ILIKE %s OR p.cpf LIKE %s"
                     params = [f"%{search}%", f"%{search}%"]
 
-                # Contar total (otimizado)
+                
                 count_query = f"""
                     SELECT COUNT(DISTINCT c.cpf)
                     FROM Cliente c
@@ -31,11 +31,11 @@ class ClienteStatsController:
                 cursor.execute(count_query, params)
                 total = cursor.fetchone()['count']
 
-                # Buscar clientes com estatísticas (OTIMIZADO E CORRIGIDO)
+                
                 offset = (page - 1) * per_page
 
-                # Query otimizada usando LEFT JOIN e FILTER para agregações
-                # CORREÇÃO: total_faltas agora conta status = 'falta' ao invés de 'cancelado'
+                
+                
                 main_query = f"""
                     SELECT 
                         c.cpf,
@@ -78,8 +78,8 @@ class ClienteStatsController:
         """Retorna detalhes completos de um cliente - OTIMIZADO E CORRIGIDO"""
         try:
             with Database.get_cursor() as cursor:
-                # Dados básicos + estatísticas (uma única query otimizada)
-                # CORREÇÃO: total_faltas agora conta status = 'falta' ao invés de 'cancelado'
+                
+                
                 cursor.execute("""
                     SELECT 
                         c.cpf,
@@ -106,7 +106,7 @@ class ClienteStatsController:
                 if not cliente:
                     return jsonify({'error': 'Cliente não encontrado'}), 404
 
-                # Histórico de agendamentos (limitado aos 20 mais recentes)
+                
                 cursor.execute("""
                     SELECT 
                         a.id_agendamento,

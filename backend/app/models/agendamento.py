@@ -92,7 +92,7 @@ class Agendamento:
 
             agendamentos = cursor.fetchall()
 
-            # Definir horário de funcionamento (8h às 18h)
+            
             horario_inicio = 8
             horario_fim = 18
             intervalo_minutos = 30  
@@ -164,7 +164,7 @@ class Agendamento:
 
             id_agendamento = cursor.fetchone()['id_agendamento']
 
-            # Associar serviço
+            
             cursor.execute("""
                 INSERT INTO Contem (id_serv, id_agen)
                 VALUES (%s, %s)
@@ -308,7 +308,7 @@ class Agendamento:
                                    nota_min=None):
 
         with Database.get_cursor() as cursor:
-            # Query base
+            
             query_base = """
                 FROM Avaliacao av
                 JOIN Agendamento a ON av.id_agen = a.id_agendamento
@@ -321,7 +321,7 @@ class Agendamento:
 
             params = [cpf_barbeiro]
 
-            # Filtros
+            
             if data_inicio:
                 query_base += " AND DATE(a.data_hora_agendamento) >= %s"
                 params.append(data_inicio)
@@ -334,11 +334,11 @@ class Agendamento:
                 query_base += " AND av.nota >= %s"
                 params.append(nota_min)
 
-            # Contar total
+            
             cursor.execute(f"SELECT COUNT(*) as total {query_base}", params)
             total_avaliacoes = cursor.fetchone()['total']
 
-            # Buscar avaliacoes paginadas
+            
             offset = (pagina - 1) * por_pagina
             query_avaliacoes = f"""
                 SELECT av.*, a.data_hora_agendamento, 

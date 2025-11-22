@@ -16,11 +16,11 @@ class Config:
     DB_PORT = os.getenv('DB_PORT', '5432')
     JWT_EXPIRATION_HOURS = 24
 
-    # Configurações de Email
+    
     MAIL_SERVER = 'smtp.gmail.com'
     MAIL_PORT = 587
     MAIL_USE_TLS = True
-    # Coloque suas credenciais reais aqui ou use variáveis de ambiente
+    
     MAIL_USERNAME = os.getenv('MAIL_USERNAME')
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')

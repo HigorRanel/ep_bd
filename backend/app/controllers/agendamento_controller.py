@@ -14,7 +14,7 @@ class AgendamentoController:
                 if campo not in dados:
                     return jsonify({'error': f'Campo {campo} é obrigatório'}), 400
 
-            # Validar se a data/hora não é no passado
+
             try:
                 data_hora_agendamento = datetime.strptime(dados['data_hora_agendamento'], '%Y-%m-%d %H:%M:%S')
                 agora = datetime.now()
@@ -24,7 +24,6 @@ class AgendamentoController:
             except ValueError:
                 return jsonify({'error': 'Formato de data/hora inválido. Use: YYYY-MM-DD HH:MM:SS'}), 400
 
-            # NOVO: Verificar se pode usar plano
             usar_plano = dados.get('usar_plano', False)
             id_plano_usado = None
             desconto_aplicado = 0
@@ -41,11 +40,9 @@ class AgendamentoController:
 
                 id_plano_usado = verificacao['id_plano']
 
-                # Calcular desconto
                 valores_plano = PlanoMensal.calcular_valores_plano(id_plano_usado)
                 desconto_aplicado = valores_plano.get('desconto_medio', 0)
 
-            # CPF de origem é quem está fazendo o agendamento
             cpf_origem = cpf_usuario
 
             resultado = Agendamento.criar(
@@ -57,7 +54,6 @@ class AgendamentoController:
                 dados.get('status', 'pendente')
             )
 
-            # Se usou plano, adicionar informação
             resposta = {**resultado}
             if id_plano_usado:
                 resposta['plano_usado'] = id_plano_usado
@@ -79,7 +75,6 @@ class AgendamentoController:
                 if campo not in dados:
                     return jsonify({'error': f'Campo {campo} é obrigatório'}), 400
 
-            # Validar se a data/hora não é no passado
             try:
                 data_hora_agendamento = datetime.strptime(dados['data_hora_agendamento'], '%Y-%m-%d %H:%M:%S')
                 agora = datetime.now()
@@ -89,7 +84,6 @@ class AgendamentoController:
             except ValueError:
                 return jsonify({'error': 'Formato de data/hora inválido. Use: YYYY-MM-DD HH:MM:SS'}), 400
 
-            # Barbeiro está fazendo o encaixe para si mesmo
             cpf_barbeiro = cpf_usuario
             cpf_origem = cpf_usuario
 
@@ -99,7 +93,7 @@ class AgendamentoController:
                 cpf_barbeiro,
                 dados['id_servico'],
                 cpf_origem,
-                'confirmado'  # Encaixe já inicia confirmado
+                'confirmado' 
             )
 
             return jsonify({
@@ -113,29 +107,25 @@ class AgendamentoController:
     def obter_horarios_disponiveis():
         try:
             cpf_barbeiro = request.args.get('cpf_barbeiro')
-            data = request.args.get('data')  # Formato: YYYY-MM-DD
+            data = request.args.get('data')  
             duracao_servico_min = int(request.args.get('duracao_servico_min', 30))
 
             if not cpf_barbeiro or not data:
                 return jsonify({'error': 'Parâmetros cpf_barbeiro e data são obrigatórios'}), 400
 
-            # Validar formato da data
             try:
                 datetime.strptime(data, '%Y-%m-%d')
             except ValueError:
                 return jsonify({'error': 'Formato de data inválido. Use: YYYY-MM-DD'}), 400
 
-            # Validar se a data não é no passado
             data_obj = datetime.strptime(data, '%Y-%m-%d').date()
             hoje = datetime.now().date()
 
             if data_obj < hoje:
                 return jsonify({'error': 'Não é possível consultar horários de datas passadas'}), 400
 
-            # Se for hoje, filtrar horários que já passaram
             horarios = Agendamento.obter_horarios_disponiveis(cpf_barbeiro, data, duracao_servico_min)
 
-            # Se for hoje, remover horários que já passaram
             if data_obj == hoje:
                 hora_atual = datetime.now().time()
                 horarios = [h for h in horarios if datetime.strptime(h, '%H:%M').time() > hora_atual]
@@ -155,19 +145,17 @@ class AgendamentoController:
     def verificar_disponibilidade():
         try:
             cpf_barbeiro = request.args.get('cpf_barbeiro')
-            data_hora = request.args.get('data_hora')  # Formato: YYYY-MM-DD HH:MM:SS
+            data_hora = request.args.get('data_hora') 
             duracao_min = int(request.args.get('duracao_min', 30))
 
             if not cpf_barbeiro or not data_hora:
                 return jsonify({'error': 'Parâmetros cpf_barbeiro e data_hora são obrigatórios'}), 400
 
-            # Validar formato de data/hora
             try:
                 datetime.strptime(data_hora, '%Y-%m-%d %H:%M:%S')
             except ValueError:
                 return jsonify({'error': 'Formato de data/hora inválido. Use: YYYY-MM-DD HH:MM:SS'}), 400
 
-            # Verificar conflito
             resultado = Agendamento.verificar_conflito_horario(cpf_barbeiro, data_hora, duracao_min)
 
             return jsonify({

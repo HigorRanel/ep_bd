@@ -9,10 +9,10 @@ def create_app():
     
     CORS(app)
     
-    # Inicializa o mail com a aplicação
+    
     mail.init_app(app) 
 
-    # As rotas devem ser importadas DENTRO da função para evitar ciclos
+    
     from backend.app.views.routes import register_routes
     register_routes(app)
     

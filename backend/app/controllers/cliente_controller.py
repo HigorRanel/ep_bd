@@ -45,7 +45,7 @@ class ClienteController:
         try:
             dados = request.get_json()
 
-            # Não permitir alterar CPF
+            
             if 'cpf' in dados:
                 del dados['cpf']
 
