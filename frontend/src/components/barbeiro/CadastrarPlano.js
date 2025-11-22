@@ -91,8 +91,7 @@ const CadastrarPlano = () => {
           id_servico: parseInt(s.id_servico),
           quantidade: parseInt(s.quantidade),
           desconto: parseFloat(s.desconto || 0)
-        })),
-        desconto: 0 
+        }))
       });
 
       setMessage({ type: 'success', text: 'Plano criado com sucesso!' });

@@ -9,17 +9,15 @@ class PlanoController:
         try:
             dados = request.get_json()
 
-            # Buscar ID do barbeiro chefe
             barbeiro = Barbeiro.buscar_por_cpf(cpf_usuario)
             if not barbeiro or not barbeiro.get('is_chefe'):
                 return jsonify({'error': 'Apenas barbeiro chefe pode criar planos'}), 403
 
-            # Buscar id_barbeiro_chefe
             from backend.app.utils.database import Database
             with Database.get_cursor() as cursor:
                 cursor.execute("""
-                    SELECT id_barbeiro_chefe FROM Barbeiro_Chefe WHERE cpf_barbeiro = %s
-                """, (cpf_usuario,))
+                       SELECT id_barbeiro_chefe FROM Barbeiro_Chefe WHERE cpf_barbeiro = %s
+                   """, (cpf_usuario,))
                 chefe = cursor.fetchone()
 
                 if not chefe:
@@ -28,18 +26,14 @@ class PlanoController:
             if 'servicos' not in dados or not dados['servicos']:
                 return jsonify({'error': 'Pelo menos um serviço é obrigatório'}), 400
 
-            # NOVO: Pegar desconto (opcional, padrão 0)
-            desconto = float(dados.get('desconto', 0))
+            for servico in dados['servicos']:
+                desconto_servico = float(servico.get('desconto', 0))
+                if desconto_servico < 0 or desconto_servico > 100:
+                    return jsonify({'error': 'Desconto deve ser entre 0 e 100'}), 400
 
-            # Validar desconto
-            if desconto < 0 or desconto > 100:
-                return jsonify({'error': 'Desconto deve ser entre 0 e 100'}), 400
-
-            # Criar plano COM DESCONTO
             resultado = PlanoMensal.criar(
                 chefe['id_barbeiro_chefe'],
-                dados['servicos'],
-                desconto
+                dados['servicos']
             )
 
             return jsonify(resultado), 201

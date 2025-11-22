@@ -3,44 +3,29 @@ from backend.app.utils.database import Database
 
 class PlanoMensal:
     @staticmethod
-    def criar(id_barbeiro_chefe, servicos, desconto=0.00):
-        """
-        Cria um novo plano mensal com desconto POR SERVIÇO
-
-        Args:
-            id_barbeiro_chefe: ID do barbeiro chefe
-            servicos: lista de dicts com {id_servico, quantidade}
-            desconto: percentual de desconto para TODOS os serviços (0-100), padrão 0
-        """
+    def criar(id_barbeiro_chefe, servicos):
         with Database.get_cursor() as cursor:
-            # Validar desconto
-            desconto = float(desconto)
-            if desconto < 0 or desconto > 100:
-                raise ValueError('Desconto deve ser entre 0 e 100')
-
-            # Criar plano (SEM desconto_percentual na tabela Plano_Mensal)
             cursor.execute("""
-                INSERT INTO Plano_Mensal (id_barbeiro_chefe)
-                VALUES (%s)
-                RETURNING id_plano_mensal
-            """, (id_barbeiro_chefe,))
+                    INSERT INTO Plano_Mensal (id_barbeiro_chefe)
+                    VALUES (%s)
+                    RETURNING id_plano_mensal
+                """, (id_barbeiro_chefe,))
 
             id_plano = cursor.fetchone()['id_plano_mensal']
 
-            # Adicionar serviços ao plano COM DESCONTO INDIVIDUAL
             for servico in servicos:
-                cursor.execute("""
-                    INSERT INTO Possui (id_serv, id_plano, quantidade, desconto)
-                    VALUES (%s, %s, %s, %s)
-                """, (servico['id_servico'], id_plano, servico['quantidade'], desconto))
+                desconto_servico = float(servico.get('desconto', 0))
 
-            # Calcular valores para retorno
-            valores = PlanoMensal.calcular_valores_plano(id_plano)
+                if desconto_servico < 0 or desconto_servico > 100:
+                    raise ValueError('Desconto deve ser entre 0 e 100')
+
+                cursor.execute("""
+                        INSERT INTO Possui (id_serv, id_plano, quantidade, desconto)
+                        VALUES (%s, %s, %s, %s)
+                    """, (servico['id_servico'], id_plano, servico['quantidade'], desconto_servico))
 
             return {
                 'id_plano_mensal': id_plano,
-                'desconto_aplicado': desconto,
-                **valores
             }
 
     @staticmethod
