@@ -111,40 +111,6 @@ class PlanoMensal:
             return planos
 
     @staticmethod
-    def buscar_por_id(id_plano):
-        """Busca um plano específico com todos os detalhes"""
-        with Database.get_cursor() as cursor:
-            cursor.execute("""
-                SELECT 
-                    pm.id_plano_mensal,
-                    pm.id_barbeiro_chefe,
-                    p.nome_completo as criador_nome,
-                    json_agg(
-                        json_build_object(
-                            'id_servico', s.id_servico,
-                            'nome', s.nome,
-                            'preco', s.preco,
-                            'quantidade', ps.quantidade,
-                            'desconto', ps.desconto
-                        ) ORDER BY s.nome
-                    ) FILTER (WHERE s.id_servico IS NOT NULL) as servicos
-                FROM Plano_Mensal pm
-                JOIN Barbeiro_Chefe bc ON pm.id_barbeiro_chefe = bc.id_barbeiro_chefe
-                JOIN Pessoa p ON bc.cpf_barbeiro = p.cpf
-                LEFT JOIN Possui ps ON pm.id_plano_mensal = ps.id_plano
-                LEFT JOIN Servico s ON ps.id_serv = s.id_servico
-                WHERE pm.id_plano_mensal = %s
-                GROUP BY pm.id_plano_mensal, pm.id_barbeiro_chefe, p.nome_completo
-            """, (id_plano,))
-
-            plano = cursor.fetchone()
-            if plano and plano['servicos']:
-                valores = PlanoMensal.calcular_valores_plano(id_plano)
-                plano.update(valores)
-
-            return plano
-
-    @staticmethod
     def assinar_plano(cpf_cliente, id_plano, data_inicio, data_fim):
         with Database.get_cursor() as cursor:
             cursor.execute("""
@@ -155,8 +121,9 @@ class PlanoMensal:
 
     @staticmethod
     def listar_assinaturas_cliente(cpf_cliente):
-        """Lista assinaturas do cliente com informações completas do plano"""
+        """Lista assinaturas do cliente com informações completas do plano (Sem JSON no SQL)"""
         with Database.get_cursor() as cursor:
+            # 1. Query "Flat" (sem funções JSON)
             cursor.execute("""
                 SELECT 
                     a.id_cliente,
@@ -164,33 +131,62 @@ class PlanoMensal:
                     a.data_inicio,
                     a.data_fim,
                     pm.id_plano_mensal,
-                    json_agg(
-                        json_build_object(
-                            'id_servico', s.id_servico,
-                            'nome', s.nome,
-                            'preco', s.preco,
-                            'quantidade', ps.quantidade,
-                            'desconto', ps.desconto
-                        ) ORDER BY s.nome
-                    ) FILTER (WHERE s.id_servico IS NOT NULL) as servicos
+                    s.id_servico,
+                    s.nome as nome_servico,
+                    s.preco as preco_servico,
+                    ps.quantidade,
+                    ps.desconto
                 FROM Assina a
                 JOIN Plano_Mensal pm ON a.id_plano = pm.id_plano_mensal
                 LEFT JOIN Possui ps ON pm.id_plano_mensal = ps.id_plano
                 LEFT JOIN Servico s ON ps.id_serv = s.id_servico
                 WHERE a.id_cliente = %s
-                GROUP BY a.id_cliente, a.id_plano, a.data_inicio, a.data_fim, pm.id_plano_mensal
-                ORDER BY a.data_fim DESC
+                ORDER BY a.data_fim DESC, s.nome ASC
             """, (cpf_cliente,))
 
-            assinaturas = cursor.fetchall()
+            rows = cursor.fetchall()
 
-            # Adicionar cálculos para cada assinatura
-            for assinatura in assinaturas:
+            # 2. Reconstrução da estrutura hierárquica (Agrupamento)
+            assinaturas_map = {}
+
+            for row in rows:
+                # Usamos uma chave composta para identificar a assinatura única.
+                # (Caso o cliente assine o mesmo plano em datas diferentes)
+                chave_unica = (row['id_plano'], row['data_inicio'])
+
+                # Se a assinatura ainda não existe no mapa, cria o cabeçalho
+                if chave_unica not in assinaturas_map:
+                    assinaturas_map[chave_unica] = {
+                        'id_cliente': row['id_cliente'],
+                        'id_plano': row['id_plano'],
+                        'data_inicio': row['data_inicio'],
+                        'data_fim': row['data_fim'],
+                        'id_plano_mensal': row['id_plano_mensal'],
+                        'servicos': [] # Lista vazia para preencher
+                    }
+
+                # Se a linha tiver um serviço válido, adiciona à lista dessa assinatura
+                if row['id_servico'] and row['quantidade'] > 0:
+                    assinaturas_map[chave_unica]['servicos'].append({
+                        'id_servico': row['id_servico'],
+                        'nome': row['nome_servico'],
+                        'preco': row['preco_servico'],
+                        'quantidade': row['quantidade'],
+                        'desconto': row['desconto']
+                    })
+
+            # 3. Converte o mapa em lista final
+            lista_assinaturas = list(assinaturas_map.values())
+
+            # 4. Adicionar cálculos (Lógica original mantida)
+            for assinatura in lista_assinaturas:
+                # Só calcula se tiver serviços (proteção extra)
                 if assinatura['servicos']:
+                    # Assume que essa função estática existe na sua classe PlanoMensal
                     valores = PlanoMensal.calcular_valores_plano(assinatura['id_plano'])
                     assinatura.update(valores)
 
-            return assinaturas
+            return lista_assinaturas
 
     @staticmethod
     def calcular_valores_plano(id_plano):
