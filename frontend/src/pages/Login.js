@@ -31,7 +31,6 @@ const Login = () => {
     const result = await login(formData.email, formData.senha);
 
     if (result.success) {
-      // Redireciona baseado no tipo de usuário
       if (result.user.tipo === 'cliente') {
         navigate('/cliente/dashboard');
       } else if (['barbeiro', 'barbeiro_chefe'].includes(result.user.tipo)) {
@@ -78,10 +77,9 @@ const Login = () => {
                 required
                 placeholder="••••••••"
               />
-              {/* Link adicionado discretamente abaixo do input */}
               <div style={{ textAlign: 'right', marginTop: '0.5rem' }}>
-                <Link 
-                  to="/esqueci-senha" 
+                <Link
+                  to="/esqueci-senha"
                   style={{ fontSize: '0.85rem', color: '#666', textDecoration: 'none' }}
                 >
                   Esqueci minha senha
@@ -89,8 +87,8 @@ const Login = () => {
               </div>
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="btn btn-primary btn-block"
               disabled={loading}
             >
@@ -100,7 +98,7 @@ const Login = () => {
 
           <div className="form-footer">
             <p>
-              Não tem uma conta? 
+              Não tem uma conta?
               <Link to="/cadastro"> Cadastre-se aqui</Link>
             </p>
           </div>

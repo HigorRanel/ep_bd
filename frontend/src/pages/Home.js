@@ -9,7 +9,6 @@ const Home = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Redireciona usuários logados para seus dashboards
     if (user) {
       if (isCliente()) {
         navigate('/cliente/dashboard');

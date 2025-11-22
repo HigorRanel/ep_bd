@@ -10,7 +10,6 @@ const MinhasReservas = () => {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ type: '', text: '' });
 
-  // Estados para filtros
   const [filtroNome, setFiltroNome] = useState('');
   const [filtroCategoria, setFiltroCategoria] = useState('todas');
   const [categorias, setCategorias] = useState([]);
@@ -26,7 +25,7 @@ const MinhasReservas = () => {
         api.get('/produtos/minhas-reservas'),
         api.get('/produtos/categorias')
       ]);
-      
+
       setProdutos(produtosRes.data);
       setReservas(reservasRes.data);
       setCategorias(categoriasRes.data);
@@ -44,9 +43,9 @@ const MinhasReservas = () => {
       carregarDados();
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.error || 'Erro ao reservar produto' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.error || 'Erro ao reservar produto'
       });
     }
   };
@@ -64,7 +63,7 @@ const MinhasReservas = () => {
 
   const cancelarReserva = async (idProduto) => {
     if (!window.confirm('Deseja cancelar esta reserva?')) return;
-    
+
     try {
       await api.delete(`/reservas/${idProduto}`);
       setMessage({ type: 'success', text: 'Reserva cancelada!' });
@@ -74,13 +73,11 @@ const MinhasReservas = () => {
     }
   };
 
-  // Função para filtrar produtos
   const filtrarProdutos = () => {
     let produtosFiltrados = produtos.filter(
       p => p.quantidade_estoque > 0
     );
 
-    // Filtro por nome
     if (filtroNome.trim()) {
       const termo = filtroNome.toLowerCase();
       produtosFiltrados = produtosFiltrados.filter(p =>
@@ -89,7 +86,6 @@ const MinhasReservas = () => {
       );
     }
 
-    // Filtro por categoria
     if (filtroCategoria !== 'todas') {
       produtosFiltrados = produtosFiltrados.filter(
         p => p.categoria === filtroCategoria
@@ -132,7 +128,6 @@ const MinhasReservas = () => {
           </div>
         )}
 
-        {/* Minhas Reservas */}
         <div className="dashboard-section">
           <h2>Minhas Reservas Ativas</h2>
           {reservas.length === 0 ? (
@@ -156,11 +151,11 @@ const MinhasReservas = () => {
                     <p><strong>Categoria:</strong> {reserva.categoria}</p>
                     <p><strong>Preço:</strong> R$ {parseFloat(reserva.preco_venda).toFixed(2)}</p>
                     <p><strong>Reservado em:</strong> {new Date(reserva.data_reserva).toLocaleDateString('pt-BR')}</p>
-                    
+
                     {reserva.status === 'reservado' && (
-                      <div style={{ 
-                        marginTop: '15px', 
-                        padding: '10px', 
+                      <div style={{
+                        marginTop: '15px',
+                        padding: '10px',
                         backgroundColor: '#e3f2fd',
                         borderRadius: '4px',
                         fontSize: '13px'
@@ -171,11 +166,11 @@ const MinhasReservas = () => {
                         </p>
                       </div>
                     )}
-                    
+
                     {reserva.status === 'comprado' && (
-                      <div style={{ 
-                        marginTop: '15px', 
-                        padding: '10px', 
+                      <div style={{
+                        marginTop: '15px',
+                        padding: '10px',
                         backgroundColor: '#e8f5e9',
                         borderRadius: '4px',
                         fontSize: '13px'
@@ -204,7 +199,7 @@ const MinhasReservas = () => {
                         </button>
                       </>
                     )}
-                    
+
                     {reserva.status === 'comprado' && (
                       <span style={{ color: '#27ae60', fontSize: '13px' }}>
                         ✓ Produto retirado com sucesso
@@ -217,20 +212,18 @@ const MinhasReservas = () => {
           )}
         </div>
 
-        {/* Filtros de Produtos */}
         <div className="dashboard-section">
           <h2>Produtos Disponíveis para Reserva</h2>
-          
+
           <div className="card" style={{ marginBottom: '30px' }}>
             <h3 style={{ marginBottom: '15px' }}>🔍 Filtrar Produtos</h3>
-            
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
               gap: '15px',
               marginBottom: '15px'
             }}>
-              {/* Filtro por Nome */}
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label>Buscar por Nome</label>
                 <input
@@ -248,7 +241,6 @@ const MinhasReservas = () => {
                 />
               </div>
 
-              {/* Filtro por Categoria */}
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label>Categoria</label>
                 <select
@@ -270,10 +262,9 @@ const MinhasReservas = () => {
               </div>
             </div>
 
-            {/* Botão Limpar Filtros e Info */}
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
               alignItems: 'center',
               paddingTop: '15px',
               borderTop: '1px solid #ecf0f1'
@@ -285,7 +276,7 @@ const MinhasReservas = () => {
                   `Mostrando ${produtosFiltrados.length} de ${produtos.filter(p => p.quantidade_estoque > 0).length} produtos`
                 )}
               </div>
-              
+
               {(filtroNome || filtroCategoria !== 'todas') && (
                 <button
                   onClick={limparFiltros}
@@ -297,11 +288,10 @@ const MinhasReservas = () => {
             </div>
           </div>
 
-          {/* Lista de Produtos */}
           {produtosFiltrados.length === 0 ? (
             <div className="empty-state">
               <p>
-                {filtroNome || filtroCategoria !== 'todas' 
+                {filtroNome || filtroCategoria !== 'todas'
                   ? 'Nenhum produto encontrado com os filtros aplicados'
                   : 'Nenhum produto disponível para reserva no momento'
                 }
@@ -315,17 +305,17 @@ const MinhasReservas = () => {
           ) : (
             <div className="grid-3">
               {produtosFiltrados.map((produto) => {
-                const jaReservado = reservas.some(r => 
-                  r.id_prod === produto.id_produto && 
+                const jaReservado = reservas.some(r =>
+                  r.id_prod === produto.id_produto &&
                   (r.status === 'reservado' || r.status === 'pendente')
                 );
-                
+
                 return (
                   <div key={produto.id_produto} className="card">
                     <div className="card-header">
                       <h3>{produto.nome_produto}</h3>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', alignItems: 'flex-end' }}>
-                        <span className="badge" style={{ 
+                        <span className="badge" style={{
                           backgroundColor: '#3498db',
                           fontSize: '11px'
                         }}>
@@ -341,8 +331,8 @@ const MinhasReservas = () => {
                     <div className="card-body">
                       {produto.descricao && (
                         <p style={{ fontSize: '13px', color: '#666', marginTop: '0', marginBottom: '10px' }}>
-                          {produto.descricao.length > 80 
-                            ? `${produto.descricao.substring(0, 80)}...` 
+                          {produto.descricao.length > 80
+                            ? `${produto.descricao.substring(0, 80)}...`
                             : produto.descricao
                           }
                         </p>
@@ -364,9 +354,9 @@ const MinhasReservas = () => {
                         {jaReservado ? '✓ Já Reservado' : '🔖 Reservar Produto'}
                       </button>
                       {jaReservado && (
-                        <small style={{ 
-                          display: 'block', 
-                          marginTop: '8px', 
+                        <small style={{
+                          display: 'block',
+                          marginTop: '8px',
                           color: '#666',
                           fontSize: '12px',
                           textAlign: 'center'
@@ -382,7 +372,6 @@ const MinhasReservas = () => {
           )}
         </div>
 
-        {/* Informações sobre Reservas */}
         <div className="card" style={{ marginTop: '40px', backgroundColor: '#f8f9fa' }}>
           <h3>ℹ️ Como Funciona</h3>
           <ul style={{ paddingLeft: '20px', marginTop: '15px', marginBottom: 0 }}>

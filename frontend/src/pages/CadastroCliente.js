@@ -15,7 +15,7 @@ const CadastroCliente = () => {
     senha: '',
     confirmarSenha: '',
   });
-  
+
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +30,6 @@ const CadastroCliente = () => {
     setError('');
   };
 
-  // === MÁSCARA CPF ===
   const handleCPFChange = (e) => {
     let v = e.target.value.replace(/\D/g, '').slice(0, 11);
 
@@ -42,17 +41,14 @@ const CadastroCliente = () => {
     setFormData({ ...formData, cpf: v });
   };
 
-  // === MÁSCARA TELEFONE ===
   const handleTelefoneChange = (e) => {
     let v = e.target.value.replace(/\D/g, '').slice(0, 11);
 
     if (v.length <= 10) {
-      // Formato fixo: (00) 0000-0000
       v = v
         .replace(/(\d{2})(\d)/, '($1) $2')
         .replace(/(\d{4})(\d)/, '$1-$2');
     } else {
-      // Formato celular: (00) 00000-0000
       v = v
         .replace(/(\d{2})(\d)/, '($1) $2')
         .replace(/(\d{5})(\d)/, '$1-$2');
@@ -77,14 +73,13 @@ const CadastroCliente = () => {
 
     setLoading(true);
 
-    // Remove as máscaras antes de enviar
     const { confirmarSenha, cpf, telefone, ...resto } = formData;
 
-  const dadosCadastro = {
-    ...resto,
-    cpf: cpf.replace(/\D/g, ''),
-    telefone: telefone, // <--- Envia o telefone como está no formulário (com máscara)
-  };
+    const dadosCadastro = {
+      ...resto,
+      cpf: cpf.replace(/\D/g, ''),
+      telefone: telefone,
+    };
 
     const result = await cadastrarCliente(dadosCadastro);
 
@@ -217,8 +212,8 @@ const CadastroCliente = () => {
               </div>
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="btn btn-primary btn-block"
               disabled={loading}
             >
@@ -228,7 +223,7 @@ const CadastroCliente = () => {
 
           <div className="form-footer">
             <p>
-              Já tem uma conta? 
+              Já tem uma conta?
               <Link to="/login"> Faça login aqui</Link>
             </p>
           </div>

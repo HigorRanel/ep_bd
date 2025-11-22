@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import Navbar from '../components/common/Navbar'; // Adicionado
-import '../styles/forms.css'; // Usando o estilo padrão
+import Navbar from '../components/common/Navbar';
+import '../styles/forms.css';
 
 const EsqueciSenha = () => {
   const { solicitarRecuperacaoEmail } = useAuth();
@@ -12,23 +12,21 @@ const EsqueciSenha = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // 1. Limpa qualquer mensagem anterior (Resolve o "acúmulo")
+
     setStatus({ type: '', message: '' });
-    
+
     setLoading(true);
     const res = await solicitarRecuperacaoEmail(email);
     setLoading(false);
-    
+
     if (res.success) {
       setStatus({ type: 'success', message: res.message });
-      setEmail(''); // Limpa o campo após sucesso
+      setEmail('');
     } else {
       setStatus({ type: 'error', message: res.error });
     }
   };
 
-  // Limpa o erro quando o usuário começa a digitar novamente
   const handleChange = (e) => {
     setEmail(e.target.value);
     if (status.message) setStatus({ type: '', message: '' });
@@ -36,8 +34,8 @@ const EsqueciSenha = () => {
 
   return (
     <div className="page-container">
-      <Navbar /> {/* Adicionado a Navbar */}
-      
+      <Navbar />
+
       <div className="form-container">
         <div className="form-card">
           <h2>Recuperar Senha</h2>
@@ -45,7 +43,6 @@ const EsqueciSenha = () => {
             Digite seu e-mail para receber o link de redefinição
           </p>
 
-          {/* Renderização condicional da mensagem */}
           {status.message && (
             <div className={`alert ${status.type === 'error' ? 'alert-error' : 'alert-success'}`}>
               {status.message}
@@ -65,16 +62,16 @@ const EsqueciSenha = () => {
                 placeholder="seu@email.com"
               />
             </div>
-            
-            <button 
-              type="submit" 
-              className="btn btn-primary btn-block" 
+
+            <button
+              type="submit"
+              className="btn btn-primary btn-block"
               disabled={loading}
             >
               {loading ? 'Enviando...' : 'Enviar Link'}
             </button>
           </form>
-          
+
           <div className="form-footer">
             <Link to="/login" className="btn-link">
               ← Voltar para o Login

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import '../../styles/forms.css'; // Reutilizando estilos de formulário existentes
+import '../../styles/forms.css';
 
 const AlterarSenha = () => {
   const { alterarSenha } = useAuth();
-  
+
   const [formData, setFormData] = useState({
     senhaAtual: '',
     novaSenha: '',
@@ -49,7 +49,7 @@ const AlterarSenha = () => {
   return (
     <div className="form-container" style={{ maxWidth: '500px', margin: '2rem auto' }}>
       <h2>Alterar Senha</h2>
-      
+
       {status.message && (
         <div className={`alert ${status.type === 'error' ? 'alert-danger' : 'alert-success'}`}>
           {status.message}

@@ -10,17 +10,14 @@ const PrivateRoute = ({ children, requiredType }) => {
     return <LoadingSpinner />;
   }
 
-  // 1. Verifica se está logado
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  // 2. Se requiredType NÃO for passado (ex: rota /perfil), permite acesso a qualquer logado
   if (!requiredType) {
     return children;
   }
 
-  // 3. Verificações específicas de tipo
   if (requiredType === 'cliente' && user.tipo !== 'cliente') {
     return <Navigate to="/barbeiro/dashboard" replace />;
   }

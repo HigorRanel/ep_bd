@@ -20,8 +20,6 @@ const AgendarServico = () => {
   const [loadingHorarios, setLoadingHorarios] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const navigate = useNavigate();
-
-  // Novos estados para plano
   const [podeUsarPlano, setPodeUsarPlano] = useState(false);
   const [infoPlano, setInfoPlano] = useState(null);
   const [usarPlano, setUsarPlano] = useState(false);
@@ -30,7 +28,6 @@ const AgendarServico = () => {
     carregarBarbeiros();
   }, []);
 
-  // Carregar horários quando data, barbeiro e serviço estiverem selecionados
   useEffect(() => {
     if (formData.cpf_barbeiro && formData.data && servicoSelecionado) {
       carregarHorariosDisponiveis();
@@ -40,17 +37,16 @@ const AgendarServico = () => {
     }
   }, [formData.cpf_barbeiro, formData.data, servicoSelecionado]);
 
-  // Nova função para verificar se pode usar plano
   const verificarPlano = async (idServico) => {
     if (!idServico) {
       setPodeUsarPlano(false);
       setInfoPlano(null);
       return;
     }
-    
+
     try {
       const response = await api.get(`/planos/pode-agendar/${idServico}`);
-      
+
       if (response.data.pode_usar_plano) {
         setPodeUsarPlano(true);
         setInfoPlano(response.data);
@@ -78,7 +74,7 @@ const AgendarServico = () => {
     try {
       const response = await api.get('/servicos');
       const todosServicos = response.data;
-      
+
       const servicosDoBarbeiro = todosServicos.filter(servico => {
         return servico.barbeiros && servico.barbeiros.some(nome => {
           const barbeiro = barbeiros.find(b => b.cpf === cpfBarbeiro);
@@ -103,22 +99,22 @@ const AgendarServico = () => {
           duracao_servico_min: servicoSelecionado.duracao_estimada_min
         }
       });
-      
+
       setHorariosDisponiveis(response.data.horarios_disponiveis);
-      
+
       if (response.data.horarios_disponiveis.length === 0) {
-        setMessage({ 
-          type: 'warning', 
-          text: 'Não há horários disponíveis nesta data. Tente outra data.' 
+        setMessage({
+          type: 'warning',
+          text: 'Não há horários disponíveis nesta data. Tente outra data.'
         });
       } else {
         setMessage({ type: '', text: '' });
       }
     } catch (error) {
       console.error('Erro ao carregar horários:', error);
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.error || 'Erro ao carregar horários disponíveis' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.error || 'Erro ao carregar horários disponíveis'
       });
       setHorariosDisponiveis([]);
     } finally {
@@ -128,11 +124,11 @@ const AgendarServico = () => {
 
   const handleBarbeiroChange = (e) => {
     const cpf = e.target.value;
-    setFormData({ 
-      cpf_barbeiro: cpf, 
-      id_servico: '', 
-      data: '', 
-      horario: '' 
+    setFormData({
+      cpf_barbeiro: cpf,
+      id_servico: '',
+      data: '',
+      horario: ''
     });
     setServicoSelecionado(null);
     setHorariosDisponiveis([]);
@@ -143,24 +139,21 @@ const AgendarServico = () => {
     }
   };
 
-  // MODIFICADA: função handleServicoChange para incluir verificação de plano
   const handleServicoChange = (e) => {
     const idServico = e.target.value;
     setFormData({ ...formData, id_servico: idServico, horario: '' });
-    
+
     if (idServico) {
       const servico = servicos.find(s => s.id_servico === parseInt(idServico));
       setServicoSelecionado(servico);
-      
-      // NOVO: Verificar se pode usar plano
       verificarPlano(idServico);
     } else {
       setServicoSelecionado(null);
       setPodeUsarPlano(false);
       setInfoPlano(null);
     }
-    
-    setUsarPlano(false); // Reset checkbox
+
+    setUsarPlano(false);
   };
 
   const handleDataChange = (e) => {
@@ -171,18 +164,14 @@ const AgendarServico = () => {
     setFormData({ ...formData, horario });
   };
 
-  // MODIFICADA: função handleSubmit para enviar informação do plano
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage({ type: '', text: '' });
 
     try {
-      // Buscar CPF do cliente logado
       const meRes = await api.get('/clientes/me');
       const cpfCliente = meRes.data.cpf;
-
-      // Formatar data e hora para o formato correto
       const dataHoraFormatada = `${formData.data} ${formData.horario}:00`;
 
       await api.post('/agendamentos', {
@@ -191,12 +180,11 @@ const AgendarServico = () => {
         cpf_barbeiro: formData.cpf_barbeiro,
         id_servico: parseInt(formData.id_servico),
         status: 'pendente',
-        usar_plano: usarPlano // NOVO
+        usar_plano: usarPlano
       });
 
       setMessage({ type: 'success', text: 'Agendamento realizado com sucesso!' });
-      
-      // Limpar formulário
+
       setFormData({
         cpf_barbeiro: '',
         id_servico: '',
@@ -210,19 +198,17 @@ const AgendarServico = () => {
       setInfoPlano(null);
       setUsarPlano(false);
 
-      // Redirecionar após 2 segundos
       setTimeout(() => navigate('/cliente/agendamentos'), 2000);
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.error || 'Erro ao agendar serviço' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.error || 'Erro ao agendar serviço'
       });
     } finally {
       setLoading(false);
     }
   };
 
-  // Obter data mínima (hoje)
   const getMinDate = () => {
     const hoje = new Date();
     const ano = hoje.getFullYear();
@@ -231,7 +217,6 @@ const AgendarServico = () => {
     return `${ano}-${mes}-${dia}`;
   };
 
-  // Obter data máxima (3 meses a partir de hoje)
   const getMaxDate = () => {
     const hoje = new Date();
     const maxData = new Date(hoje.setMonth(hoje.getMonth() + 3));
@@ -243,7 +228,6 @@ const AgendarServico = () => {
 
   const barbeiroSelecionado = barbeiros.find(b => b.cpf === formData.cpf_barbeiro);
 
-  // Agrupar horários por período (manhã, tarde, noite)
   const agruparHorariosPorPeriodo = () => {
     const grupos = {
       manha: [],
@@ -282,13 +266,12 @@ const AgendarServico = () => {
           )}
 
           <form onSubmit={handleSubmit}>
-            {/* PASSO 1: Selecionar Barbeiro */}
             <div className="agendamento-step">
               <div className="step-header">
                 <span className="step-number">1</span>
                 <h3>Escolha o Barbeiro</h3>
               </div>
-              
+
               <div className="form-group">
                 <label htmlFor="barbeiro">Barbeiro *</label>
                 <select
@@ -317,14 +300,13 @@ const AgendarServico = () => {
               )}
             </div>
 
-            {/* PASSO 2: Selecionar Serviço */}
             {formData.cpf_barbeiro && (
               <div className="agendamento-step">
                 <div className="step-header">
                   <span className="step-number">2</span>
                   <h3>Escolha o Serviço</h3>
                 </div>
-                
+
                 <div className="form-group">
                   <label htmlFor="servico">Serviço *</label>
                   <select
@@ -367,7 +349,6 @@ const AgendarServico = () => {
                   </div>
                 )}
 
-                {/* NOVO: Bloco para uso do plano */}
                 {servicoSelecionado && podeUsarPlano && infoPlano && (
                   <div className="agendamento-step">
                     <div className="info-box info-box-success">
@@ -375,10 +356,10 @@ const AgendarServico = () => {
                       <p style={{ marginTop: '10px' }}>
                         Você tem um plano ativo que inclui este serviço.
                       </p>
-                      
-                      <div style={{ 
-                        padding: '10px', 
-                        backgroundColor: '#fff', 
+
+                      <div style={{
+                        padding: '10px',
+                        backgroundColor: '#fff',
                         borderRadius: '6px',
                         marginTop: '10px'
                       }}>
@@ -389,10 +370,10 @@ const AgendarServico = () => {
                           <strong>Já utilizados:</strong> {infoPlano.uso.quantidade_usada}
                         </p>
                       </div>
-                      
-                      <label style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
+
+                      <label style={{
+                        display: 'flex',
+                        alignItems: 'center',
                         gap: '10px',
                         marginTop: '15px',
                         cursor: 'pointer',
@@ -409,11 +390,11 @@ const AgendarServico = () => {
                           ✓ Usar meu plano para este agendamento
                         </span>
                       </label>
-                      
+
                       {usarPlano && (
-                        <div style={{ 
-                          marginTop: '10px', 
-                          padding: '10px', 
+                        <div style={{
+                          marginTop: '10px',
+                          padding: '10px',
                           backgroundColor: '#e8f5e9',
                           borderRadius: '4px'
                         }}>
@@ -431,7 +412,7 @@ const AgendarServico = () => {
                     <div className="info-box" style={{ backgroundColor: '#fff3cd', borderLeft: '4px solid #f39c12' }}>
                       <h4>ℹ️ Informação sobre Plano</h4>
                       <p>{infoPlano.motivo}</p>
-                      
+
                       {infoPlano.uso && (
                         <div style={{ marginTop: '10px' }}>
                           <p style={{ margin: '5px 0' }}>
@@ -448,14 +429,13 @@ const AgendarServico = () => {
               </div>
             )}
 
-            {/* PASSO 3: Selecionar Data */}
             {servicoSelecionado && (
               <div className="agendamento-step">
                 <div className="step-header">
                   <span className="step-number">3</span>
                   <h3>Escolha a Data</h3>
                 </div>
-                
+
                 <div className="form-group">
                   <label htmlFor="data">Data *</label>
                   <input
@@ -474,7 +454,6 @@ const AgendarServico = () => {
               </div>
             )}
 
-            {/* PASSO 4: Selecionar Horário */}
             {formData.data && (
               <div className="agendamento-step">
                 <div className="step-header">
@@ -496,7 +475,6 @@ const AgendarServico = () => {
                   </div>
                 ) : (
                   <div className="horarios-container">
-                    {/* Manhã */}
                     {horariosPorPeriodo.manha.length > 0 && (
                       <div className="periodo-horarios">
                         <h4>🌅 Manhã</h4>
@@ -515,7 +493,6 @@ const AgendarServico = () => {
                       </div>
                     )}
 
-                    {/* Tarde */}
                     {horariosPorPeriodo.tarde.length > 0 && (
                       <div className="periodo-horarios">
                         <h4>☀️ Tarde</h4>
@@ -534,7 +511,6 @@ const AgendarServico = () => {
                       </div>
                     )}
 
-                    {/* Noite */}
                     {horariosPorPeriodo.noite.length > 0 && (
                       <div className="periodo-horarios">
                         <h4>🌙 Noite</h4>
@@ -557,7 +533,6 @@ const AgendarServico = () => {
               </div>
             )}
 
-            {/* MODIFICADO: Resumo Final para incluir informação do plano */}
             {formData.cpf_barbeiro && formData.id_servico && formData.data && formData.horario && (
               <div className="agendamento-step">
                 <div className={`info-box ${usarPlano ? 'info-box-success' : 'info-box-warning'}`}>
@@ -565,19 +540,19 @@ const AgendarServico = () => {
                   <div style={{ marginTop: '15px' }}>
                     <p><strong>Barbeiro:</strong> {barbeiroSelecionado?.nome_completo}</p>
                     <p><strong>Serviço:</strong> {servicoSelecionado?.nome}</p>
-                    <p><strong>Data:</strong> {new Date(formData.data + 'T00:00:00').toLocaleDateString('pt-BR', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
+                    <p><strong>Data:</strong> {new Date(formData.data + 'T00:00:00').toLocaleDateString('pt-BR', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
                     })}</p>
                     <p><strong>Horário:</strong> {formData.horario}</p>
                     <p><strong>Duração:</strong> {servicoSelecionado?.duracao_estimada_min} minutos</p>
-                    
+
                     {usarPlano ? (
-                      <div style={{ 
-                        marginTop: '15px', 
-                        paddingTop: '15px', 
+                      <div style={{
+                        marginTop: '15px',
+                        paddingTop: '15px',
                         borderTop: '2px solid #27ae60'
                       }}>
                         <p style={{ color: '#27ae60', fontWeight: 'bold', fontSize: '18px' }}>
@@ -600,10 +575,9 @@ const AgendarServico = () => {
               </div>
             )}
 
-            {/* Botões */}
             <div style={{ display: 'flex', gap: '10px', marginTop: '30px' }}>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="btn btn-primary"
                 style={{ flex: 1 }}
                 disabled={loading || !formData.horario}
@@ -621,7 +595,6 @@ const AgendarServico = () => {
             </div>
           </form>
 
-          {/* Dicas */}
           <div className="info-box" style={{ marginTop: '30px' }}>
             <h4>💡 Dicas Importantes:</h4>
             <ul style={{ marginBottom: 0, paddingLeft: '20px' }}>

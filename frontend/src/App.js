@@ -52,13 +52,13 @@ function App() {
           <Route path="/redefinir-senha/:token" element={<RedefinirSenha />} />
 
           {/* Rota do Perfil (qualquer usuário logado) */}
-          <Route 
-            path="/perfil" 
+          <Route
+            path="/perfil"
             element={
               <PrivateRoute>
                 <Perfil />
               </PrivateRoute>
-            } 
+            }
           />
 
           {/* Rotas do Cliente */}
@@ -120,8 +120,8 @@ function App() {
               </PrivateRoute>
             }
           />
-          
-          {/* NOVA: Gestão de Clientes */}
+
+          {/*Gestão de Clientes */}
           <Route
             path="/barbeiro/clientes"
             element={
@@ -138,7 +138,7 @@ function App() {
               </PrivateRoute>
             }
           />
-          
+
           <Route
             path="/barbeiro/servicos/novo"
             element={
@@ -166,8 +166,8 @@ function App() {
             }
           />
           <Route
-             path="/barbeiro/relatorios"
-              element={
+            path="/barbeiro/relatorios"
+            element={
               <PrivateRoute requiredType="barbeiro">
                 <Relatorios />
               </PrivateRoute>
@@ -190,7 +190,7 @@ function App() {
               </PrivateRoute>
             }
           />
-          
+
           <Route
             path="/barbeiro/reservas"
             element={
@@ -219,7 +219,7 @@ function App() {
               </PrivateRoute>
             }
           />
-          
+
           <Route
             path="/barbeiro/cadastrar-barbeiro"
             element={
