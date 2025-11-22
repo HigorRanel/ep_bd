@@ -327,7 +327,7 @@ class Agendamento:
     @staticmethod
     def listar_avaliacoes_paginado(cpf_barbeiro, pagina=1, por_pagina=10, data_inicio=None, data_fim=None,
                                    nota_min=None):
-        """Lista avaliações com paginação e filtros"""
+
         with Database.get_cursor() as cursor:
             # Query base
             query_base = """

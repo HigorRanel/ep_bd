@@ -365,8 +365,8 @@ const MeusAgendamentos = () => {
                   fontSize: '14px'
                 }}
               >
-                <option value="recentes">Mais recentes</option>
-                <option value="antigas">Mais antigas</option>
+                <option value="recentes">Maior data</option>
+                <option value="antigas">Menor data</option>
               </select>
             </div>
           </div>
