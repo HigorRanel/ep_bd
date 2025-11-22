@@ -42,7 +42,7 @@ const MinhasAvaliacoes = () => {
       setAvaliacoes(avaliacoesRes.data.avaliacoes);
       setPagination({
         total: avaliacoesRes.data.total_avaliacoes,
-        has_next: avaliacoesRes.data.tem_proximo,
+        has_next: avaliacoesRes.data.tem_proxima,
         has_prev: avaliacoesRes.data.tem_anterior,
         page: avaliacoesRes.data.pagina_atual,
         pages: avaliacoesRes.data.total_paginas,
@@ -55,7 +55,6 @@ const MinhasAvaliacoes = () => {
       setLoading(false);
     }
   };
-
   const renderEstrelas = (nota) => {
     const estrelas = [];
     for (let i = 1; i <= 5; i++) {
