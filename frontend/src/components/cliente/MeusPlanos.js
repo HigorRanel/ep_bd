@@ -11,7 +11,7 @@ const MeusPlanos = () => {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ type: '', text: '' });
   
-  // NOVO: Modal de detalhes do plano
+  // Modal de detalhes do plano
   const [modalDetalhes, setModalDetalhes] = useState(null);
 
   useEffect(() => {
@@ -23,18 +23,24 @@ const MeusPlanos = () => {
       const [planosRes, assinaturasRes, vencendoRes] = await Promise.all([
         api.get('/planos'),
         api.get('/planos/minhas-assinaturas'),
-        api.get('/planos/vencendo?dias=7') // Planos que vencem em 7 dias
+        api.get('/planos/vencendo?dias=7')
       ]);
       
-      setPlanosDisponiveis(planosRes.data);
-      setMinhasAssinaturas(assinaturasRes.data);
-      setPlanosVencendo(vencendoRes.data.planos_vencendo);
+      console.log('Planos disponíveis:', planosRes.data);
+      console.log('Minhas assinaturas:', assinaturasRes.data);
+      
+      setPlanosDisponiveis(planosRes.data || []);
+      setMinhasAssinaturas(assinaturasRes.data || []);
+      setPlanosVencendo(vencendoRes.data.planos_vencendo || []);
       
       // Carregar uso de cada plano ativo
-      await carregarUsoPlanos(assinaturasRes.data);
+      if (assinaturasRes.data && assinaturasRes.data.length > 0) {
+        await carregarUsoPlanos(assinaturasRes.data);
+      }
       
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
+      setMessage({ type: 'error', text: 'Erro ao carregar planos' });
     } finally {
       setLoading(false);
     }
@@ -96,16 +102,6 @@ const MeusPlanos = () => {
     }
   };
 
-  const calcularValorTotal = (servicos) => {
-    if (!servicos || servicos.length === 0) return 0;
-    return servicos.reduce((total, s) => {
-      if (s && s.preco && s.quantidade) {
-        return total + (parseFloat(s.preco) * s.quantidade);
-      }
-      return total;
-    }, 0);
-  };
-
   const planoEstaAtivo = (dataFim) => {
     return new Date(dataFim) >= new Date();
   };
@@ -130,6 +126,7 @@ const MeusPlanos = () => {
       });
     } catch (error) {
       console.error('Erro ao carregar detalhes:', error);
+      setMessage({ type: 'error', text: 'Erro ao carregar detalhes do plano' });
     }
   };
 
@@ -141,7 +138,22 @@ const MeusPlanos = () => {
     return (
       <div key={servico.id_servico} style={{ marginBottom: '15px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-          <strong>{servico.nome_servico}</strong>
+          <div>
+            <strong>{servico.nome_servico}</strong>
+            {servico.desconto_percentual > 0 && (
+              <span style={{ 
+                marginLeft: '8px', 
+                padding: '2px 6px', 
+                backgroundColor: '#e8f5e9', 
+                color: '#27ae60',
+                borderRadius: '3px',
+                fontSize: '11px',
+                fontWeight: 'bold'
+              }}>
+                {servico.desconto_percentual}% OFF
+              </span>
+            )}
+          </div>
           <span>
             {servico.quantidade_usada}/{servico.quantidade_plano}
             {servico.esgotado && ' ⚠️ Esgotado'}
@@ -192,7 +204,7 @@ const MeusPlanos = () => {
           </div>
         )}
 
-        {/* NOVO: Alertas de Vencimento */}
+        {/* Alertas de Vencimento */}
         {planosVencendo.length > 0 && (
           <div className="alert alert-warning" style={{ marginBottom: '30px' }}>
             <h4 style={{ marginTop: 0 }}>⚠️ Atenção: Planos Próximos do Vencimento</h4>
@@ -224,7 +236,12 @@ const MeusPlanos = () => {
                 const ativo = planoEstaAtivo(assinatura.data_fim);
                 const diasRestantes = calcularDiasRestantes(assinatura.data_fim);
                 const uso = usoPlanos[assinatura.id_plano];
-                const valorTotal = calcularValorTotal(assinatura.servicos);
+                
+                // Calcular valores baseado nos serviços com desconto
+                const valorComDesconto = assinatura.valor_com_desconto || 0;
+                const valorSemDesconto = assinatura.valor_sem_desconto || 0;
+                const economiaTotal = assinatura.valor_desconto_total || 0;
+                const descontoMedio = assinatura.desconto_medio || 0;
                 
                 return (
                   <div key={assinatura.id_plano} className="card">
@@ -232,7 +249,12 @@ const MeusPlanos = () => {
                       <div>
                         <h3>Plano #{assinatura.id_plano}</h3>
                         <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#666' }}>
-                          💰 R$ {valorTotal.toFixed(2)}/mês
+                          💰 R$ {valorComDesconto.toFixed(2)}/mês
+                          {economiaTotal > 0 && (
+                            <span style={{ color: '#27ae60', marginLeft: '8px' }}>
+                              (economize R$ {economiaTotal.toFixed(2)})
+                            </span>
+                          )}
                         </p>
                       </div>
                       <span className={`badge ${ativo ? 'badge-confirmado' : 'badge-cancelado'}`}>
@@ -259,7 +281,7 @@ const MeusPlanos = () => {
                         </div>
                       )}
                       
-                      {/* NOVO: Uso de Serviços */}
+                      {/* Uso de Serviços */}
                       {ativo && uso && uso.servicos && (
                         <div style={{ marginTop: '15px' }}>
                           <strong style={{ display: 'block', marginBottom: '10px' }}>
@@ -269,6 +291,7 @@ const MeusPlanos = () => {
                         </div>
                       )}
                       
+                      {/* Serviços inclusos para planos expirados */}
                       {assinatura.servicos && assinatura.servicos.length > 0 && !ativo && (
                         <>
                           <p style={{ marginTop: '15px' }}><strong>Serviços inclusos:</strong></p>
@@ -277,6 +300,11 @@ const MeusPlanos = () => {
                               servico && servico.nome && (
                                 <li key={idx}>
                                   {servico.quantidade}x {servico.nome}
+                                  {servico.desconto > 0 && (
+                                    <span style={{ color: '#27ae60', marginLeft: '5px' }}>
+                                      ({servico.desconto}% OFF)
+                                    </span>
+                                  )}
                                 </li>
                               )
                             ))}
@@ -321,19 +349,19 @@ const MeusPlanos = () => {
                 const jaAssinado = minhasAssinaturas.some(
                   a => a.id_plano === plano.id_plano_mensal && planoEstaAtivo(a.data_fim)
                 );
-                const valorSemDesconto = calcularValorTotal(plano.servicos);
                 
-                // Calcular desconto (assumindo que todos os serviços têm o mesmo desconto)
-                const desconto = plano.servicos && plano.servicos[0] ? plano.servicos[0].desconto : 0;
-                const valorDesconto = valorSemDesconto * (desconto / 100);
-                const valorComDesconto = valorSemDesconto - valorDesconto;
+                // Valores já calculados pelo backend
+                const valorSemDesconto = plano.valor_sem_desconto || 0;
+                const valorComDesconto = plano.valor_com_desconto || 0;
+                const economiaTotal = plano.valor_desconto_total || 0;
+                const descontoMedio = plano.desconto_medio || 0;
 
                 return (
                   <div key={plano.id_plano_mensal} className="card">
                     <div className="card-header">
                       <div>
                         <h3>Plano #{plano.id_plano_mensal}</h3>
-                        {desconto > 0 && (
+                        {descontoMedio > 0 && (
                           <span style={{ 
                             backgroundColor: '#27ae60', 
                             color: 'white', 
@@ -344,12 +372,12 @@ const MeusPlanos = () => {
                             marginTop: '5px',
                             display: 'inline-block'
                           }}>
-                            🎉 {desconto}% OFF
+                            🎉 Média {descontoMedio.toFixed(0)}% OFF
                           </span>
                         )}
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        {desconto > 0 ? (
+                        {economiaTotal > 0 ? (
                           <>
                             <small style={{ 
                               color: '#95a5a6', 
@@ -362,7 +390,7 @@ const MeusPlanos = () => {
                               R$ {valorComDesconto.toFixed(2)}
                             </h3>
                             <small style={{ color: '#666', fontSize: '11px' }}>
-                              Economia de R$ {valorDesconto.toFixed(2)}
+                              Economia de R$ {economiaTotal.toFixed(2)}
                             </small>
                           </>
                         ) : (
@@ -390,6 +418,11 @@ const MeusPlanos = () => {
                                   <span style={{ color: '#666', fontSize: '12px' }}>
                                     {' '}(R$ {parseFloat(servico.preco).toFixed(2)} cada)
                                   </span>
+                                  {servico.desconto > 0 && (
+                                    <span style={{ color: '#27ae60', marginLeft: '5px', fontWeight: 'bold' }}>
+                                      {servico.desconto}% OFF
+                                    </span>
+                                  )}
                                 </li>
                               )
                             ))}
@@ -397,7 +430,7 @@ const MeusPlanos = () => {
                         </>
                       )}
                       
-                      {desconto > 0 && (
+                      {economiaTotal > 0 && (
                         <div style={{ 
                           marginTop: '15px',
                           padding: '10px',
@@ -405,7 +438,7 @@ const MeusPlanos = () => {
                           borderRadius: '4px'
                         }}>
                           <strong style={{ color: '#27ae60' }}>
-                            💰 Economize {desconto}% assinando este plano!
+                            💰 Economize R$ {economiaTotal.toFixed(2)}/mês assinando este plano!
                           </strong>
                         </div>
                       )}
@@ -456,17 +489,20 @@ const MeusPlanos = () => {
                     <div style={{ display: 'grid', gap: '10px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span>Valor sem desconto:</span>
-                        <strong style={{ textDecoration: modalDetalhes.valores.desconto_percentual > 0 ? 'line-through' : 'none', color: '#95a5a6' }}>
+                        <strong style={{ 
+                          textDecoration: modalDetalhes.valores.valor_desconto_total > 0 ? 'line-through' : 'none', 
+                          color: modalDetalhes.valores.valor_desconto_total > 0 ? '#95a5a6' : '#2c3e50'
+                        }}>
                           R$ {modalDetalhes.valores.valor_sem_desconto.toFixed(2)}
                         </strong>
                       </div>
                       
-                      {modalDetalhes.valores.desconto_percentual > 0 && (
+                      {modalDetalhes.valores.valor_desconto_total > 0 && (
                         <>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span>Desconto ({modalDetalhes.valores.desconto_percentual}%):</span>
+                            <span>Desconto total ({modalDetalhes.valores.desconto_medio.toFixed(1)}% médio):</span>
                             <strong style={{ color: '#e74c3c' }}>
-                              - R$ {modalDetalhes.valores.valor_desconto.toFixed(2)}
+                              - R$ {modalDetalhes.valores.valor_desconto_total.toFixed(2)}
                             </strong>
                           </div>
                           <div style={{ 
@@ -490,18 +526,43 @@ const MeusPlanos = () => {
                   <div style={{ marginTop: '20px' }}>
                     <h4>📋 Serviços Inclusos</h4>
                     <ul style={{ paddingLeft: '20px' }}>
-                      {modalDetalhes.servicos.map((servico, idx) => (
-                        servico && servico.nome && (
-                          <li key={idx} style={{ marginBottom: '5px' }}>
+                      {modalDetalhes.servicos.map((servico, idx) => {
+                        if (!servico || !servico.nome) return null;
+                        
+                        const valorSem = parseFloat(servico.preco) * servico.quantidade;
+                        const desc = parseFloat(servico.desconto || 0);
+                        const valorDesc = valorSem * (desc / 100);
+                        const valorCom = valorSem - valorDesc;
+                        
+                        return (
+                          <li key={idx} style={{ marginBottom: '10px' }}>
                             <strong>{servico.quantidade}x</strong> {servico.nome}
+                            {desc > 0 && (
+                              <span style={{ 
+                                marginLeft: '8px',
+                                padding: '2px 6px',
+                                backgroundColor: '#e8f5e9',
+                                color: '#27ae60',
+                                borderRadius: '3px',
+                                fontSize: '11px',
+                                fontWeight: 'bold'
+                              }}>
+                                {desc}% OFF
+                              </span>
+                            )}
                             <br />
                             <small style={{ color: '#666' }}>
-                              R$ {parseFloat(servico.preco).toFixed(2)} cada = 
-                              R$ {(parseFloat(servico.preco) * servico.quantidade).toFixed(2)} total
+                              R$ {parseFloat(servico.preco).toFixed(2)} cada
+                              {desc > 0 && (
+                                <span>
+                                  {' '}| Sem desconto: R$ {valorSem.toFixed(2)} | Com desconto: <strong style={{ color: '#27ae60' }}>R$ {valorCom.toFixed(2)}</strong>
+                                </span>
+                              )}
+                              {desc === 0 && ` = R$ {valorSem.toFixed(2)} total`}
                             </small>
                           </li>
-                        )
-                      ))}
+                        );
+                      })}
                     </ul>
                   </div>
                 )}
@@ -522,7 +583,7 @@ const MeusPlanos = () => {
           <ul style={{ paddingLeft: '20px', marginTop: '15px', marginBottom: 0 }}>
             <li><strong>Assinatura Mensal:</strong> Os planos têm duração de 30 dias</li>
             <li><strong>Serviços Inclusos:</strong> Cada plano inclui uma quantidade específica de serviços</li>
-            <li><strong>Descontos:</strong> Planos com desconto oferecem economia em relação aos preços individuais</li>
+            <li><strong>Descontos:</strong> Cada serviço pode ter um desconto individual diferente</li>
             <li><strong>Uso Controlado:</strong> Você pode acompanhar quantos serviços já utilizou</li>
             <li><strong>Alertas de Vencimento:</strong> Receba avisos quando seu plano estiver próximo do vencimento</li>
             <li><strong>Renovação:</strong> Após o vencimento, você pode assinar novamente</li>

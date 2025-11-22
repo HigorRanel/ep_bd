@@ -6,7 +6,7 @@ import '../../styles/forms.css';
 const CadastrarPlano = () => {
   const [servicos, setServicos] = useState([]);
   const [servicosSelecionados, setServicosSelecionados] = useState([]);
-  const [desconto, setDesconto] = useState(0); // NOVO
+  const [descontoGeral, setDescontoGeral] = useState(0);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
@@ -26,7 +26,7 @@ const CadastrarPlano = () => {
   const adicionarServico = () => {
     setServicosSelecionados([
       ...servicosSelecionados,
-      { id_servico: '', quantidade: 1 },
+      { id_servico: '', quantidade: 1, desconto: descontoGeral }
     ]);
   };
 
@@ -40,12 +40,27 @@ const CadastrarPlano = () => {
     setServicosSelecionados(novosServicos);
   };
 
+  // Aplicar desconto geral a todos os serviços
+  const aplicarDescontoGeral = () => {
+    if (servicosSelecionados.length === 0) {
+      setMessage({ type: 'warning', text: 'Adicione pelo menos um serviço primeiro' });
+      return;
+    }
+
+    const novosServicos = servicosSelecionados.map(s => ({
+      ...s,
+      desconto: descontoGeral
+    }));
+    setServicosSelecionados(novosServicos);
+    setMessage({ type: 'success', text: `Desconto de ${descontoGeral}% aplicado a todos os serviços!` });
+    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage({ type: '', text: '' });
 
-    // Validações
     if (servicosSelecionados.length === 0) {
       setMessage({ type: 'error', text: 'Adicione pelo menos um serviço ao plano' });
       setLoading(false);
@@ -62,26 +77,30 @@ const CadastrarPlano = () => {
       return;
     }
 
-    // NOVO: Validar desconto
-    const descontoNum = parseFloat(desconto);
-    if (descontoNum < 0 || descontoNum > 100) {
-      setMessage({ type: 'error', text: 'Desconto deve ser entre 0 e 100' });
-      setLoading(false);
-      return;
+    // Validar descontos
+    for (const servico of servicosValidos) {
+      const desc = parseFloat(servico.desconto || 0);
+      if (desc < 0 || desc > 100) {
+        setMessage({ type: 'error', text: 'Todos os descontos devem ser entre 0 e 100' });
+        setLoading(false);
+        return;
+      }
     }
 
     try {
+      // Enviar com desconto=0 pois cada serviço tem seu próprio desconto
       await api.post('/planos', {
         servicos: servicosValidos.map(s => ({
           id_servico: parseInt(s.id_servico),
           quantidade: parseInt(s.quantidade),
+          desconto: parseFloat(s.desconto || 0)
         })),
-        desconto: descontoNum // NOVO
+        desconto: 0 // Não usado, mas mantém compatibilidade
       });
 
       setMessage({ type: 'success', text: 'Plano criado com sucesso!' });
       setServicosSelecionados([]);
-      setDesconto(0); // NOVO: Resetar desconto
+      setDescontoGeral(0);
     } catch (error) {
       setMessage({
         type: 'error',
@@ -96,26 +115,30 @@ const CadastrarPlano = () => {
     return servicosSelecionados.reduce((total, servSel) => {
       const servico = servicos.find(s => s.id_servico === parseInt(servSel.id_servico));
       if (servico && servSel.quantidade) {
+        const valorSemDesconto = parseFloat(servico.preco) * parseInt(servSel.quantidade);
+        const desconto = parseFloat(servSel.desconto || 0);
+        const valorDesconto = valorSemDesconto * (desconto / 100);
+        const valorComDesconto = valorSemDesconto - valorDesconto;
+        return total + valorComDesconto;
+      }
+      return total;
+    }, 0);
+  };
+
+  const calcularValorSemDesconto = () => {
+    return servicosSelecionados.reduce((total, servSel) => {
+      const servico = servicos.find(s => s.id_servico === parseInt(servSel.id_servico));
+      if (servico && servSel.quantidade) {
         return total + (parseFloat(servico.preco) * parseInt(servSel.quantidade));
       }
       return total;
     }, 0);
   };
 
-  // NOVO: Calcular valores com desconto
-  const calcularValores = () => {
-    const valorSemDesconto = calcularValorTotal();
-    const valorDesconto = valorSemDesconto * (parseFloat(desconto) / 100);
-    const valorComDesconto = valorSemDesconto - valorDesconto;
-    
-    return {
-      valorSemDesconto,
-      valorDesconto,
-      valorComDesconto
-    };
-  };
-
-  const valores = calcularValores();
+  const valorSemDesconto = calcularValorSemDesconto();
+  const valorComDesconto = calcularValorTotal();
+  const economiaTotal = valorSemDesconto - valorComDesconto;
+  const descontoMedio = valorSemDesconto > 0 ? (economiaTotal / valorSemDesconto * 100) : 0;
 
   return (
     <div className="page-container">
@@ -123,7 +146,7 @@ const CadastrarPlano = () => {
       <div className="form-container">
         <div className="form-card">
           <h2>Criar Plano Mensal</h2>
-          <p className="form-subtitle">Configure um novo plano com serviços inclusos e desconto</p>
+          <p className="form-subtitle">Configure um novo plano com serviços inclusos e descontos individuais</p>
 
           {message.text && (
             <div className={`alert alert-${message.type}`}>
@@ -133,29 +156,45 @@ const CadastrarPlano = () => {
 
           <form onSubmit={handleSubmit}>
             
-            {/* NOVO: Campo de Desconto */}
-            <div className="form-group" style={{ marginBottom: '20px' }}>
-              <label htmlFor="desconto">
-                💰 Desconto do Plano (%)
-                <small style={{ color: '#666', fontWeight: 'normal', marginLeft: '10px' }}>
-                  Opcional - deixe 0 para sem desconto
-                </small>
-              </label>
-              <input
-                type="number"
-                id="desconto"
-                min="0"
-                max="100"
-                step="0.01"
-                value={desconto}
-                onChange={(e) => setDesconto(e.target.value)}
-                placeholder="Ex: 15 para 15% de desconto"
-              />
-              <small style={{ color: '#666', fontSize: '12px', display: 'block', marginTop: '5px' }}>
-                Digite um valor entre 0 e 100. Este desconto será aplicado sobre o valor total dos serviços.
+            {/* Desconto Geral (Aplicar a Todos) */}
+            <div className="card" style={{ marginBottom: '20px', backgroundColor: '#f8f9fa' }}>
+              <h3>💰 Desconto Geral (Opcional)</h3>
+              <p style={{ fontSize: '13px', color: '#666', marginBottom: '15px' }}>
+                Configure um desconto que pode ser aplicado a todos os serviços de uma vez
+              </p>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '10px', alignItems: 'end' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label htmlFor="descontoGeral">Desconto (%)</label>
+                  <input
+                    type="number"
+                    id="descontoGeral"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={descontoGeral}
+                    onChange={(e) => setDescontoGeral(e.target.value)}
+                    placeholder="Ex: 15 para 15% de desconto"
+                  />
+                </div>
+                
+                <button
+                  type="button"
+                  onClick={aplicarDescontoGeral}
+                  className="btn btn-secondary"
+                  disabled={servicosSelecionados.length === 0}
+                  style={{ height: '42px' }}
+                >
+                  Aplicar a Todos
+                </button>
+              </div>
+              
+              <small style={{ color: '#666', fontSize: '12px', display: 'block', marginTop: '10px' }}>
+                💡 Dica: Você também pode configurar descontos diferentes para cada serviço individualmente
               </small>
             </div>
 
+            {/* Lista de Serviços */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                 <h3>Serviços do Plano</h3>
@@ -178,10 +217,13 @@ const CadastrarPlano = () => {
                     key={index}
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: '2fr 1fr auto',
+                      gridTemplateColumns: '2fr 1fr 1fr auto',
                       gap: '10px',
                       marginBottom: '15px',
                       alignItems: 'end',
+                      padding: '15px',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '8px'
                     }}
                   >
                     <div className="form-group" style={{ marginBottom: 0 }}>
@@ -211,6 +253,19 @@ const CadastrarPlano = () => {
                       />
                     </div>
 
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label>Desconto (%)</label>
+                      <input
+                        type="number"
+                        value={servSel.desconto || 0}
+                        onChange={(e) => atualizarServico(index, 'desconto', e.target.value)}
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        placeholder="0"
+                      />
+                    </div>
+
                     <button
                       type="button"
                       onClick={() => removerServico(index)}
@@ -219,83 +274,134 @@ const CadastrarPlano = () => {
                     >
                       Remover
                     </button>
+
+                    {/* Mostrar cálculo individual do serviço */}
+                    {servSel.id_servico && (
+                      <div style={{ gridColumn: '1 / -1', marginTop: '10px', fontSize: '13px' }}>
+                        {(() => {
+                          const servico = servicos.find(s => s.id_servico === parseInt(servSel.id_servico));
+                          if (!servico) return null;
+                          
+                          const valorSem = parseFloat(servico.preco) * parseInt(servSel.quantidade);
+                          const desc = parseFloat(servSel.desconto || 0);
+                          const valorDesc = valorSem * (desc / 100);
+                          const valorCom = valorSem - valorDesc;
+                          
+                          return (
+                            <div style={{ display: 'flex', gap: '15px', color: '#666' }}>
+                              <span>
+                                Sem desconto: <strong>R$ {valorSem.toFixed(2)}</strong>
+                              </span>
+                              {desc > 0 && (
+                                <>
+                                  <span style={{ color: '#e74c3c' }}>
+                                    Desconto: <strong>-R$ {valorDesc.toFixed(2)}</strong>
+                                  </span>
+                                  <span style={{ color: '#27ae60' }}>
+                                    Com desconto: <strong>R$ {valorCom.toFixed(2)}</strong>
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
                   </div>
                 ))
               )}
             </div>
 
-            {/* ATUALIZADO: Resumo do Plano com desconto */}
+            {/* Resumo do Plano */}
             {servicosSelecionados.length > 0 && (
               <div
                 style={{
                   backgroundColor: 'var(--light)',
-                  padding: '15px',
+                  padding: '20px',
                   borderRadius: 'var(--border-radius)',
                   marginBottom: '20px',
                 }}
               >
-                <h4>Resumo do Plano</h4>
-                <ul style={{ marginTop: '10px', paddingLeft: '20px' }}>
+                <h4>📋 Resumo do Plano</h4>
+                
+                <ul style={{ marginTop: '15px', paddingLeft: '20px' }}>
                   {servicosSelecionados.map((servSel, idx) => {
                     const servico = servicos.find(s => s.id_servico === parseInt(servSel.id_servico));
                     if (!servico) return null;
+                    
+                    const valorSem = parseFloat(servico.preco) * servSel.quantidade;
+                    const desc = parseFloat(servSel.desconto || 0);
+                    
                     return (
-                      <li key={idx}>
-                        {servSel.quantidade}x {servico.nome} - R$ {(parseFloat(servico.preco) * servSel.quantidade).toFixed(2)}
+                      <li key={idx} style={{ marginBottom: '8px' }}>
+                        <strong>{servSel.quantidade}x</strong> {servico.nome}
+                        {desc > 0 && (
+                          <span style={{ color: '#27ae60', marginLeft: '10px' }}>
+                            ({desc}% OFF)
+                          </span>
+                        )}
                       </li>
                     );
                   })}
                 </ul>
                 
-                {/* NOVO: Mostrar cálculos com desconto */}
-                <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '2px solid #ddd' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                <div style={{ marginTop: '20px', paddingTop: '15px', borderTop: '2px solid #ddd' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                     <span>Valor sem desconto:</span>
                     <strong style={{ 
-                      textDecoration: parseFloat(desconto) > 0 ? 'line-through' : 'none',
-                      color: parseFloat(desconto) > 0 ? '#95a5a6' : '#2c3e50'
+                      textDecoration: economiaTotal > 0 ? 'line-through' : 'none',
+                      color: economiaTotal > 0 ? '#95a5a6' : '#2c3e50'
                     }}>
-                      R$ {valores.valorSemDesconto.toFixed(2)}
+                      R$ {valorSemDesconto.toFixed(2)}
                     </strong>
                   </div>
                   
-                  {parseFloat(desconto) > 0 && (
+                  {economiaTotal > 0 && (
                     <>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                        <span>Desconto ({parseFloat(desconto).toFixed(2)}%):</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <span>Economia total ({descontoMedio.toFixed(1)}% médio):</span>
                         <strong style={{ color: '#e74c3c' }}>
-                          - R$ {valores.valorDesconto.toFixed(2)}
+                          - R$ {economiaTotal.toFixed(2)}
                         </strong>
                       </div>
                       <div style={{ 
                         display: 'flex', 
                         justifyContent: 'space-between',
-                        paddingTop: '10px',
+                        paddingTop: '12px',
                         borderTop: '2px solid var(--accent)',
                         marginTop: '10px'
                       }}>
-                        <span style={{ fontWeight: 'bold' }}>Valor Final (com desconto):</span>
-                        <strong style={{ fontSize: '20px', color: 'var(--accent)' }}>
-                          R$ {valores.valorComDesconto.toFixed(2)}/mês
+                        <span style={{ fontWeight: 'bold' }}>Valor Final:</span>
+                        <strong style={{ fontSize: '22px', color: 'var(--accent)' }}>
+                          R$ {valorComDesconto.toFixed(2)}/mês
                         </strong>
                       </div>
                       <div style={{ 
-                        marginTop: '10px',
+                        marginTop: '12px',
                         padding: '10px',
                         backgroundColor: '#e8f5e9',
                         borderRadius: '4px'
                       }}>
                         <small style={{ color: '#27ae60', fontWeight: 'bold' }}>
-                          🎉 Economia de R$ {valores.valorDesconto.toFixed(2)} por mês!
+                          🎉 Economia de R$ {economiaTotal.toFixed(2)} por mês ({descontoMedio.toFixed(1)}%)!
                         </small>
                       </div>
                     </>
                   )}
                   
-                  {parseFloat(desconto) === 0 && (
-                    <p style={{ marginTop: '10px', fontSize: '18px', fontWeight: 'bold', color: 'var(--accent)' }}>
-                      Valor Total: R$ {valores.valorSemDesconto.toFixed(2)}/mês
-                    </p>
+                  {economiaTotal === 0 && (
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      paddingTop: '12px',
+                      borderTop: '2px solid #ddd',
+                      marginTop: '10px'
+                    }}>
+                      <span style={{ fontWeight: 'bold' }}>Valor Total:</span>
+                      <strong style={{ fontSize: '22px', color: 'var(--accent)' }}>
+                        R$ {valorSemDesconto.toFixed(2)}/mês
+                      </strong>
+                    </div>
                   )}
                 </div>
               </div>
