@@ -10,8 +10,7 @@ const MeusPlanos = () => {
   const [usoPlanos, setUsoPlanos] = useState({});
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ type: '', text: '' });
-  
-  // Modal de detalhes do plano
+
   const [modalDetalhes, setModalDetalhes] = useState(null);
 
   useEffect(() => {
@@ -25,19 +24,18 @@ const MeusPlanos = () => {
         api.get('/planos/minhas-assinaturas'),
         api.get('/planos/vencendo?dias=7')
       ]);
-      
+
       console.log('Planos disponíveis:', planosRes.data);
       console.log('Minhas assinaturas:', assinaturasRes.data);
-      
+
       setPlanosDisponiveis(planosRes.data || []);
       setMinhasAssinaturas(assinaturasRes.data || []);
       setPlanosVencendo(vencendoRes.data.planos_vencendo || []);
-      
-      // Carregar uso de cada plano ativo
+
       if (assinaturasRes.data && assinaturasRes.data.length > 0) {
         await carregarUsoPlanos(assinaturasRes.data);
       }
-      
+
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       setMessage({ type: 'error', text: 'Erro ao carregar planos' });
@@ -58,7 +56,7 @@ const MeusPlanos = () => {
           return { id_plano: assinatura.id_plano, uso: null };
         }
       });
-    
+
     const resultados = await Promise.all(usoPromises);
     const usoMap = {};
     resultados.forEach(r => {
@@ -77,34 +75,33 @@ const MeusPlanos = () => {
         data_inicio: dataInicio,
         data_fim: dataFim
       });
-      
+
       setMessage({ type: 'success', text: 'Plano assinado com sucesso!' });
       carregarDados();
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.error || 'Erro ao assinar plano' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.error || 'Erro ao assinar plano'
       });
     }
   };
 
   const cancelarAssinatura = async (idPlano) => {
-      if (!window.confirm('Deseja realmente cancelar esta assinatura? Esta ação não pode ser desfeita.')) return;
+    if (!window.confirm('Deseja realmente cancelar esta assinatura? Esta ação não pode ser desfeita.')) return;
 
-      try {
-        // ✅ CORREÇÃO: Usar a rota correta
-        await api.delete(`/planos/${idPlano}/cancelar-assinatura`);
-        
-        setMessage({ type: 'success', text: 'Assinatura cancelada com sucesso!' });
-        carregarDados();
-        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-      } catch (error) {
-        console.error('Erro ao cancelar assinatura:', error);
-        const mensagemErro = error.response?.data?.error || 'Erro ao cancelar assinatura';
-        setMessage({ type: 'error', text: mensagemErro });
-      }
-    };
+    try {
+      await api.delete(`/planos/${idPlano}/cancelar-assinatura`);
+
+      setMessage({ type: 'success', text: 'Assinatura cancelada com sucesso!' });
+      carregarDados();
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      console.error('Erro ao cancelar assinatura:', error);
+      const mensagemErro = error.response?.data?.error || 'Erro ao cancelar assinatura';
+      setMessage({ type: 'error', text: mensagemErro });
+    }
+  };
 
   const planoEstaAtivo = (dataFim) => {
     return new Date(dataFim) >= new Date();
@@ -119,42 +116,41 @@ const MeusPlanos = () => {
 
   const abrirDetalhesPlano = async (idPlano) => {
     try {
-      setMessage({ type: '', text: '' }); // Limpar mensagens anteriores
-      
+      setMessage({ type: '', text: '' });
+
       const [valoresRes, planoRes] = await Promise.all([
         api.get(`/planos/${idPlano}/valores`),
         api.get(`/planos/${idPlano}`)
       ]);
-      
+
       setModalDetalhes({
         ...planoRes.data,
         valores: valoresRes.data
       });
     } catch (error) {
       console.error('Erro ao carregar detalhes:', error);
-      console.error('Response:', error.response); // Log adicional para debug
-      
+      console.error('Response:', error.response);
+
       const mensagemErro = error.response?.data?.error || 'Erro ao carregar detalhes do plano';
       setMessage({ type: 'error', text: mensagemErro });
     }
   };
 
-
   const renderUsoServico = (servico) => {
     const porcentagemUso = (servico.quantidade_usada / servico.quantidade_plano) * 100;
-    const corBarra = porcentagemUso >= 100 ? '#e74c3c' : 
-                     porcentagemUso >= 75 ? '#f39c12' : '#27ae60';
-    
+    const corBarra = porcentagemUso >= 100 ? '#e74c3c' :
+      porcentagemUso >= 75 ? '#f39c12' : '#27ae60';
+
     return (
       <div key={servico.id_servico} style={{ marginBottom: '15px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
           <div>
             <strong>{servico.nome_servico}</strong>
             {servico.desconto_percentual > 0 && (
-              <span style={{ 
-                marginLeft: '8px', 
-                padding: '2px 6px', 
-                backgroundColor: '#e8f5e9', 
+              <span style={{
+                marginLeft: '8px',
+                padding: '2px 6px',
+                backgroundColor: '#e8f5e9',
                 color: '#27ae60',
                 borderRadius: '3px',
                 fontSize: '11px',
@@ -169,16 +165,16 @@ const MeusPlanos = () => {
             {servico.esgotado && ' ⚠️ Esgotado'}
           </span>
         </div>
-        <div style={{ 
-          width: '100%', 
-          height: '8px', 
-          backgroundColor: '#ecf0f1', 
+        <div style={{
+          width: '100%',
+          height: '8px',
+          backgroundColor: '#ecf0f1',
           borderRadius: '4px',
           overflow: 'hidden'
         }}>
-          <div style={{ 
-            width: `${Math.min(porcentagemUso, 100)}%`, 
-            height: '100%', 
+          <div style={{
+            width: `${Math.min(porcentagemUso, 100)}%`,
+            height: '100%',
             backgroundColor: corBarra,
             transition: 'width 0.3s ease'
           }} />
@@ -214,7 +210,6 @@ const MeusPlanos = () => {
           </div>
         )}
 
-        {/* Alertas de Vencimento */}
         {planosVencendo.length > 0 && (
           <div className="alert alert-warning" style={{ marginBottom: '30px' }}>
             <h4 style={{ marginTop: 0 }}>⚠️ Atenção: Planos Próximos do Vencimento</h4>
@@ -230,7 +225,6 @@ const MeusPlanos = () => {
           </div>
         )}
 
-        {/* Minhas Assinaturas */}
         <div className="dashboard-section">
           <h2>Minhas Assinaturas ({minhasAssinaturas.length})</h2>
           {minhasAssinaturas.length === 0 ? (
@@ -246,13 +240,12 @@ const MeusPlanos = () => {
                 const ativo = planoEstaAtivo(assinatura.data_fim);
                 const diasRestantes = calcularDiasRestantes(assinatura.data_fim);
                 const uso = usoPlanos[assinatura.id_plano];
-                
-                // Calcular valores baseado nos serviços com desconto
+
                 const valorComDesconto = assinatura.valor_com_desconto || 0;
                 const valorSemDesconto = assinatura.valor_sem_desconto || 0;
                 const economiaTotal = assinatura.valor_desconto_total || 0;
                 const descontoMedio = assinatura.desconto_medio || 0;
-                
+
                 return (
                   <div key={assinatura.id_plano} className="card">
                     <div className="card-header">
@@ -271,18 +264,18 @@ const MeusPlanos = () => {
                         {ativo ? '✓ Ativo' : '✗ Expirado'}
                       </span>
                     </div>
-                    
+
                     <div className="card-body">
                       <p>
                         <strong>Vigência:</strong>{' '}
                         {new Date(assinatura.data_inicio).toLocaleDateString('pt-BR')} até{' '}
                         {new Date(assinatura.data_fim).toLocaleDateString('pt-BR')}
                       </p>
-                      
+
                       {ativo && diasRestantes <= 7 && (
-                        <div style={{ 
-                          padding: '10px', 
-                          backgroundColor: '#fff3cd', 
+                        <div style={{
+                          padding: '10px',
+                          backgroundColor: '#fff3cd',
                           borderRadius: '4px',
                           marginTop: '10px',
                           marginBottom: '10px'
@@ -290,8 +283,7 @@ const MeusPlanos = () => {
                           <strong>⏰ Vence em {diasRestantes} {diasRestantes === 1 ? 'dia' : 'dias'}!</strong>
                         </div>
                       )}
-                      
-                      {/* Uso de Serviços */}
+
                       {ativo && uso && uso.servicos && (
                         <div style={{ marginTop: '15px' }}>
                           <strong style={{ display: 'block', marginBottom: '10px' }}>
@@ -300,8 +292,7 @@ const MeusPlanos = () => {
                           {uso.servicos.map(servico => renderUsoServico(servico))}
                         </div>
                       )}
-                      
-                      {/* Serviços inclusos para planos expirados */}
+
                       {assinatura.servicos && assinatura.servicos.length > 0 && !ativo && (
                         <>
                           <p style={{ marginTop: '15px' }}><strong>Serviços inclusos:</strong></p>
@@ -322,10 +313,10 @@ const MeusPlanos = () => {
                         </>
                       )}
                     </div>
-                    
+
                     <div className="card-footer">
                       {ativo && (
-                        <button 
+                        <button
                           onClick={() => cancelarAssinatura(assinatura.id_plano)}
                           className="btn btn-danger btn-sm"
                         >
@@ -346,7 +337,6 @@ const MeusPlanos = () => {
           )}
         </div>
 
-        {/* Planos Disponíveis */}
         <div className="dashboard-section">
           <h2>Planos Disponíveis ({planosDisponiveis.length})</h2>
           {planosDisponiveis.length === 0 ? (
@@ -359,8 +349,7 @@ const MeusPlanos = () => {
                 const jaAssinado = minhasAssinaturas.some(
                   a => a.id_plano === plano.id_plano_mensal && planoEstaAtivo(a.data_fim)
                 );
-                
-                // Valores já calculados pelo backend
+
                 const valorSemDesconto = plano.valor_sem_desconto || 0;
                 const valorComDesconto = plano.valor_com_desconto || 0;
                 const economiaTotal = plano.valor_desconto_total || 0;
@@ -372,10 +361,10 @@ const MeusPlanos = () => {
                       <div>
                         <h3>Plano #{plano.id_plano_mensal}</h3>
                         {descontoMedio > 0 && (
-                          <span style={{ 
-                            backgroundColor: '#27ae60', 
-                            color: 'white', 
-                            padding: '2px 8px', 
+                          <span style={{
+                            backgroundColor: '#27ae60',
+                            color: 'white',
+                            padding: '2px 8px',
                             borderRadius: '4px',
                             fontSize: '12px',
                             fontWeight: 'bold',
@@ -389,8 +378,8 @@ const MeusPlanos = () => {
                       <div style={{ textAlign: 'right' }}>
                         {economiaTotal > 0 ? (
                           <>
-                            <small style={{ 
-                              color: '#95a5a6', 
+                            <small style={{
+                              color: '#95a5a6',
                               textDecoration: 'line-through',
                               display: 'block'
                             }}>
@@ -413,10 +402,10 @@ const MeusPlanos = () => {
                         )}
                       </div>
                     </div>
-                    
+
                     <div className="card-body">
                       <p><strong>Criado por:</strong> {plano.criador_nome}</p>
-                      
+
                       {plano.servicos && plano.servicos.length > 0 && (
                         <>
                           <p><strong>Inclui:</strong></p>
@@ -439,9 +428,9 @@ const MeusPlanos = () => {
                           </ul>
                         </>
                       )}
-                      
+
                       {economiaTotal > 0 && (
-                        <div style={{ 
+                        <div style={{
                           marginTop: '15px',
                           padding: '10px',
                           backgroundColor: '#e8f5e9',
@@ -453,9 +442,9 @@ const MeusPlanos = () => {
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="card-footer">
-                      <button 
+                      <button
                         onClick={() => assinarPlano(plano.id_plano_mensal)}
                         className="btn btn-primary btn-block"
                         disabled={jaAssinado}
@@ -479,19 +468,18 @@ const MeusPlanos = () => {
           )}
         </div>
 
-        {/* Modal de Detalhes */}
         {modalDetalhes && (
           <div className="modal-overlay" onClick={() => setModalDetalhes(null)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <h3>Detalhes do Plano #{modalDetalhes.id_plano_mensal}</h3>
-              
+
               <div style={{ marginBottom: '20px' }}>
                 <p><strong>Criado por:</strong> {modalDetalhes.criador_nome}</p>
-                
+
                 {modalDetalhes.valores && (
-                  <div style={{ 
-                    padding: '15px', 
-                    backgroundColor: '#f8f9fa', 
+                  <div style={{
+                    padding: '15px',
+                    backgroundColor: '#f8f9fa',
                     borderRadius: '8px',
                     marginTop: '15px'
                   }}>
@@ -499,14 +487,14 @@ const MeusPlanos = () => {
                     <div style={{ display: 'grid', gap: '10px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span>Valor sem desconto:</span>
-                        <strong style={{ 
-                          textDecoration: modalDetalhes.valores.valor_desconto_total > 0 ? 'line-through' : 'none', 
+                        <strong style={{
+                          textDecoration: modalDetalhes.valores.valor_desconto_total > 0 ? 'line-through' : 'none',
                           color: modalDetalhes.valores.valor_desconto_total > 0 ? '#95a5a6' : '#2c3e50'
                         }}>
                           R$ {modalDetalhes.valores.valor_sem_desconto.toFixed(2)}
                         </strong>
                       </div>
-                      
+
                       {modalDetalhes.valores.valor_desconto_total > 0 && (
                         <>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -515,8 +503,8 @@ const MeusPlanos = () => {
                               - R$ {modalDetalhes.valores.valor_desconto_total.toFixed(2)}
                             </strong>
                           </div>
-                          <div style={{ 
-                            display: 'flex', 
+                          <div style={{
+                            display: 'flex',
                             justifyContent: 'space-between',
                             paddingTop: '10px',
                             borderTop: '2px solid #ddd'
@@ -531,24 +519,24 @@ const MeusPlanos = () => {
                     </div>
                   </div>
                 )}
-                
+
                 {modalDetalhes.servicos && modalDetalhes.servicos.length > 0 && (
                   <div style={{ marginTop: '20px' }}>
                     <h4>📋 Serviços Inclusos</h4>
                     <ul style={{ paddingLeft: '20px' }}>
                       {modalDetalhes.servicos.map((servico, idx) => {
                         if (!servico || !servico.nome) return null;
-                        
+
                         const valorSem = parseFloat(servico.preco) * servico.quantidade;
                         const desc = parseFloat(servico.desconto || 0);
                         const valorDesc = valorSem * (desc / 100);
                         const valorCom = valorSem - valorDesc;
-                        
+
                         return (
                           <li key={idx} style={{ marginBottom: '10px' }}>
                             <strong>{servico.quantidade}x</strong> {servico.nome}
                             {desc > 0 && (
-                              <span style={{ 
+                              <span style={{
                                 marginLeft: '8px',
                                 padding: '2px 6px',
                                 backgroundColor: '#e8f5e9',
@@ -587,7 +575,6 @@ const MeusPlanos = () => {
           </div>
         )}
 
-        {/* Informações sobre Planos */}
         <div className="card" style={{ marginTop: '40px', backgroundColor: '#f8f9fa' }}>
           <h3>ℹ️ Como Funcionam os Planos</h3>
           <ul style={{ paddingLeft: '20px', marginTop: '15px', marginBottom: 0 }}>

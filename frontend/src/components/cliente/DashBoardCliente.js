@@ -21,27 +21,22 @@ const DashboardCliente = () => {
 
   const carregarDados = async () => {
     try {
-      // Buscar agendamentos
       const agendamentosRes = await api.get('/clientes/me/agendamentos');
       const agendamentos = agendamentosRes.data;
-      
-      // Filtrar pendentes
-      const pendentes = agendamentos.filter(a => 
+
+      const pendentes = agendamentos.filter(a =>
         a.status === 'pendente' || a.status === 'confirmado'
       );
-      
-      // Próximos 3 agendamentos
+
       const proximos = pendentes
         .sort((a, b) => new Date(a.data_hora_agendamento) - new Date(b.data_hora_agendamento))
         .slice(0, 3);
 
-      // Buscar reservas
       const reservasRes = await api.get('/produtos/minhas-reservas');
       const reservasAtivas = reservasRes.data.filter(r => r.status === 'reservado').length;
 
-      // Buscar planos
       const planosRes = await api.get('/planos/minhas-assinaturas');
-      const planosAtivos = planosRes.data.filter(p => 
+      const planosAtivos = planosRes.data.filter(p =>
         new Date(p.data_fim) >= new Date()
       ).length;
 

@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-    
+
     if (token && userData) {
       setUser(JSON.parse(userData));
     }
@@ -29,16 +29,16 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.post('/auth/login', { email, senha });
       const { token, user: userData } = response.data;
-      
+
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
-      
+
       return { success: true, user: userData };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.error || 'Erro ao fazer login' 
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Erro ao fazer login'
       };
     }
   };
@@ -47,16 +47,16 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.post('/auth/cadastrar-e-logar/cliente', dados);
       const { token, user: userData } = response.data;
-      
+
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
-      
+
       return { success: true, user: userData };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.error || 'Erro ao cadastrar' 
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Erro ao cadastrar'
       };
     }
   };
@@ -65,15 +65,15 @@ export const AuthProvider = ({ children }) => {
     try {
 
       await api.post('/auth/registrar/barbeiro', dados);
-      
-      return { success: true }; // Apenas retorna sucesso
+
+      return { success: true };
     } catch (error) {
-        return { 
-          success: false, 
-          error: error.response?.data?.error || 'Erro ao cadastrar barbeiro' 
-        };
-      }
-    };
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Erro ao cadastrar barbeiro'
+      };
+    }
+  };
 
   const alterarSenha = async (senhaAtual, novaSenha) => {
     try {
@@ -83,14 +83,14 @@ export const AuthProvider = ({ children }) => {
       });
       return { success: true, message: 'Senha alterada com sucesso!' };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.error || 'Erro ao alterar senha' 
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Erro ao alterar senha'
       };
     }
   };
 
-  // Funções de Recuperação de Senha
+
   const solicitarRecuperacaoEmail = async (email) => {
     try {
       await api.post('/auth/recuperar-senha-email', { email });
@@ -129,7 +129,7 @@ export const AuthProvider = ({ children }) => {
         cadastrarCliente,
         cadastrarBarbeiro,
         alterarSenha,
-        solicitarRecuperacaoEmail, 
+        solicitarRecuperacaoEmail,
         redefinirSenhaToken,
         isCliente,
         isBarbeiro,

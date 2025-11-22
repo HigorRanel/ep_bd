@@ -13,11 +13,9 @@ const MeusAgendamentos = () => {
   const [avaliacao, setAvaliacao] = useState({ nota: 5, comentario: '' });
   const [message, setMessage] = useState({ type: '', text: '' });
 
-  // Estados para paginação
   const [paginaAtual, setPaginaAtual] = useState(1);
   const itensPorPagina = 6;
 
-  // Estados para busca
   const [termoBusca, setTermoBusca] = useState('');
   const [ordenacao, setOrdenacao] = useState('recentes');
 
@@ -25,25 +23,20 @@ const MeusAgendamentos = () => {
     carregarAgendamentos();
   }, []);
 
-  // Resetar página ao mudar filtro
   useEffect(() => {
     setPaginaAtual(1);
   }, [filtro, termoBusca]);
 
-  // ✅ OTIMIZAÇÃO ULTRA: Carregar agendamentos JÁ COM avaliações do backend
   const carregarAgendamentos = async () => {
     try {
-      // ✅ NOVA ROTA: Uma única query que já traz avaliações
       const response = await api.get('/clientes/me/agendamentos-otimizado');
-      
-      // Ordenar por data (mais recentes primeiro)
-      const ordenados = response.data.sort((a, b) => 
+
+      const ordenados = response.data.sort((a, b) =>
         new Date(b.data_hora_agendamento) - new Date(a.data_hora_agendamento)
       );
-      
+
       setAgendamentos(ordenados);
-      
-      // ✅ Processar avaliações que já vieram do backend
+
       const avaliacoes = new Set();
       ordenados.forEach(ag => {
         if (ag.tem_avaliacao) {
@@ -51,7 +44,7 @@ const MeusAgendamentos = () => {
         }
       });
       setAvaliacoesExistentes(avaliacoes);
-      
+
     } catch (error) {
       console.error('Erro ao carregar agendamentos:', error);
       setMessage({ type: 'error', text: 'Erro ao carregar agendamentos' });
@@ -60,17 +53,14 @@ const MeusAgendamentos = () => {
     }
   };
 
-  // ✅ NOVA FUNÇÃO: Verificar avaliações em batch (paralelo)
   const verificarAvaliacoesExistentesBatch = async (listaAgendamentos) => {
     const avaliacoes = new Set();
-    
-    // Filtrar apenas concluídos
+
     const concluidos = listaAgendamentos.filter(a => a.status === 'concluido');
-    
+
     if (concluidos.length === 0) return;
 
     try {
-      // ✅ Fazer todas as requisições em paralelo (Promise.allSettled)
       const promises = concluidos.map(agendamento =>
         api.get(`/avaliacoes/agendamento/${agendamento.id_agendamento}`)
           .then(response => ({ id: agendamento.id_agendamento, exists: !!response.data }))
@@ -78,13 +68,13 @@ const MeusAgendamentos = () => {
       );
 
       const resultados = await Promise.allSettled(promises);
-      
+
       resultados.forEach(result => {
         if (result.status === 'fulfilled' && result.value.exists) {
           avaliacoes.add(result.value.id);
         }
       });
-      
+
       setAvaliacoesExistentes(avaliacoes);
     } catch (error) {
       console.error('Erro ao verificar avaliações:', error);
@@ -100,9 +90,9 @@ const MeusAgendamentos = () => {
       carregarAgendamentos();
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.error || 'Erro ao cancelar agendamento' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.error || 'Erro ao cancelar agendamento'
       });
     }
   };
@@ -125,9 +115,9 @@ const MeusAgendamentos = () => {
       carregarAgendamentos();
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.error || 'Erro ao enviar avaliação' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.error || 'Erro ao enviar avaliação'
       });
     }
   };
@@ -141,11 +131,9 @@ const MeusAgendamentos = () => {
     };
   }, []);
 
-  // ✅ OTIMIZAÇÃO 3: Usar useMemo para filtros (só recalcula quando necessário)
   const agendamentosFiltrados = useMemo(() => {
     let filtrados = [...agendamentos];
 
-    // Filtro por status
     if (filtro === 'pendentes') {
       filtrados = filtrados.filter(a => a.status === 'pendente' || a.status === 'confirmado');
     } else if (filtro === 'concluidos') {
@@ -154,22 +142,20 @@ const MeusAgendamentos = () => {
       filtrados = filtrados.filter(a => a.status === 'cancelado');
     }
 
-    // Busca por termo
     if (termoBusca.trim()) {
       const termo = termoBusca.toLowerCase();
-      filtrados = filtrados.filter(a => 
+      filtrados = filtrados.filter(a =>
         a.servico_nome.toLowerCase().includes(termo) ||
         a.barbeiro_nome.toLowerCase().includes(termo)
       );
     }
 
-    // Ordenação
     if (ordenacao === 'antigas') {
-      filtrados.sort((a, b) => 
+      filtrados.sort((a, b) =>
         new Date(a.data_hora_agendamento) - new Date(b.data_hora_agendamento)
       );
     } else {
-      filtrados.sort((a, b) => 
+      filtrados.sort((a, b) =>
         new Date(b.data_hora_agendamento) - new Date(a.data_hora_agendamento)
       );
     }
@@ -177,14 +163,13 @@ const MeusAgendamentos = () => {
     return filtrados;
   }, [agendamentos, filtro, termoBusca, ordenacao]);
 
-  // ✅ OTIMIZAÇÃO 4: Usar useMemo para paginação
   const agendamentosPaginados = useMemo(() => {
     const indexUltimo = paginaAtual * itensPorPagina;
     const indexPrimeiro = indexUltimo - itensPorPagina;
     return agendamentosFiltrados.slice(indexPrimeiro, indexUltimo);
   }, [agendamentosFiltrados, paginaAtual]);
 
-  const totalPaginas = useMemo(() => 
+  const totalPaginas = useMemo(() =>
     Math.ceil(agendamentosFiltrados.length / itensPorPagina),
     [agendamentosFiltrados.length]
   );
@@ -238,7 +223,6 @@ const MeusAgendamentos = () => {
     return statusMap[status] || statusMap.pendente;
   }, []);
 
-  // ✅ OTIMIZAÇÃO 5: Calcular estatísticas com useMemo
   const estatisticas = useMemo(() => ({
     total: agendamentos.length,
     pendentes: agendamentos.filter(a => a.status === 'pendente' || a.status === 'confirmado').length,
@@ -277,7 +261,6 @@ const MeusAgendamentos = () => {
           </div>
         )}
 
-        {/* Estatísticas */}
         <div className="stats-grid">
           <div className="stat-card">
             <div className="stat-icon">📅</div>
@@ -302,12 +285,10 @@ const MeusAgendamentos = () => {
           </div>
         </div>
 
-        {/* Filtros e Busca */}
         <div className="card" style={{ marginBottom: '30px' }}>
           <div style={{ marginBottom: '20px' }}>
             <h3 style={{ marginBottom: '15px' }}>🔍 Filtros e Busca</h3>
-            
-            {/* Busca */}
+
             <div style={{ marginBottom: '15px' }}>
               <input
                 type="text"
@@ -324,7 +305,6 @@ const MeusAgendamentos = () => {
               />
             </div>
 
-            {/* Filtros por Status */}
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '15px' }}>
               <button
                 onClick={() => setFiltro('todos')}
@@ -352,7 +332,6 @@ const MeusAgendamentos = () => {
               </button>
             </div>
 
-            {/* Ordenação */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <label style={{ fontWeight: '600', fontSize: '14px' }}>Ordenar por:</label>
               <select
@@ -371,9 +350,8 @@ const MeusAgendamentos = () => {
             </div>
           </div>
 
-          {/* Info de resultados */}
-          <div style={{ 
-            paddingTop: '15px', 
+          <div style={{
+            paddingTop: '15px',
             borderTop: '1px solid #ecf0f1',
             color: '#666',
             fontSize: '14px'
@@ -382,12 +360,11 @@ const MeusAgendamentos = () => {
           </div>
         </div>
 
-        {/* Lista de Agendamentos */}
         {agendamentosFiltrados.length === 0 ? (
           <div className="empty-state">
             <p>
               {filtro === 'todos' && !termoBusca
-                ? 'Você ainda não tem agendamentos' 
+                ? 'Você ainda não tem agendamentos'
                 : 'Nenhum agendamento encontrado com os filtros aplicados'}
             </p>
             {!termoBusca && (
@@ -403,7 +380,7 @@ const MeusAgendamentos = () => {
                 const { data, hora } = formatarData(agendamento.data_hora_agendamento);
                 const statusInfo = getStatusInfo(agendamento.status);
                 const avaliado = jaAvaliou(agendamento);
-                
+
                 return (
                   <div key={agendamento.id_agendamento} className="card">
                     <div className="card-header">
@@ -413,23 +390,23 @@ const MeusAgendamentos = () => {
                           {data} às {hora}
                         </p>
                       </div>
-                      <span 
+                      <span
                         className={`badge badge-${agendamento.status}`}
                         style={{ backgroundColor: statusInfo.color }}
                       >
                         {statusInfo.icon} {statusInfo.label}
                       </span>
                     </div>
-                    
+
                     <div className="card-body">
                       <p><strong>Barbeiro:</strong> {agendamento.barbeiro_nome}</p>
                       <p><strong>Duração:</strong> {agendamento.duracao_estimada_min} minutos</p>
                       <p><strong>Preço:</strong> R$ {parseFloat(agendamento.preco).toFixed(2)}</p>
-                      
+
                       {agendamento.status === 'concluido' && (
-                        <div style={{ 
-                          marginTop: '15px', 
-                          padding: '10px', 
+                        <div style={{
+                          marginTop: '15px',
+                          padding: '10px',
                           backgroundColor: avaliado ? '#e3f2fd' : '#e8f5e9',
                           borderRadius: '4px'
                         }}>
@@ -441,11 +418,11 @@ const MeusAgendamentos = () => {
                           )}
                         </div>
                       )}
-                      
+
                       {agendamento.status === 'cancelado' && (
-                        <div style={{ 
-                          marginTop: '15px', 
-                          padding: '10px', 
+                        <div style={{
+                          marginTop: '15px',
+                          padding: '10px',
                           backgroundColor: '#ffebee',
                           borderRadius: '4px'
                         }}>
@@ -453,23 +430,23 @@ const MeusAgendamentos = () => {
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="card-footer">
                       {podeAvaliar(agendamento) && (
-                        <button 
+                        <button
                           onClick={() => abrirAvaliacao(agendamento)}
                           className="btn btn-success btn-sm"
                         >
                           ⭐ Avaliar Serviço
                         </button>
                       )}
-                      
+
                       {avaliado && (
-                        <button 
+                        <button
                           disabled
                           className="btn btn-sm"
-                          style={{ 
-                            backgroundColor: '#e0e0e0', 
+                          style={{
+                            backgroundColor: '#e0e0e0',
                             color: '#666',
                             cursor: 'not-allowed',
                             opacity: 0.6
@@ -479,16 +456,16 @@ const MeusAgendamentos = () => {
                           ✓ Já Avaliado
                         </button>
                       )}
-                      
+
                       {podeCancelar(agendamento) && (
-                        <button 
+                        <button
                           onClick={() => cancelarAgendamento(agendamento.id_agendamento)}
                           className="btn btn-danger btn-sm"
                         >
                           Cancelar
                         </button>
                       )}
-                      
+
                       {!podeCancelar(agendamento) && (agendamento.status === 'pendente' || agendamento.status === 'confirmado') && (
                         <small style={{ color: '#e74c3c' }}>
                           ⚠️ Falta menos de 2h - não pode cancelar
@@ -500,12 +477,11 @@ const MeusAgendamentos = () => {
               })}
             </div>
 
-            {/* Paginação */}
             {totalPaginas > 1 && (
               <div className="card" style={{ marginTop: '30px' }}>
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
                   alignItems: 'center',
                   flexWrap: 'wrap',
                   gap: '15px'
@@ -542,14 +518,13 @@ const MeusAgendamentos = () => {
                       } else {
                         pageNum = paginaAtual - 2 + i;
                       }
-                      
+
                       return (
                         <button
                           key={pageNum}
                           onClick={() => mudarPagina(pageNum)}
-                          className={`btn btn-sm ${
-                            pageNum === paginaAtual ? 'btn-primary' : 'btn-secondary'
-                          }`}
+                          className={`btn btn-sm ${pageNum === paginaAtual ? 'btn-primary' : 'btn-secondary'
+                            }`}
                         >
                           {pageNum}
                         </button>
@@ -578,12 +553,11 @@ const MeusAgendamentos = () => {
           </>
         )}
 
-        {/* Modal de Avaliação */}
         {avaliacaoModal && (
           <div className="modal-overlay" onClick={() => setAvaliacaoModal(null)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <h3>Avaliar Serviço</h3>
-              
+
               <div style={{ marginBottom: '20px' }}>
                 <p><strong>Serviço:</strong> {avaliacaoModal.servico_nome}</p>
                 <p><strong>Barbeiro:</strong> {avaliacaoModal.barbeiro_nome}</p>

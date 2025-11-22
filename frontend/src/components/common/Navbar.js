@@ -14,7 +14,7 @@ const Navbar = () => {
     navigate('/');
   };
 
-  // Fechar dropdown ao clicar fora
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -41,11 +41,10 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              {/* Link para o Perfil */}
               <Link to="/perfil" className="navbar-user navbar-link">
                 Meu Perfil
               </Link>
-              
+
               {isCliente() && (
                 <>
                   <Link to="/cliente/dashboard" className="navbar-link">Dashboard</Link>
@@ -55,7 +54,7 @@ const Navbar = () => {
                   <Link to="/cliente/planos" className="navbar-link">Planos</Link>
                 </>
               )}
-              
+
               {isBarbeiro() && (
                 <>
                   <Link to="/barbeiro/dashboard" className="navbar-link">Dashboard</Link>
@@ -67,44 +66,44 @@ const Navbar = () => {
                   <Link to="/barbeiro/reservas" className="navbar-link">Reservas</Link>
                   <Link to="/barbeiro/notificacoes" className="navbar-link">Notificações</Link>
                   <Link to="/barbeiro/relatorios" className="navbar-link">Relatórios</Link>
-                  
+
                   {isBarbeiroChefe() && (
                     <div className="navbar-dropdown" ref={dropdownRef}>
-                      <button 
+                      <button
                         className="navbar-link dropdown-trigger"
                         onClick={() => setGestaoOpen(!gestaoOpen)}
                       >
                         Gestão ⭐ {gestaoOpen ? '▲' : '▼'}
                       </button>
-                      
+
                       {gestaoOpen && (
                         <div className="dropdown-menu">
-                          <Link 
-                            to="/barbeiro/produtos/novo" 
+                          <Link
+                            to="/barbeiro/produtos/novo"
                             className="dropdown-item"
                             onClick={() => setGestaoOpen(false)}
                           >
                             📦 Cadastrar Produto
                           </Link>
-                          
-                          <Link 
-                            to="/barbeiro/planos/gerenciar" 
+
+                          <Link
+                            to="/barbeiro/planos/gerenciar"
                             className="dropdown-item"
                             onClick={() => setGestaoOpen(false)}
                           >
                             💼 Gerenciar Planos
                           </Link>
-                          
-                          <Link 
-                            to="/barbeiro/planos/novo" 
+
+                          <Link
+                            to="/barbeiro/planos/novo"
                             className="dropdown-item"
                             onClick={() => setGestaoOpen(false)}
                           >
                             ➕ Criar Plano
                           </Link>
-                          
-                          <Link 
-                            to="/barbeiro/cadastrar-barbeiro" 
+
+                          <Link
+                            to="/barbeiro/cadastrar-barbeiro"
                             className="dropdown-item"
                             onClick={() => setGestaoOpen(false)}
                           >
@@ -116,7 +115,7 @@ const Navbar = () => {
                   )}
                 </>
               )}
-              
+
               <button onClick={handleLogout} className="navbar-link btn-logout">
                 Sair
               </button>

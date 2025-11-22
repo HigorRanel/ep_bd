@@ -6,7 +6,7 @@ import '../styles/relatorios.css';
 
 const Relatorios = () => {
   const { isBarbeiroChefe } = useAuth();
-  
+
   const [filtros, setFiltros] = useState({
     data_inicio: '',
     data_fim: '',
@@ -19,11 +19,10 @@ const Relatorios = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Sugestões de períodos rápidos
   const setPeriodoRapido = (dias) => {
     const hoje = new Date();
     const dataFim = hoje.toISOString().split('T')[0];
-    
+
     const dataInicio = new Date(hoje);
     dataInicio.setDate(dataInicio.getDate() - dias);
     const dataInicioStr = dataInicio.toISOString().split('T')[0];
@@ -89,17 +88,15 @@ const Relatorios = () => {
     <div className="page-container">
       <Navbar />
       <div className="relatorios-container">
-        
-        {/* Cabeçalho */}
+
         <div className="dashboard-header">
           <h1>📊 Relatórios Gerenciais</h1>
           <p>Análise detalhada de desempenho e movimentação financeira</p>
         </div>
 
-        {/* Painel de Filtros */}
         <div className="filtros-card">
           <h3>🔍 Filtros de Período</h3>
-          
+
           {error && (
             <div className="alert alert-error">
               {error}
@@ -144,7 +141,6 @@ const Relatorios = () => {
             </div>
           </div>
 
-          {/* Períodos Rápidos */}
           <div className="periodos-rapidos">
             <span>Períodos rápidos:</span>
             <button onClick={() => setPeriodoRapido(7)} className="btn btn-sm btn-secondary">
@@ -159,11 +155,10 @@ const Relatorios = () => {
           </div>
         </div>
 
-        {/* Tipos de Relatório */}
         <div className="tipos-relatorio">
           <h3>Escolha o tipo de relatório</h3>
           <div className="grid-3">
-            <div 
+            <div
               className={`tipo-card ${relatorioAtivo === 'financeiro' ? 'active' : ''}`}
               onClick={() => gerarRelatorio('financeiro')}
             >
@@ -172,7 +167,7 @@ const Relatorios = () => {
               <p>Balanço, receitas, gastos e lucro líquido</p>
             </div>
 
-            <div 
+            <div
               className={`tipo-card ${relatorioAtivo === 'produtos' ? 'active' : ''}`}
               onClick={() => gerarRelatorio('produtos')}
             >
@@ -181,7 +176,7 @@ const Relatorios = () => {
               <p>Produtos mais/menos vendidos e análise de estoque</p>
             </div>
 
-            <div 
+            <div
               className={`tipo-card ${relatorioAtivo === 'clientes' ? 'active' : ''}`}
               onClick={() => gerarRelatorio('clientes')}
             >
@@ -192,7 +187,6 @@ const Relatorios = () => {
           </div>
         </div>
 
-        {/* Loading */}
         {loading && (
           <div className="loading-container">
             <div className="spinner"></div>
@@ -200,7 +194,6 @@ const Relatorios = () => {
           </div>
         )}
 
-        {/* Exibição do Relatório */}
         {!loading && dadosRelatorio && (
           <div className="relatorio-resultado">
             <div className="resultado-header">
@@ -218,7 +211,6 @@ const Relatorios = () => {
               <p><strong>Período:</strong> {dadosRelatorio.periodo?.data_inicio} até {dadosRelatorio.periodo?.data_fim}</p>
             </div>
 
-            {/* Renderização condicional por tipo */}
             {relatorioAtivo === 'financeiro' && <RelatorioFinanceiro dados={dadosRelatorio} />}
             {relatorioAtivo === 'produtos' && <RelatorioProdutos dados={dadosRelatorio} />}
             {relatorioAtivo === 'clientes' && <RelatorioClientes dados={dadosRelatorio} />}
@@ -229,7 +221,7 @@ const Relatorios = () => {
   );
 };
 
-/* ===== COMPONENTE: RELATÓRIO FINANCEIRO ===== */
+
 const RelatorioFinanceiro = ({ dados }) => {
   const resumo = dados.resumo_financeiro;
   const metricas = dados.metricas_atendimento;
@@ -238,7 +230,6 @@ const RelatorioFinanceiro = ({ dados }) => {
 
   return (
     <>
-      {/* Resumo Geral */}
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon">💵</div>
@@ -273,7 +264,6 @@ const RelatorioFinanceiro = ({ dados }) => {
         </div>
       </div>
 
-      {/* Detalhamento de Receitas */}
       <div className="card">
         <h4>📊 Detalhamento de Receitas</h4>
         <div className="info-grid">
@@ -292,7 +282,6 @@ const RelatorioFinanceiro = ({ dados }) => {
         </div>
       </div>
 
-      {/* Métricas de Atendimento */}
       <div className="card">
         <h4>📊 Métricas de Atendimento</h4>
         <div className="info-grid">
@@ -311,7 +300,6 @@ const RelatorioFinanceiro = ({ dados }) => {
         </div>
       </div>
 
-      {/* Produtos */}
       <div className="card">
         <h4>📦 Vendas de Produtos</h4>
         <div className="info-grid">
@@ -334,7 +322,6 @@ const RelatorioFinanceiro = ({ dados }) => {
         </div>
       </div>
 
-      {/* Planos */}
       <div className="card">
         <h4>💼 Assinaturas de Planos</h4>
         <div className="info-grid">
@@ -357,7 +344,6 @@ const RelatorioFinanceiro = ({ dados }) => {
         </div>
       </div>
 
-      {/* Detalhamento por Serviço */}
       {dados.detalhamento_servicos && dados.detalhamento_servicos.length > 0 && (
         <div className="card">
           <h4>✂️ Detalhamento por Serviço</h4>
@@ -389,11 +375,10 @@ const RelatorioFinanceiro = ({ dados }) => {
   );
 };
 
-/* ===== COMPONENTE: RELATÓRIO DE PRODUTOS ===== */
+
 const RelatorioProdutos = ({ dados }) => {
   return (
     <>
-      {/* Mais Vendidos */}
       {dados.mais_vendidos && dados.mais_vendidos.length > 0 && (
         <div className="card">
           <h4>🔥 Produtos Mais Vendidos</h4>
@@ -426,7 +411,6 @@ const RelatorioProdutos = ({ dados }) => {
         </div>
       )}
 
-      {/* Menos Vendidos */}
       {dados.menos_vendidos && dados.menos_vendidos.length > 0 && (
         <div className="card">
           <h4>❄️ Produtos Menos Vendidos</h4>
@@ -457,7 +441,6 @@ const RelatorioProdutos = ({ dados }) => {
         </div>
       )}
 
-      {/* Sem Vendas */}
       {dados.sem_vendas && dados.sem_vendas.length > 0 && (
         <div className="card">
           <h4>⚠️ Produtos Sem Vendas no Período</h4>
@@ -486,7 +469,6 @@ const RelatorioProdutos = ({ dados }) => {
         </div>
       )}
 
-      {/* Por Categoria */}
       {dados.por_categoria && dados.por_categoria.length > 0 && (
         <div className="card">
           <h4>📊 Vendas por Categoria</h4>
@@ -518,11 +500,10 @@ const RelatorioProdutos = ({ dados }) => {
   );
 };
 
-/* ===== COMPONENTE: RELATÓRIO DE CLIENTES ===== */
+
 const RelatorioClientes = ({ dados }) => {
   return (
     <>
-      {/* Clientes Mais Frequentes */}
       {dados.mais_frequentes && dados.mais_frequentes.length > 0 && (
         <div className="card">
           <h4>⭐ Clientes Mais Frequentes</h4>
@@ -555,7 +536,6 @@ const RelatorioClientes = ({ dados }) => {
         </div>
       )}
 
-      {/* Clientes Inativos */}
       {dados.inativos && dados.inativos.length > 0 && (
         <div className="card">
           <h4>⏰ Clientes Inativos</h4>
@@ -584,7 +564,6 @@ const RelatorioClientes = ({ dados }) => {
         </div>
       )}
 
-      {/* Serviços Populares */}
       {dados.servicos_populares && dados.servicos_populares.length > 0 && (
         <div className="card">
           <h4>✂️ Serviços Mais Populares</h4>
@@ -613,7 +592,6 @@ const RelatorioClientes = ({ dados }) => {
         </div>
       )}
 
-      {/* Clientes com Faltas */}
       {dados.com_faltas && dados.com_faltas.length > 0 && (
         <div className="card">
           <h4>⚠️ Clientes com Faltas</h4>
