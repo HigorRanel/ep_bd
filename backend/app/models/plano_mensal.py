@@ -45,38 +45,83 @@ class PlanoMensal:
 
     @staticmethod
     def listar_todos():
-        """Lista todos os planos com informações completas"""
+
         with Database.get_cursor() as cursor:
             cursor.execute("""
                 SELECT 
                     pm.id_plano_mensal,
                     pm.id_barbeiro_chefe,
                     p.nome_completo as criador_nome,
-                    json_agg(
-                        json_build_object(
-                            'id_servico', s.id_servico,
-                            'nome', s.nome,
-                            'preco', s.preco,
-                            'quantidade', ps.quantidade,
-                            'desconto', ps.desconto
-                        ) ORDER BY s.nome
-                    ) FILTER (WHERE s.id_servico IS NOT NULL) as servicos
+                    s.id_servico,
+                    s.nome as servico_nome,
+                    s.preco as servico_preco,
+                    ps.quantidade as servico_quantidade,
+                    ps.desconto as servico_desconto
                 FROM Plano_Mensal pm
                 JOIN Barbeiro_Chefe bc ON pm.id_barbeiro_chefe = bc.id_barbeiro_chefe
                 JOIN Pessoa p ON bc.cpf_barbeiro = p.cpf
                 LEFT JOIN Possui ps ON pm.id_plano_mensal = ps.id_plano
                 LEFT JOIN Servico s ON ps.id_serv = s.id_servico
-                GROUP BY pm.id_plano_mensal, pm.id_barbeiro_chefe, p.nome_completo
-                ORDER BY pm.id_plano_mensal DESC
+                ORDER BY pm.id_plano_mensal DESC, s.nome
             """)
 
-            planos = cursor.fetchall()
+            resultados = cursor.fetchall()
 
-            # Adicionar cálculos de valores para cada plano
+            planos_dict = {}
+
+            for row in resultados:
+                plano_id = row['id_plano_mensal']
+
+                if plano_id not in planos_dict:
+                    planos_dict[plano_id] = {
+                        'id_plano_mensal': plano_id,
+                        'id_barbeiro_chefe': row['id_barbeiro_chefe'],
+                        'criador_nome': row['criador_nome'],
+                        'servicos': []
+                    }
+
+                if row['id_servico'] is not None:
+                    planos_dict[plano_id]['servicos'].append({
+                        'id_servico': row['id_servico'],
+                        'nome': row['servico_nome'],
+                        'preco': row['servico_preco'],
+                        'quantidade': row['servico_quantidade'],
+                        'desconto': row['servico_desconto']
+                    })
+
+            planos = list(planos_dict.values())
+
             for plano in planos:
                 if plano['servicos']:
-                    valores = PlanoMensal.calcular_valores_plano(plano['id_plano_mensal'])
-                    plano.update(valores)
+                    valor_sem_desconto = 0
+                    valor_com_desconto = 0
+                    total_desconto = 0
+
+                    for servico in plano['servicos']:
+                        preco = float(servico['preco'])
+                        quantidade = servico['quantidade']
+                        desconto = float(servico['desconto'] or 0)
+
+                        subtotal_sem_desconto = preco * quantidade
+                        valor_desconto = subtotal_sem_desconto * (desconto / 100)
+                        subtotal_com_desconto = subtotal_sem_desconto - valor_desconto
+
+                        valor_sem_desconto += subtotal_sem_desconto
+                        valor_com_desconto += subtotal_com_desconto
+                        total_desconto += valor_desconto
+
+                    desconto_medio = (total_desconto / valor_sem_desconto * 100) if valor_sem_desconto > 0 else 0
+
+                    plano['valor_sem_desconto'] = valor_sem_desconto
+                    plano['valor_com_desconto'] = valor_com_desconto
+                    plano['valor_desconto_total'] = total_desconto
+                    plano['desconto_medio'] = desconto_medio
+                else:
+                    # Plano sem serviços
+                    plano['valor_sem_desconto'] = 0
+                    plano['valor_com_desconto'] = 0
+                    plano['valor_desconto_total'] = 0
+                    plano['desconto_medio'] = 0
 
             return planos
 
