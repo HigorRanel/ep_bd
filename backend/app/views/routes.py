@@ -325,7 +325,7 @@ def register_routes(app):
             data_inicio = request.args.get('data_inicio')
             data_fim = request.args.get('data_fim')
 
-            avaliacoes = Agendamento.listar_avaliacoes_barbeiro_paginado(
+            avaliacoes = Agendamento.listar_avaliacoes_paginado(
                 cpf_barbeiro, page, per_page, data_inicio, data_fim
             )
             return jsonify(avaliacoes), 200
@@ -357,7 +357,7 @@ def register_routes(app):
             data_inicio = request.args.get('data_inicio')
             data_fim = request.args.get('data_fim')
 
-            avaliacoes = Agendamento.listar_avaliacoes_barbeiro_paginado(
+            avaliacoes = Agendamento.listar_avaliacoes_paginado(
                 request.user_cpf, page, per_page, data_inicio, data_fim
             )
             return jsonify(avaliacoes), 200

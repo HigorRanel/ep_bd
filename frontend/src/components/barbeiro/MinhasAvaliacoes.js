@@ -40,7 +40,14 @@ const MinhasAvaliacoes = () => {
       ]);
 
       setAvaliacoes(avaliacoesRes.data.avaliacoes);
-      setPagination(avaliacoesRes.data.pagination);
+      setPagination({
+        total: avaliacoesRes.data.total_avaliacoes,
+        has_next: avaliacoesRes.data.tem_proximo,
+        has_prev: avaliacoesRes.data.tem_anterior,
+        page: avaliacoesRes.data.pagina_atual,
+        pages: avaliacoesRes.data.total_paginas,
+
+      });
       setEstatisticas(mediaRes.data);
     } catch (error) {
       console.error('Erro ao carregar avaliações:', error);

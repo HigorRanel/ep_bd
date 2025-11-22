@@ -70,17 +70,16 @@ CREATE TABLE Oferece (
 
 CREATE TABLE Agendamento (
     id_agendamento SERIAL PRIMARY KEY,
-    data_hora_agendamento TIMESTAMP NOT NULL,
+    data_hora_agendamento TIMESTAMP with time zone NOT NULL,
     status dom_status_agendamento NOT NULL,
     cpf_origem VARCHAR(11) REFERENCES Pessoa(cpf)
-        ON DELETE SET NULL ON UPDATE CASCADE,
+        ON DELETE CASCADE ON UPDATE CASCADE,
     client_id VARCHAR(11) NOT NULL REFERENCES Cliente(cpf)
         ON DELETE CASCADE ON UPDATE CASCADE,
     barbeiro_id VARCHAR(11) NOT NULL REFERENCES Barbeiro(cpf)
-        ON DELETE SET NULL ON UPDATE CASCADE
+        ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-ALTER TABLE agendamento ALTER COLUMN data_hora_agendamento TYPE timestamp with time zone ;
 
 CREATE TABLE Contem (
     id_serv INT REFERENCES Servico(id_servico)
