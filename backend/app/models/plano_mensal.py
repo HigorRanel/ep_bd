@@ -213,7 +213,7 @@ class PlanoMensal:
             """, (id_plano,))
 
             servicos = cursor.fetchall()
-
+            print(servicos)
             if not servicos:
                 return {
                     'valor_sem_desconto': 0,
