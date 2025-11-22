@@ -255,6 +255,12 @@ def register_routes(app):
     def calcular_valores_plano(id_plano):
         return PlanoController.calcular_valores_plano(id_plano)
 
+    @app.route('/api/planos/<int:id_plano>/cancelar-assinatura', methods=['DELETE'])
+    @token_required
+    def cancelar_assinatura_plano(id_plano):
+        """Endpoint para cliente cancelar sua assinatura de um plano"""
+        return PlanoController.cancelar_assinatura(id_plano, request.user_cpf)
+
     # NOVO: Verificar se pode agendar com plano
     @app.route('/api/planos/pode-agendar/<int:id_servico>', methods=['GET'])
     @token_required

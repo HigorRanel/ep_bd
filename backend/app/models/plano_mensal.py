@@ -383,12 +383,12 @@ class PlanoMensal:
                     a.data_inicio,
                     a.data_fim,
                     pm.id_plano_mensal,
-                    DATE_PART('day', a.data_fim - CURRENT_DATE) as dias_restantes
+                    (a.data_fim::DATE - CURRENT_DATE) as dias_restantes
                 FROM Assina a
                 JOIN Plano_Mensal pm ON a.id_plano = pm.id_plano_mensal
                 WHERE a.id_cliente = %s
-                AND a.data_fim >= CURRENT_DATE
-                AND a.data_fim <= CURRENT_DATE + INTERVAL '%s days'
+                AND a.data_fim::DATE >= CURRENT_DATE
+                AND (a.data_fim::DATE - CURRENT_DATE) <= %s
                 ORDER BY a.data_fim ASC
             """, (cpf_cliente, dias))
             return cursor.fetchall()

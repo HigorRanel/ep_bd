@@ -90,17 +90,21 @@ const MeusPlanos = () => {
   };
 
   const cancelarAssinatura = async (idPlano) => {
-    if (!window.confirm('Deseja cancelar esta assinatura?')) return;
+      if (!window.confirm('Deseja realmente cancelar esta assinatura? Esta ação não pode ser desfeita.')) return;
 
-    try {
-      await api.delete(`/assinaturas/cancelar/${idPlano}`);
-      setMessage({ type: 'success', text: 'Assinatura cancelada com sucesso!' });
-      carregarDados();
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Erro ao cancelar assinatura' });
-    }
-  };
+      try {
+        // ✅ CORREÇÃO: Usar a rota correta
+        await api.delete(`/planos/${idPlano}/cancelar-assinatura`);
+        
+        setMessage({ type: 'success', text: 'Assinatura cancelada com sucesso!' });
+        carregarDados();
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      } catch (error) {
+        console.error('Erro ao cancelar assinatura:', error);
+        const mensagemErro = error.response?.data?.error || 'Erro ao cancelar assinatura';
+        setMessage({ type: 'error', text: mensagemErro });
+      }
+    };
 
   const planoEstaAtivo = (dataFim) => {
     return new Date(dataFim) >= new Date();
@@ -115,6 +119,8 @@ const MeusPlanos = () => {
 
   const abrirDetalhesPlano = async (idPlano) => {
     try {
+      setMessage({ type: '', text: '' }); // Limpar mensagens anteriores
+      
       const [valoresRes, planoRes] = await Promise.all([
         api.get(`/planos/${idPlano}/valores`),
         api.get(`/planos/${idPlano}`)
@@ -126,9 +132,13 @@ const MeusPlanos = () => {
       });
     } catch (error) {
       console.error('Erro ao carregar detalhes:', error);
-      setMessage({ type: 'error', text: 'Erro ao carregar detalhes do plano' });
+      console.error('Response:', error.response); // Log adicional para debug
+      
+      const mensagemErro = error.response?.data?.error || 'Erro ao carregar detalhes do plano';
+      setMessage({ type: 'error', text: mensagemErro });
     }
   };
+
 
   const renderUsoServico = (servico) => {
     const porcentagemUso = (servico.quantidade_usada / servico.quantidade_plano) * 100;
@@ -558,7 +568,7 @@ const MeusPlanos = () => {
                                   {' '}| Sem desconto: R$ {valorSem.toFixed(2)} | Com desconto: <strong style={{ color: '#27ae60' }}>R$ {valorCom.toFixed(2)}</strong>
                                 </span>
                               )}
-                              {desc === 0 && ` = R$ {valorSem.toFixed(2)} total`}
+                              {desc === 0 && ' | R$ ' + valorSem.toFixed(2) + ' total'}
                             </small>
                           </li>
                         );

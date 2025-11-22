@@ -201,8 +201,8 @@ class PlanoController:
                     WHERE id_plano = %s
                 """, (desconto, id_plano))
 
-            # Recalcular valores
-            valores = PlanoMensal.calcular_desconto_plano(id_plano)
+            # Recalcular valores - ✅ CORRIGIDO
+            valores = PlanoMensal.calcular_valores_plano(id_plano)  # ✅ MÉTODO CORRETO
 
             return jsonify({
                 'message': 'Desconto atualizado com sucesso',
@@ -246,7 +246,31 @@ class PlanoController:
     def calcular_valores_plano(id_plano):
         """Retorna valores do plano com desconto"""
         try:
-            valores = PlanoMensal.calcular_desconto_plano(id_plano)
+            valores = PlanoMensal.calcular_valores_plano(id_plano)  
             return jsonify(valores), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @staticmethod
+    def cancelar_assinatura(id_plano, cpf_usuario):
+        """Cancela a assinatura de um plano (chamado pelo cliente)"""
+        try:
+            from backend.app.models.plano_mensal import PlanoMensal
+
+            # Verificar se o cliente tem assinatura ativa deste plano
+            assinatura = PlanoMensal.verificar_assinatura_ativa(cpf_usuario, id_plano)
+
+            if not assinatura:
+                return jsonify({
+                    'error': 'Você não tem uma assinatura ativa deste plano'
+                }), 404
+
+            # Cancelar a assinatura
+            PlanoMensal.cancelar_assinatura(cpf_usuario, id_plano)
+
+            return jsonify({
+                'message': 'Assinatura cancelada com sucesso'
+            }), 200
+
         except Exception as e:
             return jsonify({'error': str(e)}), 500
