@@ -63,21 +63,17 @@ export const AuthProvider = ({ children }) => {
 
   const cadastrarBarbeiro = async (dados) => {
     try {
-      const response = await api.post('/auth/cadastrar-e-logar/barbeiro', dados);
-      const { token, user: userData } = response.data;
+
+      await api.post('/auth/registrar/barbeiro', dados);
       
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(userData));
-      setUser(userData);
-      
-      return { success: true, user: userData };
+      return { success: true }; // Apenas retorna sucesso
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.error || 'Erro ao cadastrar barbeiro' 
-      };
-    }
-  };
+        return { 
+          success: false, 
+          error: error.response?.data?.error || 'Erro ao cadastrar barbeiro' 
+        };
+      }
+    };
 
   const alterarSenha = async (senhaAtual, novaSenha) => {
     try {
@@ -133,10 +129,8 @@ export const AuthProvider = ({ children }) => {
         cadastrarCliente,
         cadastrarBarbeiro,
         alterarSenha,
-        // --- ADICIONE ESTAS DUAS LINHAS ABAIXO ---
         solicitarRecuperacaoEmail, 
         redefinirSenhaToken,
-        // -----------------------------------------
         isCliente,
         isBarbeiro,
         isBarbeiroChefe,
