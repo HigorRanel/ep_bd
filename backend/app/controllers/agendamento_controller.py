@@ -260,3 +260,11 @@ class AgendamentoController:
             return jsonify(avaliacoes), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+
+    @staticmethod
+    def listar_agendamentos_cliente_otimizado(cpf_cliente):
+        try:
+            agendamentos = Agendamento.buscar_agendamentos_cliente_otimizado(cpf_cliente)
+            return jsonify(agendamentos), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500

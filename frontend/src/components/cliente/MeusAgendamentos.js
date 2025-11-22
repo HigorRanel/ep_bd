@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../common/Navbar';
 import api from '../../services/api';
@@ -19,7 +19,7 @@ const MeusAgendamentos = () => {
 
   // Estados para busca
   const [termoBusca, setTermoBusca] = useState('');
-  const [ordenacao, setOrdenacao] = useState('recentes'); // recentes, antigas
+  const [ordenacao, setOrdenacao] = useState('recentes');
 
   useEffect(() => {
     carregarAgendamentos();
@@ -30,9 +30,11 @@ const MeusAgendamentos = () => {
     setPaginaAtual(1);
   }, [filtro, termoBusca]);
 
+  // ✅ OTIMIZAÇÃO ULTRA: Carregar agendamentos JÁ COM avaliações do backend
   const carregarAgendamentos = async () => {
     try {
-      const response = await api.get('/clientes/me/agendamentos');
+      // ✅ NOVA ROTA: Uma única query que já traz avaliações
+      const response = await api.get('/clientes/me/agendamentos-otimizado');
       
       // Ordenar por data (mais recentes primeiro)
       const ordenados = response.data.sort((a, b) => 
@@ -41,8 +43,15 @@ const MeusAgendamentos = () => {
       
       setAgendamentos(ordenados);
       
-      // Verificar avaliações existentes para cada agendamento
-      await verificarAvaliacoesExistentes(ordenados);
+      // ✅ Processar avaliações que já vieram do backend
+      const avaliacoes = new Set();
+      ordenados.forEach(ag => {
+        if (ag.tem_avaliacao) {
+          avaliacoes.add(ag.id_agendamento);
+        }
+      });
+      setAvaliacoesExistentes(avaliacoes);
+      
     } catch (error) {
       console.error('Erro ao carregar agendamentos:', error);
       setMessage({ type: 'error', text: 'Erro ao carregar agendamentos' });
@@ -51,27 +60,35 @@ const MeusAgendamentos = () => {
     }
   };
 
-  const verificarAvaliacoesExistentes = async (listaAgendamentos) => {
+  // ✅ NOVA FUNÇÃO: Verificar avaliações em batch (paralelo)
+  const verificarAvaliacoesExistentesBatch = async (listaAgendamentos) => {
     const avaliacoes = new Set();
     
-    // Verificar apenas agendamentos concluídos
+    // Filtrar apenas concluídos
     const concluidos = listaAgendamentos.filter(a => a.status === 'concluido');
     
-    for (const agendamento of concluidos) {
-      try {
-        const response = await api.get(`/avaliacoes/agendamento/${agendamento.id_agendamento}`);
-        if (response.data) {
-          avaliacoes.add(agendamento.id_agendamento);
+    if (concluidos.length === 0) return;
+
+    try {
+      // ✅ Fazer todas as requisições em paralelo (Promise.allSettled)
+      const promises = concluidos.map(agendamento =>
+        api.get(`/avaliacoes/agendamento/${agendamento.id_agendamento}`)
+          .then(response => ({ id: agendamento.id_agendamento, exists: !!response.data }))
+          .catch(error => ({ id: agendamento.id_agendamento, exists: false }))
+      );
+
+      const resultados = await Promise.allSettled(promises);
+      
+      resultados.forEach(result => {
+        if (result.status === 'fulfilled' && result.value.exists) {
+          avaliacoes.add(result.value.id);
         }
-      } catch (error) {
-        // Se retornar 404, significa que não tem avaliação
-        if (error.response?.status !== 404) {
-          console.error('Erro ao verificar avaliação:', error);
-        }
-      }
+      });
+      
+      setAvaliacoesExistentes(avaliacoes);
+    } catch (error) {
+      console.error('Erro ao verificar avaliações:', error);
     }
-    
-    setAvaliacoesExistentes(avaliacoes);
   };
 
   const cancelarAgendamento = async (id) => {
@@ -115,16 +132,17 @@ const MeusAgendamentos = () => {
     }
   };
 
-  const formatarData = (dataString) => {
+  const formatarData = useCallback((dataString) => {
     const data = new Date(dataString);
     return {
       data: data.toLocaleDateString('pt-BR'),
       hora: data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
       completo: data.toLocaleString('pt-BR')
     };
-  };
+  }, []);
 
-  const filtrarAgendamentos = () => {
+  // ✅ OTIMIZAÇÃO 3: Usar useMemo para filtros (só recalcula quando necessário)
+  const agendamentosFiltrados = useMemo(() => {
     let filtrados = [...agendamentos];
 
     // Filtro por status
@@ -157,22 +175,26 @@ const MeusAgendamentos = () => {
     }
 
     return filtrados;
-  };
+  }, [agendamentos, filtro, termoBusca, ordenacao]);
 
-  const agendamentosFiltrados = filtrarAgendamentos();
+  // ✅ OTIMIZAÇÃO 4: Usar useMemo para paginação
+  const agendamentosPaginados = useMemo(() => {
+    const indexUltimo = paginaAtual * itensPorPagina;
+    const indexPrimeiro = indexUltimo - itensPorPagina;
+    return agendamentosFiltrados.slice(indexPrimeiro, indexUltimo);
+  }, [agendamentosFiltrados, paginaAtual]);
 
-  // Cálculo da paginação
-  const totalPaginas = Math.ceil(agendamentosFiltrados.length / itensPorPagina);
-  const indexUltimo = paginaAtual * itensPorPagina;
-  const indexPrimeiro = indexUltimo - itensPorPagina;
-  const agendamentosPaginados = agendamentosFiltrados.slice(indexPrimeiro, indexUltimo);
+  const totalPaginas = useMemo(() => 
+    Math.ceil(agendamentosFiltrados.length / itensPorPagina),
+    [agendamentosFiltrados.length]
+  );
 
-  const mudarPagina = (numeroPagina) => {
+  const mudarPagina = useCallback((numeroPagina) => {
     setPaginaAtual(numeroPagina);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, []);
 
-  const renderEstrelas = (nota) => {
+  const renderEstrelas = useCallback((nota) => {
     return Array.from({ length: 5 }, (_, i) => (
       <span
         key={i}
@@ -181,22 +203,22 @@ const MeusAgendamentos = () => {
           color: i < nota ? '#f39c12' : '#ddd',
           cursor: 'pointer'
         }}
-        onClick={() => setAvaliacao({ ...avaliacao, nota: i + 1 })}
+        onClick={() => setAvaliacao(prev => ({ ...prev, nota: i + 1 }))}
       >
         ★
       </span>
     ));
-  };
+  }, []);
 
-  const podeAvaliar = (agendamento) => {
+  const podeAvaliar = useCallback((agendamento) => {
     return agendamento.status === 'concluido' && !avaliacoesExistentes.has(agendamento.id_agendamento);
-  };
+  }, [avaliacoesExistentes]);
 
-  const jaAvaliou = (agendamento) => {
+  const jaAvaliou = useCallback((agendamento) => {
     return avaliacoesExistentes.has(agendamento.id_agendamento);
-  };
+  }, [avaliacoesExistentes]);
 
-  const podeCancelar = (agendamento) => {
+  const podeCancelar = useCallback((agendamento) => {
     if (agendamento.status !== 'pendente' && agendamento.status !== 'confirmado') {
       return false;
     }
@@ -204,9 +226,9 @@ const MeusAgendamentos = () => {
     const agora = new Date();
     const diferencaHoras = (dataAgendamento - agora) / (1000 * 60 * 60);
     return diferencaHoras > 2;
-  };
+  }, []);
 
-  const getStatusInfo = (status) => {
+  const getStatusInfo = useCallback((status) => {
     const statusMap = {
       pendente: { label: 'Pendente', color: '#f39c12', icon: '⏳' },
       confirmado: { label: 'Confirmado', color: '#3498db', icon: '✓' },
@@ -214,13 +236,23 @@ const MeusAgendamentos = () => {
       cancelado: { label: 'Cancelado', color: '#e74c3c', icon: '✗' }
     };
     return statusMap[status] || statusMap.pendente;
-  };
+  }, []);
+
+  // ✅ OTIMIZAÇÃO 5: Calcular estatísticas com useMemo
+  const estatisticas = useMemo(() => ({
+    total: agendamentos.length,
+    pendentes: agendamentos.filter(a => a.status === 'pendente' || a.status === 'confirmado').length,
+    concluidos: agendamentos.filter(a => a.status === 'concluido').length
+  }), [agendamentos]);
 
   if (loading) {
     return (
       <div className="page-container">
         <Navbar />
-        <div className="loading-container">Carregando seus agendamentos...</div>
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Carregando seus agendamentos...</p>
+        </div>
       </div>
     );
   }
@@ -250,21 +282,21 @@ const MeusAgendamentos = () => {
           <div className="stat-card">
             <div className="stat-icon">📅</div>
             <div className="stat-content">
-              <h3>{agendamentos.length}</h3>
+              <h3>{estatisticas.total}</h3>
               <p>Total de Agendamentos</p>
             </div>
           </div>
           <div className="stat-card">
             <div className="stat-icon">⏳</div>
             <div className="stat-content">
-              <h3>{agendamentos.filter(a => a.status === 'pendente' || a.status === 'confirmado').length}</h3>
+              <h3>{estatisticas.pendentes}</h3>
               <p>Pendentes</p>
             </div>
           </div>
           <div className="stat-card">
             <div className="stat-icon">✅</div>
             <div className="stat-content">
-              <h3>{agendamentos.filter(a => a.status === 'concluido').length}</h3>
+              <h3>{estatisticas.concluidos}</h3>
               <p>Concluídos</p>
             </div>
           </div>
@@ -298,19 +330,19 @@ const MeusAgendamentos = () => {
                 onClick={() => setFiltro('todos')}
                 className={`btn btn-sm ${filtro === 'todos' ? 'btn-primary' : 'btn-secondary'}`}
               >
-                Todos ({agendamentos.length})
+                Todos ({estatisticas.total})
               </button>
               <button
                 onClick={() => setFiltro('pendentes')}
                 className={`btn btn-sm ${filtro === 'pendentes' ? 'btn-primary' : 'btn-secondary'}`}
               >
-                Pendentes ({agendamentos.filter(a => a.status === 'pendente' || a.status === 'confirmado').length})
+                Pendentes ({estatisticas.pendentes})
               </button>
               <button
                 onClick={() => setFiltro('concluidos')}
                 className={`btn btn-sm ${filtro === 'concluidos' ? 'btn-primary' : 'btn-secondary'}`}
               >
-                Concluídos ({agendamentos.filter(a => a.status === 'concluido').length})
+                Concluídos ({estatisticas.concluidos})
               </button>
               <button
                 onClick={() => setFiltro('cancelados')}

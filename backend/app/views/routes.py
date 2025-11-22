@@ -665,17 +665,15 @@ def register_routes(app):
     @token_required
     @barbeiro_required
     def relatorio_clientes():
-        """
-        Relatório de comportamento de clientes
-        Query params: data_inicio, data_fim, limite (padrão 20)
-        """
         return RelatorioController.relatorio_clientes()
 
     @app.route('/api/relatorios/completo', methods=['GET'])
     @token_required
     @barbeiro_chefe_required
     def relatorio_completo():
-        """
-        Endpoint informativo sobre relatórios disponíveis
-        """
         return RelatorioController.relatorio_completo()
+
+    @app.route('/api/clientes/me/agendamentos-otimizado', methods=['GET'])
+    @token_required
+    def meus_agendamentos_otimizado():
+        return AgendamentoController.listar_agendamentos_cliente_otimizado(request.user_cpf)
