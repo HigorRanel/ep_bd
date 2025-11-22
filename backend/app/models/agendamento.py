@@ -19,12 +19,9 @@ class Agendamento:
             dict: {'tem_conflito': bool, 'agendamento_conflitante': dict ou None}
         """
         with Database.get_cursor() as cursor:
-            # Calcular horário de início e fim do novo agendamento
-            # Remove timezone info para comparação consistente
             inicio = datetime.strptime(data_hora, '%Y-%m-%d %H:%M:%S')
             fim = inicio + timedelta(minutes=duracao_min)
 
-            # Query para buscar agendamentos que podem conflitar
             query = """
                 SELECT a.*, s.duracao_estimada_min, pc.nome_completo as cliente_nome
                 FROM Agendamento a
@@ -39,7 +36,6 @@ class Agendamento:
 
             params = [cpf_barbeiro, inicio.date()]
 
-            # Se for edição, excluir o próprio agendamento da verificação
             if id_agendamento_excluir:
                 query += " AND a.id_agendamento != %s"
                 params.append(id_agendamento_excluir)
@@ -47,22 +43,14 @@ class Agendamento:
             cursor.execute(query, params)
             agendamentos_existentes = cursor.fetchall()
 
-            # Verificar conflitos
             for agendamento in agendamentos_existentes:
                 ag_inicio = agendamento['data_hora_agendamento']
 
-                # Remover timezone info se existir
                 if ag_inicio.tzinfo is not None:
                     ag_inicio = ag_inicio.replace(tzinfo=None)
 
                 ag_duracao = agendamento['duracao_estimada_min']
                 ag_fim = ag_inicio + timedelta(minutes=ag_duracao)
-
-                # Verificar se há sobreposição de horários
-                # Conflito ocorre se:
-                # 1. Novo agendamento começa durante um agendamento existente
-                # 2. Novo agendamento termina durante um agendamento existente
-                # 3. Novo agendamento envolve completamente um agendamento existente
 
                 if (inicio < ag_fim and fim > ag_inicio):
                     return {
@@ -92,7 +80,6 @@ class Agendamento:
             list: Lista de horários disponíveis no formato 'HH:MM'
         """
         with Database.get_cursor() as cursor:
-            # Buscar agendamentos do barbeiro nessa data
             cursor.execute("""
                 SELECT a.data_hora_agendamento, s.duracao_estimada_min
                 FROM Agendamento a
@@ -109,9 +96,8 @@ class Agendamento:
             # Definir horário de funcionamento (8h às 18h)
             horario_inicio = 8
             horario_fim = 18
-            intervalo_minutos = 30  # Intervalos de 30 minutos
+            intervalo_minutos = 30  
 
-            # Gerar todos os horários possíveis
             horarios_possiveis = []
             hora_atual = horario_inicio
             minuto_atual = 0
@@ -123,7 +109,6 @@ class Agendamento:
                     minuto_atual = 0
                     hora_atual += 1
 
-            # Remover horários ocupados
             horarios_disponiveis = []
             data_base = datetime.strptime(data, '%Y-%m-%d')
 
@@ -132,12 +117,10 @@ class Agendamento:
                 horario_teste = data_base.replace(hour=hora, minute=minuto)
                 horario_teste_fim = horario_teste + timedelta(minutes=duracao_servico_min)
 
-                # Verificar se esse horário conflita com algum agendamento
                 conflito = False
                 for ag in agendamentos:
                     ag_inicio = ag['data_hora_agendamento']
 
-                    # Remover timezone info se existir
                     if ag_inicio.tzinfo is not None:
                         ag_inicio = ag_inicio.replace(tzinfo=None)
 
@@ -155,7 +138,6 @@ class Agendamento:
     @staticmethod
     def criar(data_hora, cpf_cliente, cpf_barbeiro, id_servico, cpf_origem, status='pendente'):
         with Database.get_cursor() as cursor:
-            # Buscar duração do serviço
             cursor.execute("""
                 SELECT duracao_estimada_min FROM Servico WHERE id_servico = %s
             """, (id_servico,))
@@ -166,7 +148,6 @@ class Agendamento:
 
             duracao = servico['duracao_estimada_min']
 
-            # Verificar conflito de horário
             conflito = Agendamento.verificar_conflito_horario(cpf_barbeiro, data_hora, duracao)
 
             if conflito['tem_conflito']:
@@ -176,7 +157,6 @@ class Agendamento:
                     f"das {ag_conf['horario_inicio']} às {ag_conf['horario_fim']}."
                 )
 
-            # Criar agendamento
             cursor.execute("""
                 INSERT INTO Agendamento (data_hora_agendamento, status, cpf_origem, client_id, barbeiro_id)
                 VALUES (%s, %s, %s, %s, %s)

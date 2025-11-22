@@ -32,7 +32,7 @@ class PlanoMensal:
                 cursor.execute("""
                     INSERT INTO Possui (id_serv, id_plano, quantidade, desconto)
                     VALUES (%s, %s, %s, %s)
-                """, (servico['id_servico'], id_plano, servico['quantidade'], desconto))
+                """, (servico['id_servico'], id_plano, servico['quantidade'], servico['desconto']))
 
             # Calcular valores para retorno
             valores = PlanoMensal.calcular_valores_plano(id_plano)
@@ -183,7 +183,7 @@ class PlanoMensal:
             """, (id_plano,))
 
             servicos = cursor.fetchall()
-
+            print(servicos)
             if not servicos:
                 return {
                     'valor_sem_desconto': 0,

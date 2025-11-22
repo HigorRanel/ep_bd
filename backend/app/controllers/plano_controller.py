@@ -28,7 +28,7 @@ class PlanoController:
             if 'servicos' not in dados or not dados['servicos']:
                 return jsonify({'error': 'Pelo menos um serviço é obrigatório'}), 400
 
-            # NOVO: Pegar desconto (opcional, padrão 0)
+            # Pegar desconto (opcional, padrão 0)
             desconto = float(dados.get('desconto', 0))
 
             # Validar desconto
