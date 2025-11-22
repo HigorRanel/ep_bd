@@ -13,17 +13,16 @@ const GerenciarClientes = () => {
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
 
-  // Debounce do search - só atualiza após 500ms sem digitar
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearchDebounced(search);
-      setPage(1); // Reset para página 1 ao buscar
-    }, 500); // 500ms de delay
+      setPage(1); 
+    }, 500); 
 
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Carrega clientes quando o search debounced ou página mudam
   useEffect(() => {
     carregarClientes();
   }, [page, searchDebounced]);

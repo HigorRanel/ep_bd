@@ -9,12 +9,10 @@ const GerenciarPlanos = () => {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ type: '', text: '' });
   
-  // Modal de edição
   const [modalEditar, setModalEditar] = useState(null);
   const [servicosEditando, setServicosEditando] = useState([]);
   const [descontoGeral, setDescontoGeral] = useState(0);
 
-  // Estado para busca
   const [termoBusca, setTermoBusca] = useState('');
 
   useEffect(() => {
@@ -40,12 +38,11 @@ const GerenciarPlanos = () => {
   const abrirModalEditar = (plano) => {
     setModalEditar(plano);
     
-    // Carregar serviços do plano COM seus descontos individuais
     const servicosAtuais = plano.servicos?.filter(s => s && s.id_servico) || [];
     setServicosEditando(servicosAtuais.map(s => ({
       id_servico: s.id_servico,
       quantidade: s.quantidade,
-      desconto: s.desconto || 0  // IMPORTANTE: preservar desconto individual
+      desconto: s.desconto || 0  
     })));
     
     setDescontoGeral(0);
@@ -68,7 +65,6 @@ const GerenciarPlanos = () => {
     setServicosEditando(novos);
   };
 
-  // Aplicar desconto geral a todos os serviços
   const aplicarDescontoGeralEdicao = () => {
     if (servicosEditando.length === 0) {
       setMessage({ type: 'warning', text: 'Adicione pelo menos um serviço primeiro' });
@@ -97,7 +93,6 @@ const GerenciarPlanos = () => {
       return;
     }
 
-    // Validar descontos
     for (const servico of servicosValidos) {
       const desc = parseFloat(servico.desconto || 0);
       if (desc < 0 || desc > 100) {
@@ -111,9 +106,9 @@ const GerenciarPlanos = () => {
         servicos: servicosValidos.map(s => ({
           id_servico: parseInt(s.id_servico),
           quantidade: parseInt(s.quantidade),
-          desconto: parseFloat(s.desconto || 0)  // IMPORTANTE: enviar desconto individual
+          desconto: parseFloat(s.desconto || 0)  
         })),
-        desconto: 0  // Não usado, mas mantém compatibilidade
+        desconto: 0 
       });
 
       setMessage({ type: 'success', text: 'Plano atualizado com sucesso!' });
@@ -169,7 +164,6 @@ const GerenciarPlanos = () => {
     }, 0);
   };
 
-  // Planos filtrados
   const planosFiltrados = planos.filter(plano => {
     if (!termoBusca.trim()) return true;
     
@@ -262,7 +256,6 @@ const GerenciarPlanos = () => {
           ) : (
             <div className="grid-2">
               {planosFiltrados.map(plano => {
-                // Valores já calculados pelo backend
                 const valorSemDesconto = plano.valor_sem_desconto || 0;
                 const valorComDesconto = plano.valor_com_desconto || 0;
                 const economiaTotal = plano.valor_desconto_total || 0;

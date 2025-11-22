@@ -8,8 +8,7 @@ const ConsultarReservas = () => {
   const [reservasFiltradas, setReservasFiltradas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ type: '', text: '' });
-  
-  // Filtros
+
   const [filtros, setFiltros] = useState({
     status: 'todos',
     categoria: 'todas',
@@ -18,11 +17,9 @@ const ConsultarReservas = () => {
     nomeCliente: '',
   });
 
-  // Modal de edição
   const [modalEditar, setModalEditar] = useState(null);
   const [novoStatus, setNovoStatus] = useState('');
 
-  // Estatísticas
   const [stats, setStats] = useState({
     total: 0,
     pendentes: 0,
@@ -40,13 +37,13 @@ const ConsultarReservas = () => {
 
   const carregarDados = async () => {
     try {
-    
+
       const response = await api.get('/reservas/todas');
       const todasReservas = response.data;
-      
+
       setReservas(todasReservas);
       calcularEstatisticas(todasReservas);
-      
+
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       setMessage({ type: 'error', text: 'Erro ao carregar reservas' });
@@ -67,17 +64,14 @@ const ConsultarReservas = () => {
   const aplicarFiltros = () => {
     let filtradas = [...reservas];
 
-    // Filtro por status
     if (filtros.status !== 'todos') {
       filtradas = filtradas.filter(r => r.status === filtros.status);
     }
 
-    // Filtro por categoria
     if (filtros.categoria !== 'todas') {
       filtradas = filtradas.filter(r => r.categoria === filtros.categoria);
     }
 
-    // Filtro por data início
     if (filtros.dataInicio) {
       filtradas = filtradas.filter(r => {
         const dataReserva = r.data_reserva.split('T')[0];
@@ -85,7 +79,6 @@ const ConsultarReservas = () => {
       });
     }
 
-    // Filtro por data fim
     if (filtros.dataFim) {
       filtradas = filtradas.filter(r => {
         const dataReserva = r.data_reserva.split('T')[0];
@@ -93,15 +86,13 @@ const ConsultarReservas = () => {
       });
     }
 
-    // Filtro por nome do cliente
     if (filtros.nomeCliente.trim()) {
       const termo = filtros.nomeCliente.toLowerCase().trim();
-      filtradas = filtradas.filter(r => 
+      filtradas = filtradas.filter(r =>
         r.cliente_nome.toLowerCase().includes(termo)
       );
     }
 
-    // Ordenar por data (mais recentes primeiro)
     filtradas.sort((a, b) => new Date(b.data_reserva) - new Date(a.data_reserva));
 
     setReservasFiltradas(filtradas);
@@ -126,7 +117,6 @@ const ConsultarReservas = () => {
     if (!modalEditar || !novoStatus) return;
 
     try {
-      // NOVA ROTA OTIMIZADA
       await api.put('/reservas/atualizar-status', {
         id_cliente: modalEditar.id_cliente,
         id_produto: modalEditar.id_prod,
@@ -138,9 +128,9 @@ const ConsultarReservas = () => {
       carregarDados();
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.error || 'Erro ao alterar status' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.error || 'Erro ao alterar status'
       });
     }
   };
@@ -155,14 +145,14 @@ const ConsultarReservas = () => {
           id_produto: idProduto,
         }
       });
-      
+
       setMessage({ type: 'success', text: 'Reserva cancelada com sucesso!' });
       carregarDados();
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.error || 'Erro ao cancelar reserva' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.error || 'Erro ao cancelar reserva'
       });
     }
   };
@@ -182,7 +172,6 @@ const ConsultarReservas = () => {
     return statusMap[status] || statusMap.reservado;
   };
 
-  // Obter categorias únicas
   const categorias = [...new Set(reservas.map(r => r.categoria))];
 
   if (loading) {
@@ -332,7 +321,7 @@ const ConsultarReservas = () => {
           <div className="grid-2">
             {reservasFiltradas.map((reserva) => {
               const statusInfo = getStatusInfo(reserva.status);
-              
+
               return (
                 <div key={`${reserva.id_cliente}-${reserva.id_prod}`} className="card">
                   <div className="card-header">
@@ -342,7 +331,7 @@ const ConsultarReservas = () => {
                         Reservado em {formatarData(reserva.data_reserva)}
                       </p>
                     </div>
-                    <span 
+                    <span
                       className={`badge`}
                       style={{ backgroundColor: statusInfo.color }}
                     >
@@ -355,7 +344,7 @@ const ConsultarReservas = () => {
                     <p><strong>Categoria:</strong> {reserva.categoria}</p>
                     <p><strong>Preço:</strong> R$ {parseFloat(reserva.preco_venda).toFixed(2)}</p>
                     <p><strong>Estoque disponível:</strong> {reserva.quantidade_estoque}</p>
-                    
+
                     <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #ecf0f1' }}>
                       <p style={{ fontSize: '13px', marginBottom: '5px' }}>
                         <strong>Contato:</strong>
@@ -390,7 +379,7 @@ const ConsultarReservas = () => {
                         </button>
                       </>
                     )}
-                    
+
                     {reserva.status !== 'reservado' && (
                       <button
                         onClick={() => abrirModalEditar(reserva)}
@@ -434,9 +423,9 @@ const ConsultarReservas = () => {
                 </select>
               </div>
 
-              <div style={{ 
-                padding: '15px', 
-                backgroundColor: '#fff3cd', 
+              <div style={{
+                padding: '15px',
+                backgroundColor: '#fff3cd',
                 borderRadius: '8px',
                 marginBottom: '20px',
                 fontSize: '13px'

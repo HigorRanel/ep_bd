@@ -62,7 +62,6 @@ const AgendaBarbeiro = () => {
       grupos[data].push(ag);
     });
 
-    // Ordenar agendamentos dentro de cada dia
     Object.keys(grupos).forEach((data) => {
       grupos[data].sort((a, b) => 
         new Date(a.data_hora_agendamento) - new Date(b.data_hora_agendamento)
@@ -72,7 +71,6 @@ const AgendaBarbeiro = () => {
     return grupos;
   };
 
-  // NOVO: Função para obter info de status incluindo 'falta'
   const getStatusInfo = (status) => {
     const statusMap = {
       pendente: { className: 'badge-pendente', color: '#f39c12', icon: '⏳' },
