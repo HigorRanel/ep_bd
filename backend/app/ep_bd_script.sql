@@ -45,7 +45,6 @@ CREATE TABLE Assina (
         ON DELETE CASCADE ON UPDATE CASCADE,
 	data_inicio DATE NOT NULL,
     data_fim DATE NOT NULL,	
-    desconto DECIMAL(4,2) NOT NULL DEFAULT 0.00,
     id_plano INT REFERENCES Plano_Mensal(id_plano_mensal)
         ON DELETE CASCADE ON UPDATE CASCADE,
     PRIMARY KEY (id_cliente, id_plano)
@@ -126,6 +125,7 @@ CREATE TABLE Possui (
     id_plano INT REFERENCES Plano_Mensal(id_plano_mensal)
         ON DELETE CASCADE ON UPDATE CASCADE,
     quantidade INT NOT NULL,
+    desconto DECIMAL(4,2) NOT NULL DEFAULT 00.00,
     PRIMARY KEY (id_serv, id_plano)
 );
 
