@@ -1,6 +1,5 @@
 from backend.app.utils.database import Database
 from datetime import datetime, timedelta
-import pytz
 
 
 class Agendamento:

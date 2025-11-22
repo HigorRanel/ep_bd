@@ -25,16 +25,37 @@ class Servico:
     def listar_todos():
         with Database.get_cursor() as cursor:
             cursor.execute("""
-                SELECT s.*, 
-                       array_agg(p.nome_completo) as barbeiros
+                SELECT 
+                    s.*, 
+                    p.nome_completo as nome_barbeiro
                 FROM Servico s
                 LEFT JOIN Oferece o ON s.id_servico = o.id_servico
                 LEFT JOIN Barbeiro b ON o.cpf_barbeiro = b.cpf
                 LEFT JOIN Pessoa p ON b.cpf = p.cpf
-                GROUP BY s.id_servico
                 ORDER BY s.nome
-            """)
-            return cursor.fetchall()
+                """)
+            
+            rows = cursor.fetchall()
+            
+            servicos_map = {}
+            
+            for row in rows:
+                id_servico = row['id_servico']
+                
+                if id_servico not in servicos_map:
+
+                    dados_servico = dict(row) 
+                    
+                    del dados_servico['nome_barbeiro'] 
+                    
+                    dados_servico['barbeiros'] = []
+                    
+                    servicos_map[id_servico] = dados_servico
+
+                if row['nome_barbeiro']:
+                    servicos_map[id_servico]['barbeiros'].append(row['nome_barbeiro'])
+            
+            return list(servicos_map.values())
 
     @staticmethod
     def buscar_por_id(id_servico):
