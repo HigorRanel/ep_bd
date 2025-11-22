@@ -4,7 +4,7 @@ import api from '../../services/api';
 import '../../styles/dashboard.css';
 
 const ListarProdutos = () => {
-  // Estado para produtos e paginação
+
   const [produtos, setProdutos] = useState([]);
   const [paginacao, setPaginacao] = useState({
     total_produtos: 0,
@@ -15,31 +15,26 @@ const ListarProdutos = () => {
     tem_anterior: false
   });
   
-  // Estado para filtros
+  
   const [filtros, setFiltros] = useState({
     nome: '',
     categoria: '',
     status: ''
   });
   
-  // Estado para categorias disponíveis
   const [categorias, setCategorias] = useState([]);
   
-  // Estado para controle de UI
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
 
-  // NOVO: Modal de edição
   const [modalEditar, setModalEditar] = useState(null);
   const [produtoEditando, setProdutoEditando] = useState(null);
 
-  // Carregar categorias na montagem do componente
   useEffect(() => {
     carregarCategorias();
   }, []);
 
-  // Carregar produtos quando filtros ou página mudam
   useEffect(() => {
     carregarProdutos();
   }, [paginacao.pagina_atual, paginacao.por_pagina]);
@@ -57,13 +52,11 @@ const ListarProdutos = () => {
     try {
       setLoading(true);
       
-      // Construir query params
       const params = {
         pagina: paginacao.pagina_atual,
         por_pagina: paginacao.por_pagina
       };
       
-      // Adicionar filtros se preenchidos
       if (filtros.nome.trim()) {
         params.nome = filtros.nome.trim();
       }
@@ -104,7 +97,6 @@ const ListarProdutos = () => {
   };
 
   const aplicarFiltros = () => {
-    // Resetar para primeira página ao aplicar filtros
     setPaginacao(prev => ({
       ...prev,
       pagina_atual: 1
@@ -122,7 +114,7 @@ const ListarProdutos = () => {
       ...prev,
       pagina_atual: 1
     }));
-    // Recarregar sem filtros
+
     setTimeout(() => carregarProdutos(), 0);
   };
 
@@ -137,7 +129,7 @@ const ListarProdutos = () => {
     setPaginacao(prev => ({
       ...prev,
       por_pagina: parseInt(novoValor),
-      pagina_atual: 1 // Resetar para primeira página
+      pagina_atual: 1 
     }));
   };
 
@@ -165,13 +157,11 @@ const ListarProdutos = () => {
     }
   };
 
-  // NOVO: Abrir modal de edição
   const abrirModalEditar = (produto) => {
     setModalEditar(true);
     setProdutoEditando({...produto});
   };
 
-  // NOVO: Salvar edição
   const salvarEdicao = async () => {
     try {
       await api.put(`/produtos/${produtoEditando.id_produto}`, produtoEditando);
@@ -188,7 +178,6 @@ const ListarProdutos = () => {
     }
   };
 
-  // NOVO: Deletar produto
   const deletarProduto = async (idProduto, nomeProduto) => {
     if (!window.confirm(`Deseja realmente deletar o produto "${nomeProduto}"? Esta ação não pode ser desfeita.`)) {
       return;
@@ -207,7 +196,6 @@ const ListarProdutos = () => {
     }
   };
 
-  // Gerar array de páginas para navegação
   const gerarPaginas = () => {
     const paginas = [];
     const maxPaginasVisiveis = 5;
@@ -534,7 +522,7 @@ const ListarProdutos = () => {
           </>
         )}
 
-        {/* NOVO: Modal de Edição */}
+        {/* Modal de Edição */}
         {modalEditar && produtoEditando && (
           <div className="modal-overlay" onClick={() => setModalEditar(false)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>

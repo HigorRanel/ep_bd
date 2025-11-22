@@ -40,7 +40,6 @@ const CadastrarPlano = () => {
     setServicosSelecionados(novosServicos);
   };
 
-  // Aplicar desconto geral a todos os serviços
   const aplicarDescontoGeral = () => {
     if (servicosSelecionados.length === 0) {
       setMessage({ type: 'warning', text: 'Adicione pelo menos um serviço primeiro' });
@@ -77,7 +76,6 @@ const CadastrarPlano = () => {
       return;
     }
 
-    // Validar descontos
     for (const servico of servicosValidos) {
       const desc = parseFloat(servico.desconto || 0);
       if (desc < 0 || desc > 100) {
@@ -88,14 +86,13 @@ const CadastrarPlano = () => {
     }
 
     try {
-      // Enviar com desconto=0 pois cada serviço tem seu próprio desconto
       await api.post('/planos', {
         servicos: servicosValidos.map(s => ({
           id_servico: parseInt(s.id_servico),
           quantidade: parseInt(s.quantidade),
           desconto: parseFloat(s.desconto || 0)
         })),
-        desconto: 0 // Não usado, mas mantém compatibilidade
+        desconto: 0 
       });
 
       setMessage({ type: 'success', text: 'Plano criado com sucesso!' });
@@ -156,7 +153,6 @@ const CadastrarPlano = () => {
 
           <form onSubmit={handleSubmit}>
             
-            {/* Desconto Geral (Aplicar a Todos) */}
             <div className="card" style={{ marginBottom: '20px', backgroundColor: '#f8f9fa' }}>
               <h3>💰 Desconto Geral (Opcional)</h3>
               <p style={{ fontSize: '13px', color: '#666', marginBottom: '15px' }}>

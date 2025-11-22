@@ -23,7 +23,6 @@ const CadastrarBarbeiro = () => {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Atualiza campos comuns
   const handleChange = (e) => {
     const value =
       e.target.type === 'checkbox' ? e.target.checked : e.target.value;
@@ -36,7 +35,7 @@ const CadastrarBarbeiro = () => {
     setError('');
   };
 
-  // === CPF MASK ===
+
   const handleCPFChange = (e) => {
     let v = e.target.value.replace(/\D/g, '').slice(0, 11);
 
@@ -48,17 +47,14 @@ const CadastrarBarbeiro = () => {
     setFormData({ ...formData, cpf: v });
   };
 
-  // === TELEFONE MASK ===
   const handleTelefoneChange = (e) => {
     let v = e.target.value.replace(/\D/g, '').slice(0, 11);
 
     if (v.length <= 10) {
-      // Telefone fixo
       v = v
         .replace(/(\d{2})(\d)/, '($1) $2')
         .replace(/(\d{4})(\d)/, '$1-$2');
     } else {
-      // Celular
       v = v
         .replace(/(\d{2})(\d)/, '($1) $2')
         .replace(/(\d{5})(\d)/, '$1-$2');
@@ -84,12 +80,11 @@ const CadastrarBarbeiro = () => {
 
     setLoading(true);
 
-    // Remove máscaras antes de enviar
     const { confirmarSenha, cpf, telefone, ...resto } = formData;
     const dadosCadastro = {
       ...resto,
       cpf: cpf.replace(/\D/g, ''),
-      telefone: telefone, // <--- Envia o telefone como está no formulário (com máscara)
+      telefone: telefone, 
     };
 
     const result = await cadastrarBarbeiro(dadosCadastro);

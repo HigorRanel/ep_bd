@@ -18,7 +18,6 @@ const CadastrarServico = () => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const navigate = useNavigate();
 
-  // Estados para edição
   const [modalEditar, setModalEditar] = useState(false);
   const [servicoEditando, setServicoEditando] = useState(null);
 
@@ -87,13 +86,11 @@ const CadastrarServico = () => {
     }
   };
 
-  // NOVO: Abrir modal de edição
   const abrirModalEditar = (servico) => {
     setModalEditar(true);
     setServicoEditando({...servico});
   };
 
-  // NOVO: Salvar edição
   const salvarEdicao = async () => {
     try {
       await api.put(`/servicos/${servicoEditando.id_servico}`, {

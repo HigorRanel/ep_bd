@@ -43,10 +43,9 @@ const DashboardBarbeiro = () => {
     try {
       setLoading(true);
       
-      const hoje = new Date(); // Pega a data/hora atual do navegador (Local)
+      const hoje = new Date(); 
 
-      // Calcular início e fim da semana usando data Local
-      const diaSemana = hoje.getDay(); // 0 (Dom) a 6 (Sab)
+      const diaSemana = hoje.getDay();
       const inicioSemana = new Date(hoje);
       inicioSemana.setDate(hoje.getDate() - diaSemana);
       
@@ -72,15 +71,13 @@ const DashboardBarbeiro = () => {
 
       const todosAgendamentos = agendaRes.data;
       
-      // --- CORREÇÃO DO FILTRO DE HOJE ---
       const agendamentosHoje = todosAgendamentos.filter(a => {
         const dataAg = new Date(a.data_hora_agendamento);
-        // Usa a comparação de objetos de data (MUITO MAIS SEGURO)
         return isMesmoDia(dataAg, hoje) && 
                (a.status === 'pendente' || a.status === 'confirmado');
       });
 
-      // --- CORREÇÃO DO FILTRO DA SEMANA ---
+      
       const agendamentosSemana = todosAgendamentos.filter(a => {
         const dataAg = new Date(a.data_hora_agendamento);
         return isEntreDatas(dataAg, inicioSemana, fimSemana) &&
@@ -90,7 +87,7 @@ const DashboardBarbeiro = () => {
       const proximos = todosAgendamentos
         .filter(a => {
           const dataAg = new Date(a.data_hora_agendamento);
-          // Compara timestamp para garantir que é futuro
+          
           return dataAg > new Date() && (a.status === 'pendente' || a.status === 'confirmado');
         })
         .sort((a, b) => new Date(a.data_hora_agendamento) - new Date(b.data_hora_agendamento))

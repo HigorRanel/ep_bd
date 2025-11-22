@@ -12,7 +12,6 @@ const MinhasAvaliacoes = () => {
   });
   const [loading, setLoading] = useState(true);
   
-  // Filtros
   const [filtros, setFiltros] = useState({
     page: 1,
     per_page: 10,
@@ -79,8 +78,6 @@ const MinhasAvaliacoes = () => {
 
   const calcularDistribuicao = () => {
     const distribuicao = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-    // Nota: Esta distribuição é baseada apenas nas avaliações da página atual
-    // Para ter uma distribuição completa, seria necessário um endpoint específico
     avaliacoes.forEach((av) => {
       distribuicao[av.nota]++;
     });

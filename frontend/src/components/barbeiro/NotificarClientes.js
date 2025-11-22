@@ -4,7 +4,7 @@ import api from '../../services/api';
 import '../../styles/dashboard.css';
 
 const NotificarClientes = () => {
-  const [etapa, setEtapa] = useState(1); // 1: Filtro, 2: Seleção, 3: Mensagem, 4: Confirmação
+  const [etapa, setEtapa] = useState(1); 
   const [tipoFiltro, setTipoFiltro] = useState('inativos');
   const [clientes, setClientes] = useState([]);
   const [clientesSelecionados, setClientesSelecionados] = useState([]);
@@ -14,11 +14,9 @@ const NotificarClientes = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   
-  // Parâmetros de filtro
   const [diasInatividade, setDiasInatividade] = useState(60);
   const [minimoFaltas, setMinimoFaltas] = useState(3);
   
-  // Preview do template
   const [showPreview, setShowPreview] = useState(false);
   const [previewHtml, setPreviewHtml] = useState('');
 
@@ -144,7 +142,6 @@ const NotificarClientes = () => {
       
       setEtapa(4);
       
-      // Exibir resultados
       if (response.data.emails_falha && response.data.emails_falha.length > 0) {
         console.warn('Falhas no envio:', response.data.emails_falha);
       }
@@ -300,7 +297,7 @@ const NotificarClientes = () => {
           </div>
         </div>
 
-        {/* ETAPA 1: Filtrar Clientes */}
+        {/* Filtrar Clientes */}
         {etapa === 1 && (
           <div className="card">
             <h3>1️⃣ Escolha o Tipo de Notificação</h3>
@@ -362,7 +359,7 @@ const NotificarClientes = () => {
           </div>
         )}
 
-        {/* ETAPA 2: Selecionar Clientes */}
+        {/* Selecionar Clientes */}
         {etapa === 2 && (
           <div className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -426,7 +423,7 @@ const NotificarClientes = () => {
           </div>
         )}
 
-        {/* ETAPA 3: Compor Mensagem */}
+        {/* Compor Mensagem */}
         {etapa === 3 && (
           <div>
             <div className="card" style={{ marginBottom: '20px' }}>
@@ -488,7 +485,7 @@ const NotificarClientes = () => {
           </div>
         )}
 
-        {/* ETAPA 4: Conclusão */}
+        {/* Conclusão */}
         {etapa === 4 && (
           <div className="card" style={{ textAlign: 'center', padding: '60px 30px' }}>
             <div style={{ fontSize: '80px', marginBottom: '20px' }}>✅</div>

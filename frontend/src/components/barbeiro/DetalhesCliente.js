@@ -13,8 +13,7 @@ const DetalhesCliente = () => {
   const [historico, setHistorico] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mostrarEncaixe, setMostrarEncaixe] = useState(false);
-  
-  // Estados para encaixe
+
   const [servicos, setServicos] = useState([]);
   const [formEncaixe, setFormEncaixe] = useState({
     id_servico: '',
@@ -61,7 +60,6 @@ const DetalhesCliente = () => {
     try {
       setLoadingHorarios(true);
       
-      // CORREÇÃO: usar user.cpf do contexto diretamente
       const cpf_barbeiro = user.cpf;
       
       const servico = servicos.find(s => s.id_servico === parseInt(formEncaixe.id_servico));
@@ -90,7 +88,7 @@ const DetalhesCliente = () => {
     }
 
     try {
-      // CORREÇÃO: usar user.cpf diretamente
+      
       const cpf_barbeiro = user.cpf;
       
       await api.post('/agendamentos', {
