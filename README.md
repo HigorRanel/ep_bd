@@ -1,5 +1,3 @@
-Aqui está o arquivo Markdown completo, unificando os pré-requisitos e as instruções de configuração (instalação e execução) para o seu projeto `ep_bd`.
-
 # EP_BD - Sistema de Gerenciamento de Barbearia
 
 Este projeto é uma aplicação web que integra um backend em **Flask** e um frontend em **React**.
@@ -28,10 +26,10 @@ Siga a ordem abaixo para garantir o funcionamento correto da aplicação.
 Abra o seu terminal e clone o projeto para sua máquina:
 
 ```bash
-git clone <URL_DO_REPOSITORIO>
+git clone URL_DO_REPOSITORIO
 cd ep_bd
 ````
-
+A url pode ser obtida clicando no botão code de cor verde localizado encima da listagem dos arquivos do projeto
 ### 2\. Configurando o Backend (Flask)
 
 O backend gerencia a API e o banco de dados.
@@ -62,7 +60,8 @@ O backend gerencia a API e o banco de dados.
     python -m backend.app.run
     ```
 
-    *O servidor iniciará em `http://0.0.0.0:5000` (modo debug ativado).*
+    Caso surja uma janela flutuante clique em permitir <br>
+    *O servidor iniciará em `http://0.0.0.0:5000`*
 
 ### 3\. Configurando o Frontend (React)
 
