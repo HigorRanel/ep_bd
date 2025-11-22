@@ -34,21 +34,21 @@ def register_routes(app):
     def cadastrar_e_logar_barbeiro():
         return AuthController.registrar_e_logar_barbeiro()
 
-    # CLIENTES
+    
     @app.route('/api/clientes', methods=['GET'])
     @token_required
     @barbeiro_required
     def listar_clientes():
         return ClienteController.listar()
 
-    # Clientes com estatísticas
+    
     @app.route('/api/clientes/estatisticas', methods=['GET'])
     @token_required
     @barbeiro_required
     def listar_clientes_stats():
         return ClienteStatsController.listar_com_estatisticas()
 
-    # Detalhes do cliente
+    
     @app.route('/api/clientes/<cpf>/detalhes', methods=['GET'])
     @token_required
     @barbeiro_required
@@ -121,7 +121,7 @@ def register_routes(app):
     def avaliar_agendamento(id_agendamento):
         return AgendamentoController.avaliar(id_agendamento)
 
-    # SERVIÇOS
+    
     @app.route('/api/servicos', methods=['POST'])
     @token_required
     @barbeiro_required
@@ -150,7 +150,7 @@ def register_routes(app):
     def deletar_servico(id_servico):
         return ServicoController.deletar(id_servico)
 
-    # PRODUTOS
+    
     @app.route('/api/produtos', methods=['POST'])
     @token_required
     @barbeiro_chefe_required
@@ -167,14 +167,14 @@ def register_routes(app):
     def buscar_produto(id_produto):
         return ProdutoController.buscar(id_produto)
 
-    # Atualizar produto completo
+    
     @app.route('/api/produtos/<int:id_produto>', methods=['PUT'])
     @token_required
     @barbeiro_chefe_required
     def atualizar_produto(id_produto):
         return ProdutoController.atualizar(id_produto)
 
-    # NOVO: Deletar produto
+    
     @app.route('/api/produtos/<int:id_produto>', methods=['DELETE'])
     @token_required
     @barbeiro_chefe_required
@@ -203,7 +203,7 @@ def register_routes(app):
     def listar_minhas_reservas():
         return ProdutoController.minhas_reservas(request.user_cpf)
 
-    #  PLANOS
+    
     @app.route('/api/planos', methods=['POST'])
     @token_required
     @barbeiro_chefe_required
@@ -232,26 +232,26 @@ def register_routes(app):
     def deletar_plano(id_plano):
         return PlanoController.deletar(id_plano, request.user_cpf)
 
-    # NOVO: Gerenciar desconto do plano
+    
     @app.route('/api/planos/<int:id_plano>/desconto', methods=['PUT'])
     @token_required
     @barbeiro_chefe_required
     def atualizar_desconto_plano(id_plano):
         return PlanoController.atualizar_desconto_plano(id_plano, request.user_cpf)
 
-    # Verificar uso de serviços do plano pelo cliente
+    
     @app.route('/api/planos/<int:id_plano>/uso', methods=['GET'])
     @token_required
     def verificar_uso_plano(id_plano):
         return PlanoController.verificar_uso_plano(id_plano, request.user_cpf)
 
-    # Listar planos próximos do vencimento
+    
     @app.route('/api/planos/vencendo', methods=['GET'])
     @token_required
     def planos_vencendo():
         return PlanoController.planos_vencendo(request.user_cpf)
 
-    # Calcular valores do plano (com desconto)
+    
     @app.route('/api/planos/<int:id_plano>/valores', methods=['GET'])
     @token_required
     def calcular_valores_plano(id_plano):
@@ -263,7 +263,7 @@ def register_routes(app):
         """Endpoint para cliente cancelar sua assinatura de um plano"""
         return PlanoController.cancelar_assinatura(id_plano, request.user_cpf)
 
-    # Verificar se pode agendar com plano
+    
     @app.route('/api/planos/pode-agendar/<int:id_servico>', methods=['GET'])
     @token_required
     def pode_agendar_com_plano(id_servico):
@@ -335,11 +335,11 @@ def register_routes(app):
         try:
             from backend.app.models.agendamento import Agendamento
 
-            # Paginação
+            
             page = int(request.args.get('page', 1))
             per_page = int(request.args.get('per_page', 10))
 
-            # Filtro de data
+            
             data_inicio = request.args.get('data_inicio')
             data_fim = request.args.get('data_fim')
 
@@ -367,11 +367,11 @@ def register_routes(app):
         try:
             from backend.app.models.agendamento import Agendamento
 
-            # Paginação
+            
             page = int(request.args.get('page', 1))
             per_page = int(request.args.get('per_page', 10))
 
-            # Filtro de data
+            
             data_inicio = request.args.get('data_inicio')
             data_fim = request.args.get('data_fim')
 
@@ -640,7 +640,7 @@ def register_routes(app):
         """Envia notificação por email para clientes selecionados"""
         return NotificacaoController.enviar_notificacao(request.user_cpf)
 
-    # === RELATÓRIOS ===
+    
     @app.route('/api/relatorios/financeiro', methods=['GET'])
     @token_required
     @barbeiro_required

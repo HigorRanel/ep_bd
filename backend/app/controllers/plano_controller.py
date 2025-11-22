@@ -56,7 +56,7 @@ class PlanoController:
         try:
             pagina = int(request.args.get('pagina', 1))
             por_pagina = int(request.args.get('por_pagina', 10))
-            criador = request.args.get('criador')  # Filtro por nome do criador
+            criador = request.args.get('criador')  
 
             planos = PlanoMensal.listar_paginado(pagina, por_pagina, criador)
             return jsonify(planos), 200
@@ -80,7 +80,7 @@ class PlanoController:
         try:
             dados = request.get_json()
 
-            # Verificar se é barbeiro chefe
+            
             barbeiro = Barbeiro.buscar_por_cpf(cpf_usuario)
             if not barbeiro or not barbeiro.get('is_chefe'):
                 return jsonify({'error': 'Apenas barbeiro chefe pode atualizar planos'}), 403
@@ -88,20 +88,20 @@ class PlanoController:
             if 'servicos' not in dados:
                 return jsonify({'error': 'Campo servicos é obrigatório'}), 400
 
-            # NOVO: Pegar desconto (opcional)
+            
             desconto = dados.get('desconto')
 
-            # Se desconto foi fornecido, validar
+            
             if desconto is not None:
                 desconto = float(desconto)
                 if desconto < 0 or desconto > 100:
                     return jsonify({'error': 'Desconto deve ser entre 0 e 100'}), 400
 
-            # Atualizar plano COM DESCONTO
+            
             resultado = PlanoMensal.atualizar(
                 id_plano,
                 dados['servicos'],
-                desconto  # NOVO
+                desconto  
             )
 
             return jsonify(resultado), 200
@@ -114,12 +114,12 @@ class PlanoController:
     def deletar(id_plano, cpf_usuario):
         """Deleta um plano (se não tiver assinaturas ativas)"""
         try:
-            # Verificar se é barbeiro chefe
+            
             barbeiro = Barbeiro.buscar_por_cpf(cpf_usuario)
             if not barbeiro or not barbeiro.get('is_chefe'):
                 return jsonify({'error': 'Apenas barbeiro chefe pode deletar planos'}), 403
 
-            # Verificar se há assinaturas ativas
+            
             from backend.app.utils.database import Database
             with Database.get_cursor() as cursor:
                 cursor.execute("""
@@ -174,7 +174,7 @@ class PlanoController:
         try:
             dados = request.get_json()
 
-            # Verificar se é barbeiro chefe
+            
             barbeiro = Barbeiro.buscar_por_cpf(cpf_usuario)
             if not barbeiro or not barbeiro.get('is_chefe'):
                 return jsonify({'error': 'Apenas barbeiro chefe pode atualizar descontos'}), 403
@@ -186,7 +186,7 @@ class PlanoController:
             if desconto < 0 or desconto > 100:
                 return jsonify({'error': 'Desconto deve ser entre 0 e 100'}), 400
 
-            # Atualizar desconto para todos os serviços do plano
+            
             from backend.app.utils.database import Database
             with Database.get_cursor() as cursor:
                 cursor.execute("""
@@ -195,8 +195,8 @@ class PlanoController:
                     WHERE id_plano = %s
                 """, (desconto, id_plano))
 
-            # Recalcular valores - ✅ CORRIGIDO
-            valores = PlanoMensal.calcular_valores_plano(id_plano)  # ✅ MÉTODO CORRETO
+            
+            valores = PlanoMensal.calcular_valores_plano(id_plano)  
 
             return jsonify({
                 'message': 'Desconto atualizado com sucesso',
@@ -251,7 +251,7 @@ class PlanoController:
         try:
             from backend.app.models.plano_mensal import PlanoMensal
 
-            # Verificar se o cliente tem assinatura ativa deste plano
+            
             assinatura = PlanoMensal.verificar_assinatura_ativa(cpf_usuario, id_plano)
 
             if not assinatura:
@@ -259,7 +259,7 @@ class PlanoController:
                     'error': 'Você não tem uma assinatura ativa deste plano'
                 }), 404
 
-            # Cancelar a assinatura
+            
             PlanoMensal.cancelar_assinatura(cpf_usuario, id_plano)
 
             return jsonify({

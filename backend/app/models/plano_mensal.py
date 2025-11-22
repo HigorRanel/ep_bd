@@ -102,7 +102,7 @@ class PlanoMensal:
                     plano['valor_desconto_total'] = total_desconto
                     plano['desconto_medio'] = desconto_medio
                 else:
-                    # Plano sem serviços
+                    
                     plano['valor_sem_desconto'] = 0
                     plano['valor_com_desconto'] = 0
                     plano['valor_desconto_total'] = 0
@@ -123,7 +123,7 @@ class PlanoMensal:
     def listar_assinaturas_cliente(cpf_cliente):
         """Lista assinaturas do cliente com informações completas do plano (Sem JSON no SQL)"""
         with Database.get_cursor() as cursor:
-            # 1. Query "Flat" (sem funções JSON)
+            
             cursor.execute("""
                 SELECT 
                     a.id_cliente,
@@ -146,15 +146,15 @@ class PlanoMensal:
 
             rows = cursor.fetchall()
 
-            # 2. Reconstrução da estrutura hierárquica (Agrupamento)
+            
             assinaturas_map = {}
 
             for row in rows:
-                # Usamos uma chave composta para identificar a assinatura única.
-                # (Caso o cliente assine o mesmo plano em datas diferentes)
+                
+                
                 chave_unica = (row['id_plano'], row['data_inicio'])
 
-                # Se a assinatura ainda não existe no mapa, cria o cabeçalho
+                
                 if chave_unica not in assinaturas_map:
                     assinaturas_map[chave_unica] = {
                         'id_cliente': row['id_cliente'],
@@ -162,10 +162,10 @@ class PlanoMensal:
                         'data_inicio': row['data_inicio'],
                         'data_fim': row['data_fim'],
                         'id_plano_mensal': row['id_plano_mensal'],
-                        'servicos': [] # Lista vazia para preencher
+                        'servicos': [] 
                     }
 
-                # Se a linha tiver um serviço válido, adiciona à lista dessa assinatura
+                
                 if row['id_servico'] and row['quantidade'] > 0:
                     assinaturas_map[chave_unica]['servicos'].append({
                         'id_servico': row['id_servico'],
@@ -175,14 +175,14 @@ class PlanoMensal:
                         'desconto': row['desconto']
                     })
 
-            # 3. Converte o mapa em lista final
+            
             lista_assinaturas = list(assinaturas_map.values())
 
-            # 4. Adicionar cálculos (Lógica original mantida)
+            
             for assinatura in lista_assinaturas:
-                # Só calcula se tiver serviços (proteção extra)
+                
                 if assinatura['servicos']:
-                    # Assume que essa função estática existe na sua classe PlanoMensal
+                    
                     valores = PlanoMensal.calcular_valores_plano(assinatura['id_plano'])
                     assinatura.update(valores)
 
@@ -197,7 +197,7 @@ class PlanoMensal:
             dict com valor_sem_desconto, valor_desconto_total, valor_com_desconto, desconto_medio
         """
         with Database.get_cursor() as cursor:
-            # Buscar todos os serviços do plano com seus descontos individuais
+            
             cursor.execute("""
                 SELECT 
                     s.preco,
@@ -221,26 +221,26 @@ class PlanoMensal:
             valor_sem_desconto = 0
             valor_com_desconto = 0
 
-            # Calcular para cada serviço
+            
             for servico in servicos:
                 preco = float(servico['preco'])
                 quantidade = int(servico['quantidade'])
                 desconto_percentual = float(servico['desconto'] or 0)
 
-                # Valor deste serviço sem desconto
+                
                 valor_servico_sem_desconto = preco * quantidade
 
-                # Valor deste serviço com desconto
+                
                 desconto_servico = valor_servico_sem_desconto * (desconto_percentual / 100)
                 valor_servico_com_desconto = valor_servico_sem_desconto - desconto_servico
 
                 valor_sem_desconto += valor_servico_sem_desconto
                 valor_com_desconto += valor_servico_com_desconto
 
-            # Desconto total em reais
+            
             valor_desconto_total = valor_sem_desconto - valor_com_desconto
 
-            # Desconto médio percentual
+            
             desconto_medio = (valor_desconto_total / valor_sem_desconto * 100) if valor_sem_desconto > 0 else 0
 
             return {
@@ -261,12 +261,12 @@ class PlanoMensal:
             desconto: desconto padrão para serviços que não especificarem (opcional)
         """
         with Database.get_cursor() as cursor:
-            # Remover serviços antigos
+            
             cursor.execute("DELETE FROM Possui WHERE id_plano = %s", (id_plano,))
 
-            # Adicionar novos serviços
+            
             for servico in servicos:
-                # Se o serviço tem desconto próprio, usa ele, senão usa o padrão
+                
                 desconto_servico = servico.get('desconto', desconto if desconto is not None else 0)
                 desconto_servico = float(desconto_servico)
 
@@ -278,7 +278,7 @@ class PlanoMensal:
                     VALUES (%s, %s, %s, %s)
                 """, (servico['id_servico'], id_plano, servico['quantidade'], desconto_servico))
 
-            # Calcular valores atualizados
+            
             valores = PlanoMensal.calcular_valores_plano(id_plano)
 
             return {
@@ -294,7 +294,7 @@ class PlanoMensal:
             cursor.execute("DELETE FROM Plano_Mensal WHERE id_plano_mensal = %s", (id_plano,))
             return True
 
-    # ... (continua com os outros métodos)
+    
     @staticmethod
     def pode_agendar_com_plano(cpf_cliente, id_servico):
         """Verifica se o cliente pode agendar um serviço usando um plano ativo"""

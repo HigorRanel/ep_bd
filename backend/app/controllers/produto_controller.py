@@ -40,20 +40,20 @@ class ProdutoController:
     def listar_paginado():
 
         try:
-            # Obter parâmetros da query string
+            
             pagina = int(request.args.get('pagina', 1))
             por_pagina = int(request.args.get('por_pagina', 10))
             nome_filtro = request.args.get('nome', None)
             categoria_filtro = request.args.get('categoria', None)
             status_filtro = request.args.get('status', None)
 
-            # Validações
+            
             if pagina < 1:
                 pagina = 1
             if por_pagina < 1 or por_pagina > 100:
                 por_pagina = 10
 
-            # Buscar produtos
+            
             resultado = Produto.listar_paginado(
                 pagina=pagina,
                 por_pagina=por_pagina,
@@ -106,7 +106,7 @@ class ProdutoController:
             if 'quantidade' not in dados:
                 return jsonify({'error': 'Campo quantidade é obrigatório'}), 400
 
-            # Buscar produto atual para validar estoque
+            
             produto_atual = Produto.buscar_por_id(id_produto)
             if not produto_atual:
                 return jsonify({'error': 'Produto não encontrado'}), 404
@@ -115,7 +115,7 @@ class ProdutoController:
             estoque_atual = produto_atual['quantidade_estoque']
             estoque_final = estoque_atual + quantidade_ajuste
 
-            # Validar se o estoque ficaria negativo
+            
             if estoque_final < 0:
                 return jsonify({
                     'error': f'Operação inválida: o estoque não pode ficar negativo. Estoque atual: {estoque_atual}, ajuste solicitado: {quantidade_ajuste}'
@@ -176,18 +176,18 @@ class ProdutoController:
     def listar_dashboard():
         try:
             produtos = Produto.listar_com_reservas()
-            # O 'qtd_reservas' já virá dentro de cada objeto produto
+            
             return jsonify(produtos), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
-    # NOVO: Atualizar produto completo
+    
     @staticmethod
     def atualizar(id_produto):
         try:
             dados = request.get_json()
 
-            # Validar campos
+            
             campos_atualizaveis = ['nome_produto', 'descricao', 'preco_compra', 'preco_venda',
                                    'categoria', 'quantidade_estoque', 'minimo_estoque', 'status']
 
@@ -205,11 +205,11 @@ class ProdutoController:
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
-    # NOVO: Deletar produto
+    
     @staticmethod
     def deletar(id_produto):
         try:
-            # Verificar se produto tem reservas ativas
+            
             reservas = Produto.listar_reservas_por_produto(id_produto)
             reservas_ativas = [r for r in reservas if r['status'] in ['reservado', 'pendente']]
 

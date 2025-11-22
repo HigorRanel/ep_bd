@@ -13,7 +13,7 @@ class ServicoController:
                 if campo not in dados:
                     return jsonify({'error': f'Campo {campo} é obrigatório'}), 400
 
-            # Criar serviço
+            
             resultado = Servico.criar(
                 dados['nome'],
                 dados['preco'],
@@ -21,7 +21,7 @@ class ServicoController:
                 dados.get('descricao')
             )
 
-            # Associar ao barbeiro
+            
             Servico.associar_barbeiro(resultado['id_servico'], dados['cpf_barbeiro'])
 
             return jsonify(resultado), 201
@@ -51,7 +51,7 @@ class ServicoController:
         try:
             dados = request.get_json()
 
-            # Campos permitidos para atualização
+            
             campos_permitidos = ['nome', 'preco', 'duracao_estimada_min', 'descricao']
             dados_atualizacao = {}
 
@@ -74,7 +74,7 @@ class ServicoController:
     @staticmethod
     def deletar(id_servico):
         try:
-            # Verificar se há agendamentos ativos com este serviço
+            
             from backend.app.utils.database import Database
             with Database.get_cursor() as cursor:
                 cursor.execute("""

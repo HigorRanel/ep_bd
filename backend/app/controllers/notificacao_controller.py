@@ -7,7 +7,7 @@ import threading
 
 
 class NotificacaoController:
-    # Templates de email pré-definidos
+    
     TEMPLATES = {
         'cliente_inativo': {
             'assunto': '✂️ Sentimos sua falta na {nome_barbearia}!',
@@ -49,7 +49,7 @@ class NotificacaoController:
         nome_cliente = dados_cliente.get('nome_completo', 'Cliente')
         primeira_nome = nome_cliente.split()[0]
 
-        # CSS comum para todos os templates
+        
         css_base = """
         <style>
             body {
@@ -113,7 +113,7 @@ class NotificacaoController:
         </style>
         """
 
-        # Templates específicos
+        
         if tipo_template == 'inativo':
             dias_inativo = dados_cliente.get('dias_sem_visita', 0)
             html = f"""
@@ -281,7 +281,7 @@ class NotificacaoController:
             """
 
         else:
-            # Template genérico
+            
             html = f"""
             <!DOCTYPE html>
             <html>
@@ -319,7 +319,7 @@ class NotificacaoController:
             dias_inatividade = int(request.args.get('dias', 60))
 
             with Database.get_cursor() as cursor:
-                # Buscar clientes que cortaram com este barbeiro mas estão inativos
+                
                 cursor.execute("""
                     WITH ultimo_atendimento AS (
                         SELECT 
@@ -400,7 +400,7 @@ class NotificacaoController:
         try:
             dados = request.get_json()
 
-            # Validações
+            
             if 'cpfs_clientes' not in dados or not dados['cpfs_clientes']:
                 return jsonify({'error': 'Selecione pelo menos um cliente'}), 400
 
@@ -411,11 +411,11 @@ class NotificacaoController:
             cpfs_clientes = dados['cpfs_clientes']
             conteudo_personalizado = dados.get('conteudo_personalizado', '')
 
-            # Validar tipo de template
+            
             if tipo_template not in NotificacaoController.TEMPLATES:
                 return jsonify({'error': 'Tipo de template inválido'}), 400
 
-            # Buscar dados dos clientes
+            
             with Database.get_cursor() as cursor:
                 placeholders = ','.join(['%s'] * len(cpfs_clientes))
 
@@ -438,7 +438,7 @@ class NotificacaoController:
             if not clientes:
                 return jsonify({'error': 'Nenhum cliente encontrado'}), 404
 
-            # Preparar envio de emails
+            
             template_info = NotificacaoController.TEMPLATES[tipo_template]
             assunto = template_info['assunto'].format(nome_barbearia='Barbearia')
 
@@ -447,7 +447,7 @@ class NotificacaoController:
 
             for cliente in clientes:
                 try:
-                    # Calcular dias sem visita
+                    
                     dias_sem_visita = 0
                     if cliente['ultima_visita']:
                         dias_sem_visita = (datetime.now().date() - cliente['ultima_visita'].date()).days
@@ -458,14 +458,14 @@ class NotificacaoController:
                         'dias_sem_visita': dias_sem_visita
                     }
 
-                    # Gerar HTML do email
+                    
                     corpo_html = NotificacaoController._gerar_html_email(
                         tipo_template,
                         dados_cliente,
                         conteudo_personalizado
                     )
 
-                    # Enviar email
+                    
                     msg = Message(
                         assunto,
                         recipients=[cliente['email']],
@@ -536,7 +536,7 @@ class NotificacaoController:
             if not tipo_template or tipo_template not in NotificacaoController.TEMPLATES:
                 return jsonify({'error': 'Tipo de template inválido'}), 400
 
-            # Dados de exemplo
+            
             dados_exemplo = {
                 'nome_completo': 'João da Silva',
                 'total_faltas': 3,

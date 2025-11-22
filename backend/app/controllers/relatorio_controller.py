@@ -13,14 +13,14 @@ class RelatorioController:
         try:
             data_inicio = request.args.get('data_inicio')
             data_fim = request.args.get('data_fim')
-            cpf_barbeiro = request.args.get('cpf_barbeiro')  # Filtro opcional
+            cpf_barbeiro = request.args.get('cpf_barbeiro')  
 
-            # Validar datas
+            
             if not data_inicio or not data_fim:
                 return jsonify({'error': 'data_inicio e data_fim são obrigatórios'}), 400
 
             with Database.get_cursor() as cursor:
-                # === RECEITAS (Agendamentos Concluídos) ===
+                
                 query_receitas = """
                     SELECT 
                         COALESCE(SUM(s.preco), 0) as total_receitas,
@@ -42,7 +42,7 @@ class RelatorioController:
                 cursor.execute(query_receitas, params_receitas)
                 receitas = cursor.fetchone()
 
-                # === GASTOS (Produtos Comprados) ===
+                
                 query_gastos = """
                     SELECT 
                         COALESCE(SUM(p.preco_compra), 0) as total_gastos_produtos,
@@ -55,7 +55,7 @@ class RelatorioController:
                 cursor.execute(query_gastos, [data_inicio, data_fim])
                 gastos = cursor.fetchone()
 
-                # === VENDAS DE PRODUTOS (Receita de Produtos) ===
+                
                 query_vendas_produtos = """
                     SELECT 
                         COALESCE(SUM(p.preco_venda), 0) as receita_produtos,
@@ -69,7 +69,7 @@ class RelatorioController:
                 cursor.execute(query_vendas_produtos, [data_inicio, data_fim])
                 vendas_produtos = cursor.fetchone()
 
-                # === ASSINATURAS DE PLANOS (PostgreSQL otimizado) ===
+                
                 query_planos = """
                     SELECT 
                         COUNT(*) as total_assinaturas,
@@ -81,7 +81,7 @@ class RelatorioController:
                 cursor.execute(query_planos, [data_inicio, data_fim, data_inicio, data_fim])
                 planos = cursor.fetchone()
 
-                # Calcular receita de planos (estimada baseada nos valores dos planos ativos)
+                
                 query_receita_planos = """
                     SELECT 
                         COALESCE(SUM(
@@ -96,7 +96,7 @@ class RelatorioController:
                 cursor.execute(query_receita_planos, [data_inicio, data_fim])
                 receita_planos_result = cursor.fetchone()
 
-                # === DETALHAMENTO POR SERVIÇO ===
+                
                 query_servicos = """
                     SELECT 
                         s.nome as servico_nome,
@@ -122,7 +122,7 @@ class RelatorioController:
                 cursor.execute(query_servicos, params_servicos)
                 detalhamento_servicos = cursor.fetchall()
 
-                # === CALCULAR TOTAIS ===
+                
                 total_receitas_servicos = float(receitas['total_receitas'] or 0)
                 total_receita_produtos = float(vendas_produtos['receita_produtos'] or 0)
                 total_receita_planos = float(receita_planos_result['receita_planos'] or 0)
@@ -131,7 +131,7 @@ class RelatorioController:
                 receita_total = total_receitas_servicos + total_receita_produtos + total_receita_planos
                 lucro_liquido = receita_total - total_gastos
 
-                # Montar resposta
+                
                 relatorio = {
                     'periodo': {
                         'data_inicio': data_inicio,
@@ -189,7 +189,7 @@ class RelatorioController:
                 return jsonify({'error': 'data_inicio e data_fim são obrigatórios'}), 400
 
             with Database.get_cursor() as cursor:
-                # Produtos mais vendidos
+                
                 query_mais_vendidos = """
                     SELECT 
                         p.id_produto,
@@ -212,7 +212,7 @@ class RelatorioController:
                 cursor.execute(query_mais_vendidos, [data_inicio, data_fim, limite])
                 mais_vendidos = cursor.fetchall()
 
-                # Produtos menos vendidos (que tiveram pelo menos 1 venda)
+                
                 query_menos_vendidos = """
                     SELECT 
                         p.id_produto,
@@ -234,7 +234,7 @@ class RelatorioController:
                 cursor.execute(query_menos_vendidos, [data_inicio, data_fim, limite])
                 menos_vendidos = cursor.fetchall()
 
-                # Produtos sem vendas no período
+                
                 query_sem_vendas = """
                     SELECT 
                         p.id_produto,
@@ -256,7 +256,7 @@ class RelatorioController:
                 cursor.execute(query_sem_vendas, [data_inicio, data_fim, limite])
                 sem_vendas = cursor.fetchall()
 
-                # Resumo por categoria
+                
                 query_por_categoria = """
                     SELECT 
                         p.categoria,
@@ -305,7 +305,7 @@ class RelatorioController:
                 return jsonify({'error': 'data_inicio e data_fim são obrigatórios'}), 400
 
             with Database.get_cursor() as cursor:
-                # Clientes mais frequentes (PostgreSQL com STRING_AGG)
+                
                 query_mais_frequentes = """
                     SELECT 
                         c.cpf,
@@ -330,7 +330,7 @@ class RelatorioController:
                 cursor.execute(query_mais_frequentes, [data_inicio, data_fim, limite])
                 mais_frequentes = cursor.fetchall()
 
-                # Clientes inativos (não voltaram no período)
+                
                 query_inativos = """
                     SELECT 
                         c.cpf,
@@ -355,7 +355,7 @@ class RelatorioController:
                 cursor.execute(query_inativos, [data_inicio, data_fim, limite])
                 inativos = cursor.fetchall()
 
-                # Padrões de comportamento (serviços mais populares)
+                
                 query_servicos_populares = """
                     SELECT 
                         s.nome as servico_nome,
@@ -373,7 +373,7 @@ class RelatorioController:
                 cursor.execute(query_servicos_populares, [data_inicio, data_fim])
                 servicos_populares = cursor.fetchall()
 
-                # Clientes com mais faltas
+                
                 query_faltas = """
                     SELECT 
                         c.cpf,
@@ -423,8 +423,8 @@ class RelatorioController:
             if not data_inicio or not data_fim:
                 return jsonify({'error': 'data_inicio e data_fim são obrigatórios'}), 400
 
-            # Chamar os outros métodos para obter dados
-            # (Simulando chamadas internas)
+            
+            
 
             return jsonify({
                 'message': 'Use os endpoints específicos para cada tipo de relatório',

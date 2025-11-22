@@ -106,7 +106,7 @@ class Reserva:
     @staticmethod
     def atualizar_status(id_cliente, id_produto, novo_status):
         with Database.get_cursor() as cursor:
-            # Buscar status atual
+            
             cursor.execute("""
                 SELECT status FROM Reserva 
                 WHERE id_cliente = %s AND id_prod = %s
