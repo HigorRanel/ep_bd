@@ -9,6 +9,8 @@ from backend.app.controllers.plano_controller import PlanoController
 from backend.app.utils.decorators import token_required, barbeiro_required, barbeiro_chefe_required
 from backend.app.controllers.reserva_controller import ReservaController
 from backend.app.controllers.cliente_stats_controller import ClienteStatsController
+from backend.app.controllers.notificacao_controller import NotificacaoController
+from backend.app.controllers.relatorio_controller import RelatorioController
 
 
 def register_routes(app):
@@ -213,6 +215,11 @@ def register_routes(app):
     def listar_planos():
         return PlanoController.listar()
 
+    @app.route('/api/planos/<int:id_plano>', methods=['GET'])
+    @token_required
+    def buscar_plano(id_plano):
+        return PlanoController.buscar(id_plano)
+
     @app.route('/api/planos/<int:id_plano>', methods=['PUT'])
     @token_required
     @barbeiro_chefe_required
@@ -225,6 +232,48 @@ def register_routes(app):
     def deletar_plano(id_plano):
         return PlanoController.deletar(id_plano, request.user_cpf)
 
+    # NOVO: Gerenciar desconto do plano
+    @app.route('/api/planos/<int:id_plano>/desconto', methods=['PUT'])
+    @token_required
+    @barbeiro_chefe_required
+    def atualizar_desconto_plano(id_plano):
+        return PlanoController.atualizar_desconto_plano(id_plano, request.user_cpf)
+
+    # NOVO: Verificar uso de serviços do plano pelo cliente
+    @app.route('/api/planos/<int:id_plano>/uso', methods=['GET'])
+    @token_required
+    def verificar_uso_plano(id_plano):
+        return PlanoController.verificar_uso_plano(id_plano, request.user_cpf)
+
+    # NOVO: Listar planos próximos do vencimento
+    @app.route('/api/planos/vencendo', methods=['GET'])
+    @token_required
+    def planos_vencendo():
+        return PlanoController.planos_vencendo(request.user_cpf)
+
+    # NOVO: Calcular valores do plano (com desconto)
+    @app.route('/api/planos/<int:id_plano>/valores', methods=['GET'])
+    @token_required
+    def calcular_valores_plano(id_plano):
+        return PlanoController.calcular_valores_plano(id_plano)
+
+    @app.route('/api/planos/<int:id_plano>/cancelar-assinatura', methods=['DELETE'])
+    @token_required
+    def cancelar_assinatura_plano(id_plano):
+        """Endpoint para cliente cancelar sua assinatura de um plano"""
+        return PlanoController.cancelar_assinatura(id_plano, request.user_cpf)
+
+    # NOVO: Verificar se pode agendar com plano
+    @app.route('/api/planos/pode-agendar/<int:id_servico>', methods=['GET'])
+    @token_required
+    def pode_agendar_com_plano(id_servico):
+        try:
+            from backend.app.models.plano_mensal import PlanoMensal
+            resultado = PlanoMensal.pode_agendar_com_plano(request.user_cpf, id_servico)
+            return jsonify(resultado), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
     @app.route('/api/planos/assinar', methods=['POST'])
     @token_required
     def assinar_plano():
@@ -234,37 +283,6 @@ def register_routes(app):
     @token_required
     def listar_minhas_assinaturas():
         return PlanoController.minhas_assinaturas(request.user_cpf)
-
-    @app.route('/api/health', methods=['GET'])
-    def health_check():
-        return {'status': 'ok', 'message': 'API Barbearia funcionando'}, 200
-
-    @app.route('/api/assinaturas/cancelar/<int:id_plano>', methods=['DELETE'])
-    @token_required
-    def cancelar_assinatura(id_plano):
-        try:
-            from backend.app.models.plano_mensal import PlanoMensal
-            PlanoMensal.cancelar_assinatura(request.user_cpf, id_plano)
-            return jsonify({'message': 'Assinatura cancelada com sucesso'}), 200
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-
-    @app.route('/api/assinaturas/verificar/<int:id_plano>', methods=['GET'])
-    @token_required
-    def verificar_assinatura_ativa(id_plano):
-        try:
-            from backend.app.models.plano_mensal import PlanoMensal
-            assinatura = PlanoMensal.verificar_assinatura_ativa(request.user_cpf, id_plano)
-
-            if assinatura:
-                return jsonify({
-                    'ativa': True,
-                    'assinatura': assinatura
-                }), 200
-            else:
-                return jsonify({'ativa': False}), 200
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
 
     @app.route('/api/agendamentos/<int:id_agendamento>/servico', methods=['GET'])
     @token_required
@@ -586,3 +604,78 @@ def register_routes(app):
     @barbeiro_required
     def listar_produtos_dashboard():
         return ProdutoController.listar_dashboard()
+
+    @app.route('/api/notificacoes/templates', methods=['GET'])
+    @token_required
+    @barbeiro_required
+    def listar_templates_email():
+        """Lista templates de email disponíveis"""
+        return NotificacaoController.listar_templates()
+
+    @app.route('/api/notificacoes/template/preview', methods=['GET'])
+    @token_required
+    @barbeiro_required
+    def visualizar_template_email():
+        """Gera preview de um template de email"""
+        return NotificacaoController.visualizar_template(request.user_cpf)
+
+    @app.route('/api/notificacoes/clientes-inativos', methods=['GET'])
+    @token_required
+    @barbeiro_required
+    def listar_clientes_inativos():
+        """Lista clientes que não cortam há muito tempo"""
+        return NotificacaoController.listar_clientes_inativos(request.user_cpf)
+
+    @app.route('/api/notificacoes/clientes-faltas', methods=['GET'])
+    @token_required
+    @barbeiro_required
+    def listar_clientes_com_faltas():
+        """Lista clientes com muitas faltas"""
+        return NotificacaoController.listar_clientes_muitas_faltas(request.user_cpf)
+
+    @app.route('/api/notificacoes/enviar', methods=['POST'])
+    @token_required
+    @barbeiro_required
+    def enviar_notificacoes():
+        """Envia notificação por email para clientes selecionados"""
+        return NotificacaoController.enviar_notificacao(request.user_cpf)
+
+    # === RELATÓRIOS ===
+    @app.route('/api/relatorios/financeiro', methods=['GET'])
+    @token_required
+    @barbeiro_required
+    def relatorio_financeiro():
+        """
+        Gera relatório financeiro detalhado
+        Query params: data_inicio, data_fim, cpf_barbeiro (opcional)
+        """
+        return RelatorioController.gerar_relatorio_financeiro()
+
+    @app.route('/api/relatorios/produtos', methods=['GET'])
+    @token_required
+    @barbeiro_required
+    def relatorio_produtos():
+        """
+        Relatório de produtos mais e menos vendidos
+        Query params: data_inicio, data_fim, limite (padrão 10)
+        """
+        return RelatorioController.relatorio_produtos()
+
+    @app.route('/api/relatorios/clientes', methods=['GET'])
+    @token_required
+    @barbeiro_required
+    def relatorio_clientes():
+        """
+        Relatório de comportamento de clientes
+        Query params: data_inicio, data_fim, limite (padrão 20)
+        """
+        return RelatorioController.relatorio_clientes()
+
+    @app.route('/api/relatorios/completo', methods=['GET'])
+    @token_required
+    @barbeiro_chefe_required
+    def relatorio_completo():
+        """
+        Endpoint informativo sobre relatórios disponíveis
+        """
+        return RelatorioController.relatorio_completo()

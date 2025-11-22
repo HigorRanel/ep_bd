@@ -34,6 +34,8 @@ import ListarProdutos from './components/barbeiro/ListarProdutos';
 import GerenciarClientes from './components/barbeiro/GerenciarClientes';
 import DetalhesCliente from './components/barbeiro/DetalhesCliente';
 import GerenciarPlanos from './components/barbeiro/GerenciarPlanos';
+import NotificarClientes from './components/barbeiro/NotificarClientes';
+import Relatorios from './pages/Relatorios';
 
 import './styles/global.css';
 
@@ -150,6 +152,24 @@ function App() {
             element={
               <PrivateRoute requiredType="barbeiro">
                 <MinhasAvaliacoes />
+              </PrivateRoute>
+            }
+          />
+
+          {/* Notificações - Apenas Barbeiros */}
+          <Route
+            path="/barbeiro/notificacoes"
+            element={
+              <PrivateRoute requiredType="barbeiro">
+                <NotificarClientes />
+              </PrivateRoute>
+            }
+          />
+          <Route
+             path="/barbeiro/relatorios"
+              element={
+              <PrivateRoute requiredType="barbeiro">
+                <Relatorios />
               </PrivateRoute>
             }
           />

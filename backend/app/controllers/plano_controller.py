@@ -28,8 +28,23 @@ class PlanoController:
             if 'servicos' not in dados or not dados['servicos']:
                 return jsonify({'error': 'Pelo menos um serviço é obrigatório'}), 400
 
-            resultado = PlanoMensal.criar(chefe['id_barbeiro_chefe'], dados['servicos'])
+            # NOVO: Pegar desconto (opcional, padrão 0)
+            desconto = float(dados.get('desconto', 0))
+
+            # Validar desconto
+            if desconto < 0 or desconto > 100:
+                return jsonify({'error': 'Desconto deve ser entre 0 e 100'}), 400
+
+            # Criar plano COM DESCONTO
+            resultado = PlanoMensal.criar(
+                chefe['id_barbeiro_chefe'],
+                dados['servicos'],
+                desconto
+            )
+
             return jsonify(resultado), 201
+        except ValueError as ve:
+            return jsonify({'error': str(ve)}), 400
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
@@ -67,7 +82,7 @@ class PlanoController:
 
     @staticmethod
     def atualizar(id_plano, cpf_usuario):
-        """Atualiza serviços de um plano"""
+        """Atualiza serviços e desconto de um plano"""
         try:
             dados = request.get_json()
 
@@ -79,9 +94,25 @@ class PlanoController:
             if 'servicos' not in dados:
                 return jsonify({'error': 'Campo servicos é obrigatório'}), 400
 
-            # CORREÇÃO: usar método atualizar do modelo
-            resultado = PlanoMensal.atualizar(id_plano, dados['servicos'])
+            # NOVO: Pegar desconto (opcional)
+            desconto = dados.get('desconto')
+
+            # Se desconto foi fornecido, validar
+            if desconto is not None:
+                desconto = float(desconto)
+                if desconto < 0 or desconto > 100:
+                    return jsonify({'error': 'Desconto deve ser entre 0 e 100'}), 400
+
+            # Atualizar plano COM DESCONTO
+            resultado = PlanoMensal.atualizar(
+                id_plano,
+                dados['servicos'],
+                desconto  # NOVO
+            )
+
             return jsonify(resultado), 200
+        except ValueError as ve:
+            return jsonify({'error': str(ve)}), 400
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
@@ -140,5 +171,106 @@ class PlanoController:
         try:
             assinaturas = PlanoMensal.listar_assinaturas_cliente(cpf_usuario)
             return jsonify(assinaturas), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @staticmethod
+    def atualizar_desconto_plano(id_plano, cpf_usuario):
+        """Atualiza o desconto de um plano - NOVO"""
+        try:
+            dados = request.get_json()
+
+            # Verificar se é barbeiro chefe
+            barbeiro = Barbeiro.buscar_por_cpf(cpf_usuario)
+            if not barbeiro or not barbeiro.get('is_chefe'):
+                return jsonify({'error': 'Apenas barbeiro chefe pode atualizar descontos'}), 403
+
+            if 'desconto' not in dados:
+                return jsonify({'error': 'Campo desconto é obrigatório'}), 400
+
+            desconto = float(dados['desconto'])
+            if desconto < 0 or desconto > 100:
+                return jsonify({'error': 'Desconto deve ser entre 0 e 100'}), 400
+
+            # Atualizar desconto para todos os serviços do plano
+            from backend.app.utils.database import Database
+            with Database.get_cursor() as cursor:
+                cursor.execute("""
+                    UPDATE Possui
+                    SET desconto = %s
+                    WHERE id_plano = %s
+                """, (desconto, id_plano))
+
+            # Recalcular valores - ✅ CORRIGIDO
+            valores = PlanoMensal.calcular_valores_plano(id_plano)  # ✅ MÉTODO CORRETO
+
+            return jsonify({
+                'message': 'Desconto atualizado com sucesso',
+                'desconto_percentual': desconto,
+                **valores
+            }), 200
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @staticmethod
+    def verificar_uso_plano(id_plano, cpf_usuario):
+        """Verifica uso de serviços do plano pelo cliente"""
+        try:
+            uso = PlanoMensal.verificar_uso_servicos_plano(cpf_usuario, id_plano)
+
+            if not uso:
+                return jsonify({'error': 'Plano não encontrado ou não está ativo'}), 404
+
+            return jsonify(uso), 200
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @staticmethod
+    def planos_vencendo(cpf_usuario):
+        """Lista planos próximos do vencimento"""
+        try:
+            dias = int(request.args.get('dias', 7))
+            planos = PlanoMensal.listar_planos_proximos_vencimento(cpf_usuario, dias)
+
+            return jsonify({
+                'planos_vencendo': planos,
+                'total': len(planos)
+            }), 200
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @staticmethod
+    def calcular_valores_plano(id_plano):
+        """Retorna valores do plano com desconto"""
+        try:
+            valores = PlanoMensal.calcular_valores_plano(id_plano)
+            return jsonify(valores), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @staticmethod
+    def cancelar_assinatura(id_plano, cpf_usuario):
+        """Cancela a assinatura de um plano (chamado pelo cliente)"""
+        try:
+            from backend.app.models.plano_mensal import PlanoMensal
+
+            # Verificar se o cliente tem assinatura ativa deste plano
+            assinatura = PlanoMensal.verificar_assinatura_ativa(cpf_usuario, id_plano)
+
+            if not assinatura:
+                return jsonify({
+                    'error': 'Você não tem uma assinatura ativa deste plano'
+                }), 404
+
+            # Cancelar a assinatura
+            PlanoMensal.cancelar_assinatura(cpf_usuario, id_plano)
+
+            return jsonify({
+                'message': 'Assinatura cancelada com sucesso'
+            }), 200
+
         except Exception as e:
             return jsonify({'error': str(e)}), 500
