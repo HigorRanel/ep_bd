@@ -327,7 +327,7 @@ class Agendamento:
     @staticmethod
     def listar_avaliacoes_paginado(cpf_barbeiro, pagina=1, por_pagina=10, data_inicio=None, data_fim=None,
                                    nota_min=None):
-        """Lista avaliações com paginação e filtros"""
+
         with Database.get_cursor() as cursor:
             # Query base
             query_base = """
@@ -385,3 +385,37 @@ class Agendamento:
                 'tem_proxima': pagina < total_paginas,
                 'tem_anterior': pagina > 1
             }
+
+    @staticmethod
+    def buscar_agendamentos_cliente_otimizado(cpf_cliente):
+        with Database.get_cursor() as cursor:
+            cursor.execute("""
+                    SELECT 
+                        a.id_agendamento,
+                        a.data_hora_agendamento,
+                        a.status,
+                        a.cpf_origem,
+                        a.client_id,
+                        a.barbeiro_id,
+                        s.id_servico,
+                        s.nome as servico_nome,
+                        s.preco,
+                        s.duracao_estimada_min,
+                        s.descricao as servico_descricao,
+                        pb.nome_completo as barbeiro_nome,
+                        pb.telefone as barbeiro_telefone,
+                        pb.email as barbeiro_email,
+                        av.nota as avaliacao_nota,
+                        av.comentario as avaliacao_comentario,
+                        CASE WHEN av.id_agen IS NOT NULL THEN true ELSE false END as tem_avaliacao
+                    FROM Agendamento a
+                    INNER JOIN Contem ct ON a.id_agendamento = ct.id_agen
+                    INNER JOIN Servico s ON ct.id_serv = s.id_servico
+                    INNER JOIN Barbeiro b ON a.barbeiro_id = b.cpf
+                    INNER JOIN Pessoa pb ON b.cpf = pb.cpf
+                    LEFT JOIN Avaliacao av ON a.id_agendamento = av.id_agen
+                    WHERE a.client_id = %s
+                    ORDER BY a.data_hora_agendamento DESC
+                """, (cpf_cliente,))
+
+            return cursor.fetchall()
