@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/navbar.css';
@@ -6,11 +6,25 @@ import '../../styles/navbar.css';
 const Navbar = () => {
   const { user, logout, isCliente, isBarbeiro, isBarbeiroChefe } = useAuth();
   const navigate = useNavigate();
+  const [gestaoOpen, setGestaoOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
+
+  // Fechar dropdown ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setGestaoOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <nav className="navbar">
@@ -53,24 +67,49 @@ const Navbar = () => {
                   <Link to="/barbeiro/reservas" className="navbar-link">Reservas</Link>
                   
                   {isBarbeiroChefe() && (
-                    <div className="navbar-admin-group">
-                      <span className="admin-label">Gestão</span>
+                    <div className="navbar-dropdown" ref={dropdownRef}>
+                      <button 
+                        className="navbar-link dropdown-trigger"
+                        onClick={() => setGestaoOpen(!gestaoOpen)}
+                      >
+                        Gestão ⭐ {gestaoOpen ? '▲' : '▼'}
+                      </button>
                       
-                      <Link to="/barbeiro/produtos/novo" className="navbar-link admin-link">
-                        + Produto
-                      </Link>
-                      
-                      <Link to="/barbeiro/planos/gerenciar" className="navbar-link admin-link">
-                       + Planos
-                      </Link>
-                      
-                      <Link to="/barbeiro/planos/novo" className="navbar-link admin-link">
-                        + Plano
-                      </Link>
-                      
-                      <Link to="/barbeiro/cadastrar-barbeiro" className="navbar-link admin-link">
-                        + Barbeiro
-                      </Link>
+                      {gestaoOpen && (
+                        <div className="dropdown-menu">
+                          <Link 
+                            to="/barbeiro/produtos/novo" 
+                            className="dropdown-item"
+                            onClick={() => setGestaoOpen(false)}
+                          >
+                            📦 Cadastrar Produto
+                          </Link>
+                          
+                          <Link 
+                            to="/barbeiro/planos/gerenciar" 
+                            className="dropdown-item"
+                            onClick={() => setGestaoOpen(false)}
+                          >
+                            💼 Gerenciar Planos
+                          </Link>
+                          
+                          <Link 
+                            to="/barbeiro/planos/novo" 
+                            className="dropdown-item"
+                            onClick={() => setGestaoOpen(false)}
+                          >
+                            ➕ Criar Plano
+                          </Link>
+                          
+                          <Link 
+                            to="/barbeiro/cadastrar-barbeiro" 
+                            className="dropdown-item"
+                            onClick={() => setGestaoOpen(false)}
+                          >
+                            👤 Cadastrar Barbeiro
+                          </Link>
+                        </div>
+                      )}
                     </div>
                   )}
                 </>

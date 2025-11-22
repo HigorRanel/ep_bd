@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../common/Navbar';
 import api from '../../services/api';
@@ -9,21 +9,33 @@ const GerenciarClientes = () => {
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [searchDebounced, setSearchDebounced] = useState('');
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
 
+  // Debounce do search - só atualiza após 500ms sem digitar
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchDebounced(search);
+      setPage(1); // Reset para página 1 ao buscar
+    }, 500); // 500ms de delay
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Carrega clientes quando o search debounced ou página mudam
   useEffect(() => {
     carregarClientes();
-  }, [page, search]);
+  }, [page, searchDebounced]);
 
-  const carregarClientes = async () => {
+  const carregarClientes = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.get('/clientes/estatisticas', {
         params: {
           page,
           per_page: 10,
-          search: search || undefined
+          search: searchDebounced || undefined
         }
       });
       
@@ -34,7 +46,7 @@ const GerenciarClientes = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, searchDebounced]);
 
   const verDetalhes = (cpf) => {
     navigate(`/barbeiro/clientes/${cpf}`);
@@ -56,7 +68,13 @@ const GerenciarClientes = () => {
     return idade;
   };
 
-  if (loading) {
+  const limparBusca = () => {
+    setSearch('');
+    setSearchDebounced('');
+    setPage(1);
+  };
+
+  if (loading && page === 1 && !search) {
     return (
       <div className="page-container">
         <Navbar />
@@ -83,16 +101,79 @@ const GerenciarClientes = () => {
         <div className="card" style={{ marginBottom: '30px' }}>
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label>Buscar Cliente</label>
-            <input
-              type="text"
-              placeholder="Digite o nome ou CPF do cliente..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              style={{ width: '100%' }}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type="text"
+                placeholder="Digite o nome ou CPF do cliente..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{ 
+                  width: '100%',
+                  paddingRight: search ? '100px' : '12px'
+                }}
+              />
+              
+              {/* Indicador de busca ativa */}
+              {search && search !== searchDebounced && (
+                <span style={{
+                  position: 'absolute',
+                  right: search ? '90px' : '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: '#3498db',
+                  fontSize: '12px'
+                }}>
+                  Buscando...
+                </span>
+              )}
+              
+              {/* Botão limpar */}
+              {search && (
+                <button
+                  onClick={limparBusca}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: '#e74c3c',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '4px 12px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseOver={(e) => e.target.style.background = '#c0392b'}
+                  onMouseOut={(e) => e.target.style.background = '#e74c3c'}
+                >
+                  ✕ Limpar
+                </button>
+              )}
+            </div>
+            
+            {/* Info de busca */}
+            {searchDebounced && (
+              <small style={{ 
+                display: 'block', 
+                marginTop: '8px', 
+                color: '#666',
+                fontSize: '13px'
+              }}>
+                {loading ? (
+                  <>🔍 Buscando por "{searchDebounced}"...</>
+                ) : (
+                  <>
+                    {pagination.total > 0 ? (
+                      <>✓ Encontrados <strong>{pagination.total}</strong> cliente(s) com "{searchDebounced}"</>
+                    ) : (
+                      <>⚠️ Nenhum cliente encontrado com "{searchDebounced}"</>
+                    )}
+                  </>
+                )}
+              </small>
+            )}
           </div>
         </div>
 
@@ -102,15 +183,29 @@ const GerenciarClientes = () => {
             <div className="stat-icon">👥</div>
             <div className="stat-content">
               <h3>{pagination.total || 0}</h3>
-              <p>Total de Clientes</p>
+              <p>{searchDebounced ? 'Clientes Encontrados' : 'Total de Clientes'}</p>
             </div>
           </div>
         </div>
 
         {/* Lista de Clientes */}
-        {clientes.length === 0 ? (
+        {loading && page === 1 ? (
+          <div className="loading-container" style={{ minHeight: '300px' }}>
+            <div className="spinner"></div>
+            <p>Carregando clientes...</p>
+          </div>
+        ) : clientes.length === 0 ? (
           <div className="empty-state">
-            <p>Nenhum cliente encontrado</p>
+            {searchDebounced ? (
+              <>
+                <p>Nenhum cliente encontrado com "{searchDebounced}"</p>
+                <button onClick={limparBusca} className="btn btn-primary">
+                  Limpar Busca
+                </button>
+              </>
+            ) : (
+              <p>Nenhum cliente cadastrado</p>
+            )}
           </div>
         ) : (
           <>
@@ -196,18 +291,21 @@ const GerenciarClientes = () => {
                   justifyContent: 'space-between', 
                   alignItems: 'center' 
                 }}>
-                  <span>Página {page} de {pagination.pages}</span>
+                  <span>
+                    Página {page} de {pagination.pages}
+                    {loading && <span style={{ marginLeft: '10px', color: '#3498db' }}>(Carregando...)</span>}
+                  </span>
                   <div style={{ display: 'flex', gap: '10px' }}>
                     <button
                       onClick={() => setPage(p => Math.max(1, p - 1))}
-                      disabled={page === 1}
+                      disabled={page === 1 || loading}
                       className="btn btn-secondary btn-sm"
                     >
                       ← Anterior
                     </button>
                     <button
                       onClick={() => setPage(p => Math.min(pagination.pages, p + 1))}
-                      disabled={page === pagination.pages}
+                      disabled={page === pagination.pages || loading}
                       className="btn btn-secondary btn-sm"
                     >
                       Próxima →
