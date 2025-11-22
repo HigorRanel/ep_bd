@@ -35,6 +35,7 @@ import GerenciarClientes from './components/barbeiro/GerenciarClientes';
 import DetalhesCliente from './components/barbeiro/DetalhesCliente';
 import GerenciarPlanos from './components/barbeiro/GerenciarPlanos';
 import NotificarClientes from './components/barbeiro/NotificarClientes';
+import Relatorios from './pages/Relatorios';
 
 import './styles/global.css';
 
@@ -164,7 +165,14 @@ function App() {
               </PrivateRoute>
             }
           />
-
+          <Route
+             path="/barbeiro/relatorios"
+              element={
+              <PrivateRoute requiredType="barbeiro">
+                <Relatorios />
+              </PrivateRoute>
+            }
+          />
           <Route
             path="/barbeiro/produtos"
             element={

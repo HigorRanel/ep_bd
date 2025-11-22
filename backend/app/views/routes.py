@@ -10,6 +10,7 @@ from backend.app.utils.decorators import token_required, barbeiro_required, barb
 from backend.app.controllers.reserva_controller import ReservaController
 from backend.app.controllers.cliente_stats_controller import ClienteStatsController
 from backend.app.controllers.notificacao_controller import NotificacaoController
+from backend.app.controllers.relatorio_controller import RelatorioController
 
 
 def register_routes(app):
@@ -638,3 +639,49 @@ def register_routes(app):
     def enviar_notificacoes():
         """Envia notificação por email para clientes selecionados"""
         return NotificacaoController.enviar_notificacao(request.user_cpf)
+
+    def register_relatorio_routes(app):
+        """
+        Registra as rotas de relatórios no Flask app.
+        Cole estas rotas dentro da função register_routes() no arquivo routes.py
+        """
+
+        # === RELATÓRIOS ===
+        @app.route('/api/relatorios/financeiro', methods=['GET'])
+        @token_required
+        @barbeiro_required
+        def relatorio_financeiro():
+            """
+            Gera relatório financeiro detalhado
+            Query params: data_inicio, data_fim, cpf_barbeiro (opcional)
+            """
+            return RelatorioController.gerar_relatorio_financeiro()
+
+        @app.route('/api/relatorios/produtos', methods=['GET'])
+        @token_required
+        @barbeiro_required
+        def relatorio_produtos():
+            """
+            Relatório de produtos mais e menos vendidos
+            Query params: data_inicio, data_fim, limite (padrão 10)
+            """
+            return RelatorioController.relatorio_produtos()
+
+        @app.route('/api/relatorios/clientes', methods=['GET'])
+        @token_required
+        @barbeiro_required
+        def relatorio_clientes():
+            """
+            Relatório de comportamento de clientes
+            Query params: data_inicio, data_fim, limite (padrão 20)
+            """
+            return RelatorioController.relatorio_clientes()
+
+        @app.route('/api/relatorios/completo', methods=['GET'])
+        @token_required
+        @barbeiro_chefe_required
+        def relatorio_completo():
+            """
+            Endpoint informativo sobre relatórios disponíveis
+            """
+            return RelatorioController.relatorio_completo()

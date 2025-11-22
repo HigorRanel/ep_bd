@@ -66,6 +66,7 @@ const Navbar = () => {
                   <Link to="/barbeiro/produtos" className="navbar-link">Produtos</Link>
                   <Link to="/barbeiro/reservas" className="navbar-link">Reservas</Link>
                   <Link to="/barbeiro/notificacoes" className="navbar-link">Notificações</Link>
+                  <Link to="/barbeiro/relatorios" className="navbar-link">Relatórios</Link>
                   
                   {isBarbeiroChefe() && (
                     <div className="navbar-dropdown" ref={dropdownRef}>
