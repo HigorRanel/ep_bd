@@ -213,6 +213,11 @@ def register_routes(app):
     def listar_planos():
         return PlanoController.listar()
 
+    @app.route('/api/planos/<int:id_plano>', methods=['GET'])
+    @token_required
+    def buscar_plano(id_plano):
+        return PlanoController.buscar(id_plano)
+
     @app.route('/api/planos/<int:id_plano>', methods=['PUT'])
     @token_required
     @barbeiro_chefe_required
@@ -225,6 +230,42 @@ def register_routes(app):
     def deletar_plano(id_plano):
         return PlanoController.deletar(id_plano, request.user_cpf)
 
+    # NOVO: Gerenciar desconto do plano
+    @app.route('/api/planos/<int:id_plano>/desconto', methods=['PUT'])
+    @token_required
+    @barbeiro_chefe_required
+    def atualizar_desconto_plano(id_plano):
+        return PlanoController.atualizar_desconto_plano(id_plano, request.user_cpf)
+
+    # NOVO: Verificar uso de serviços do plano pelo cliente
+    @app.route('/api/planos/<int:id_plano>/uso', methods=['GET'])
+    @token_required
+    def verificar_uso_plano(id_plano):
+        return PlanoController.verificar_uso_plano(id_plano, request.user_cpf)
+
+    # NOVO: Listar planos próximos do vencimento
+    @app.route('/api/planos/vencendo', methods=['GET'])
+    @token_required
+    def planos_vencendo():
+        return PlanoController.planos_vencendo(request.user_cpf)
+
+    # NOVO: Calcular valores do plano (com desconto)
+    @app.route('/api/planos/<int:id_plano>/valores', methods=['GET'])
+    @token_required
+    def calcular_valores_plano(id_plano):
+        return PlanoController.calcular_valores_plano(id_plano)
+
+    # NOVO: Verificar se pode agendar com plano
+    @app.route('/api/planos/pode-agendar/<int:id_servico>', methods=['GET'])
+    @token_required
+    def pode_agendar_com_plano(id_servico):
+        try:
+            from backend.app.models.plano_mensal import PlanoMensal
+            resultado = PlanoMensal.pode_agendar_com_plano(request.user_cpf, id_servico)
+            return jsonify(resultado), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
     @app.route('/api/planos/assinar', methods=['POST'])
     @token_required
     def assinar_plano():
@@ -234,37 +275,6 @@ def register_routes(app):
     @token_required
     def listar_minhas_assinaturas():
         return PlanoController.minhas_assinaturas(request.user_cpf)
-
-    @app.route('/api/health', methods=['GET'])
-    def health_check():
-        return {'status': 'ok', 'message': 'API Barbearia funcionando'}, 200
-
-    @app.route('/api/assinaturas/cancelar/<int:id_plano>', methods=['DELETE'])
-    @token_required
-    def cancelar_assinatura(id_plano):
-        try:
-            from backend.app.models.plano_mensal import PlanoMensal
-            PlanoMensal.cancelar_assinatura(request.user_cpf, id_plano)
-            return jsonify({'message': 'Assinatura cancelada com sucesso'}), 200
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-
-    @app.route('/api/assinaturas/verificar/<int:id_plano>', methods=['GET'])
-    @token_required
-    def verificar_assinatura_ativa(id_plano):
-        try:
-            from backend.app.models.plano_mensal import PlanoMensal
-            assinatura = PlanoMensal.verificar_assinatura_ativa(request.user_cpf, id_plano)
-
-            if assinatura:
-                return jsonify({
-                    'ativa': True,
-                    'assinatura': assinatura
-                }), 200
-            else:
-                return jsonify({'ativa': False}), 200
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
 
     @app.route('/api/agendamentos/<int:id_agendamento>/servico', methods=['GET'])
     @token_required

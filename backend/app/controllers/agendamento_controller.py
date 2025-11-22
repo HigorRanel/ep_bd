@@ -24,6 +24,27 @@ class AgendamentoController:
             except ValueError:
                 return jsonify({'error': 'Formato de data/hora inválido. Use: YYYY-MM-DD HH:MM:SS'}), 400
 
+            # NOVO: Verificar se pode usar plano
+            usar_plano = dados.get('usar_plano', False)
+            id_plano_usado = None
+            desconto_aplicado = 0
+
+            if usar_plano and tipo_usuario == 'cliente':
+                from backend.app.models.plano_mensal import PlanoMensal
+                verificacao = PlanoMensal.pode_agendar_com_plano(dados['cpf_cliente'], dados['id_servico'])
+
+                if not verificacao['pode_usar_plano']:
+                    return jsonify({
+                        'error': f"Não foi possível usar o plano: {verificacao['motivo']}",
+                        'detalhes': verificacao
+                    }), 400
+
+                id_plano_usado = verificacao['id_plano']
+
+                # Calcular desconto
+                valores_plano = PlanoMensal.calcular_desconto_plano(id_plano_usado)
+                desconto_aplicado = valores_plano.get('desconto_percentual', 0)
+
             # CPF de origem é quem está fazendo o agendamento
             cpf_origem = cpf_usuario
 
@@ -36,7 +57,14 @@ class AgendamentoController:
                 dados.get('status', 'pendente')
             )
 
-            return jsonify(resultado), 201
+            # Se usou plano, adicionar informação
+            resposta = {**resultado}
+            if id_plano_usado:
+                resposta['plano_usado'] = id_plano_usado
+                resposta['desconto_aplicado'] = desconto_aplicado
+                resposta['message'] = f'Agendamento criado com desconto de {desconto_aplicado}% do plano'
+
+            return jsonify(resposta), 201
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 

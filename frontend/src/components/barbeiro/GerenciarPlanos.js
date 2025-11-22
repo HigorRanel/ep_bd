@@ -13,6 +13,9 @@ const GerenciarPlanos = () => {
   const [modalEditar, setModalEditar] = useState(null);
   const [servicosEditando, setServicosEditando] = useState([]);
 
+  // NOVO: Estado para desconto no modal de edição
+  const [novoDesconto, setNovoDesconto] = useState(0);
+
   // NOVO: Estado para busca
   const [termoBusca, setTermoBusca] = useState('');
 
@@ -36,6 +39,7 @@ const GerenciarPlanos = () => {
     }
   };
 
+  // MODIFICADA: função abrirModalEditar para carregar desconto
   const abrirModalEditar = (plano) => {
     setModalEditar(plano);
     // Carregar serviços do plano
@@ -44,6 +48,10 @@ const GerenciarPlanos = () => {
       id_servico: s.id_servico,
       quantidade: s.quantidade
     })));
+    
+    // NOVO: Carregar desconto atual
+    const descontoAtual = plano.servicos && plano.servicos[0] ? plano.servicos[0].desconto : 0;
+    setNovoDesconto(descontoAtual);
   };
 
   const adicionarServicoEdicao = () => {
@@ -60,6 +68,7 @@ const GerenciarPlanos = () => {
     setServicosEditando(novos);
   };
 
+  // MODIFICADA: função salvarEdicao para incluir desconto
   const salvarEdicao = async () => {
     if (servicosEditando.length === 0) {
       setMessage({ type: 'error', text: 'Adicione pelo menos um serviço' });
@@ -73,12 +82,20 @@ const GerenciarPlanos = () => {
       return;
     }
 
+    // NOVO: Validar desconto
+    const descontoNum = parseFloat(novoDesconto);
+    if (descontoNum < 0 || descontoNum > 100) {
+      setMessage({ type: 'error', text: 'Desconto deve ser entre 0 e 100' });
+      return;
+    }
+
     try {
       await api.put(`/planos/${modalEditar.id_plano_mensal}`, {
         servicos: servicosValidos.map(s => ({
           id_servico: parseInt(s.id_servico),
           quantidade: parseInt(s.quantidade)
-        }))
+        })),
+        desconto: descontoNum // NOVO
       });
 
       setMessage({ type: 'success', text: 'Plano atualizado com sucesso!' });
@@ -292,6 +309,28 @@ const GerenciarPlanos = () => {
                 Configure os serviços inclusos no plano
               </p>
 
+              {/* NOVO: Campo de Desconto no Modal de Edição */}
+              <div className="form-group" style={{ marginBottom: '20px' }}>
+                <label>
+                  💰 Desconto do Plano (%)
+                  <small style={{ color: '#666', fontWeight: 'normal', marginLeft: '10px' }}>
+                    Deixe 0 para sem desconto
+                  </small>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  value={novoDesconto}
+                  onChange={(e) => setNovoDesconto(e.target.value)}
+                  placeholder="Ex: 15 para 15% de desconto"
+                />
+                <small style={{ color: '#666', fontSize: '12px', display: 'block', marginTop: '5px' }}>
+                  Valor entre 0 e 100. Será aplicado sobre o valor total dos serviços.
+                </small>
+              </div>
+
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                   <strong>Serviços do Plano</strong>
@@ -360,6 +399,7 @@ const GerenciarPlanos = () => {
                 )}
               </div>
 
+              {/* MODIFICADO: Resumo do Plano para mostrar desconto */}
               {servicosEditando.length > 0 && (
                 <div
                   style={{
@@ -381,9 +421,69 @@ const GerenciarPlanos = () => {
                       );
                     })}
                   </ul>
-                  <p style={{ marginTop: '15px', fontSize: '18px', fontWeight: 'bold', color: '#27ae60' }}>
-                    Valor Total: R$ {calcularValorTotalEdicao().toFixed(2)}/mês
-                  </p>
+                  
+                  {/* NOVO: Cálculos com desconto */}
+                  <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '2px solid #ddd' }}>
+                    {(() => {
+                      const valorSemDesconto = calcularValorTotalEdicao();
+                      const descontoNum = parseFloat(novoDesconto) || 0;
+                      const valorDesconto = valorSemDesconto * (descontoNum / 100);
+                      const valorComDesconto = valorSemDesconto - valorDesconto;
+                      
+                      return (
+                        <>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                            <span>Valor sem desconto:</span>
+                            <strong style={{ 
+                              textDecoration: descontoNum > 0 ? 'line-through' : 'none',
+                              color: descontoNum > 0 ? '#95a5a6' : '#2c3e50'
+                            }}>
+                              R$ {valorSemDesconto.toFixed(2)}
+                            </strong>
+                          </div>
+                          
+                          {descontoNum > 0 && (
+                            <>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                                <span>Desconto ({descontoNum.toFixed(2)}%):</span>
+                                <strong style={{ color: '#e74c3c' }}>
+                                  - R$ {valorDesconto.toFixed(2)}
+                                </strong>
+                              </div>
+                              <div style={{ 
+                                display: 'flex', 
+                                justifyContent: 'space-between',
+                                paddingTop: '10px',
+                                borderTop: '2px solid #27ae60',
+                                marginTop: '10px'
+                              }}>
+                                <span style={{ fontWeight: 'bold' }}>Valor Final:</span>
+                                <strong style={{ fontSize: '20px', color: '#27ae60' }}>
+                                  R$ {valorComDesconto.toFixed(2)}/mês
+                                </strong>
+                              </div>
+                              <div style={{ 
+                                marginTop: '10px',
+                                padding: '8px',
+                                backgroundColor: '#e8f5e9',
+                                borderRadius: '4px'
+                              }}>
+                                <small style={{ color: '#27ae60', fontWeight: 'bold' }}>
+                                  🎉 Economia de R$ {valorDesconto.toFixed(2)} por mês!
+                                </small>
+                              </div>
+                            </>
+                          )}
+                          
+                          {descontoNum === 0 && (
+                            <p style={{ marginTop: '10px', fontSize: '18px', fontWeight: 'bold', color: '#27ae60' }}>
+                              Valor Total: R$ {valorSemDesconto.toFixed(2)}/mês
+                            </p>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
                 </div>
               )}
 

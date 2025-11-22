@@ -21,6 +21,11 @@ const AgendarServico = () => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const navigate = useNavigate();
 
+  // Novos estados para plano
+  const [podeUsarPlano, setPodeUsarPlano] = useState(false);
+  const [infoPlano, setInfoPlano] = useState(null);
+  const [usarPlano, setUsarPlano] = useState(false);
+
   useEffect(() => {
     carregarBarbeiros();
   }, []);
@@ -34,6 +39,30 @@ const AgendarServico = () => {
       setFormData(prev => ({ ...prev, horario: '' }));
     }
   }, [formData.cpf_barbeiro, formData.data, servicoSelecionado]);
+
+  // Nova função para verificar se pode usar plano
+  const verificarPlano = async (idServico) => {
+    if (!idServico) {
+      setPodeUsarPlano(false);
+      setInfoPlano(null);
+      return;
+    }
+    
+    try {
+      const response = await api.get(`/planos/pode-agendar/${idServico}`);
+      
+      if (response.data.pode_usar_plano) {
+        setPodeUsarPlano(true);
+        setInfoPlano(response.data);
+      } else {
+        setPodeUsarPlano(false);
+        setInfoPlano(response.data);
+      }
+    } catch (error) {
+      setPodeUsarPlano(false);
+      setInfoPlano(null);
+    }
+  };
 
   const carregarBarbeiros = async () => {
     try {
@@ -114,6 +143,7 @@ const AgendarServico = () => {
     }
   };
 
+  // MODIFICADA: função handleServicoChange para incluir verificação de plano
   const handleServicoChange = (e) => {
     const idServico = e.target.value;
     setFormData({ ...formData, id_servico: idServico, horario: '' });
@@ -121,9 +151,16 @@ const AgendarServico = () => {
     if (idServico) {
       const servico = servicos.find(s => s.id_servico === parseInt(idServico));
       setServicoSelecionado(servico);
+      
+      // NOVO: Verificar se pode usar plano
+      verificarPlano(idServico);
     } else {
       setServicoSelecionado(null);
+      setPodeUsarPlano(false);
+      setInfoPlano(null);
     }
+    
+    setUsarPlano(false); // Reset checkbox
   };
 
   const handleDataChange = (e) => {
@@ -134,6 +171,7 @@ const AgendarServico = () => {
     setFormData({ ...formData, horario });
   };
 
+  // MODIFICADA: função handleSubmit para enviar informação do plano
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -152,7 +190,8 @@ const AgendarServico = () => {
         cpf_cliente: cpfCliente,
         cpf_barbeiro: formData.cpf_barbeiro,
         id_servico: parseInt(formData.id_servico),
-        status: 'pendente'
+        status: 'pendente',
+        usar_plano: usarPlano // NOVO
       });
 
       setMessage({ type: 'success', text: 'Agendamento realizado com sucesso!' });
@@ -167,6 +206,9 @@ const AgendarServico = () => {
       setServicoSelecionado(null);
       setServicos([]);
       setHorariosDisponiveis([]);
+      setPodeUsarPlano(false);
+      setInfoPlano(null);
+      setUsarPlano(false);
 
       // Redirecionar após 2 segundos
       setTimeout(() => navigate('/cliente/agendamentos'), 2000);
@@ -324,6 +366,85 @@ const AgendarServico = () => {
                     </div>
                   </div>
                 )}
+
+                {/* NOVO: Bloco para uso do plano */}
+                {servicoSelecionado && podeUsarPlano && infoPlano && (
+                  <div className="agendamento-step">
+                    <div className="info-box info-box-success">
+                      <h4>🎉 Você Pode Usar Seu Plano!</h4>
+                      <p style={{ marginTop: '10px' }}>
+                        Você tem um plano ativo que inclui este serviço.
+                      </p>
+                      
+                      <div style={{ 
+                        padding: '10px', 
+                        backgroundColor: '#fff', 
+                        borderRadius: '6px',
+                        marginTop: '10px'
+                      }}>
+                        <p style={{ margin: '5px 0' }}>
+                          <strong>Disponível:</strong> {infoPlano.uso.quantidade_disponivel} de {infoPlano.uso.quantidade_plano} serviços
+                        </p>
+                        <p style={{ margin: '5px 0' }}>
+                          <strong>Já utilizados:</strong> {infoPlano.uso.quantidade_usada}
+                        </p>
+                      </div>
+                      
+                      <label style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '10px',
+                        marginTop: '15px',
+                        cursor: 'pointer',
+                        fontSize: '16px',
+                        fontWeight: 'bold'
+                      }}>
+                        <input
+                          type="checkbox"
+                          checked={usarPlano}
+                          onChange={(e) => setUsarPlano(e.target.checked)}
+                          style={{ width: 'auto', margin: 0, cursor: 'pointer' }}
+                        />
+                        <span style={{ color: '#27ae60' }}>
+                          ✓ Usar meu plano para este agendamento
+                        </span>
+                      </label>
+                      
+                      {usarPlano && (
+                        <div style={{ 
+                          marginTop: '10px', 
+                          padding: '10px', 
+                          backgroundColor: '#e8f5e9',
+                          borderRadius: '4px'
+                        }}>
+                          <strong style={{ color: '#27ae60' }}>
+                            💰 Economia aplicada! Você não será cobrado por este serviço.
+                          </strong>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {servicoSelecionado && !podeUsarPlano && infoPlano && infoPlano.motivo && (
+                  <div className="agendamento-step">
+                    <div className="info-box" style={{ backgroundColor: '#fff3cd', borderLeft: '4px solid #f39c12' }}>
+                      <h4>ℹ️ Informação sobre Plano</h4>
+                      <p>{infoPlano.motivo}</p>
+                      
+                      {infoPlano.uso && (
+                        <div style={{ marginTop: '10px' }}>
+                          <p style={{ margin: '5px 0' }}>
+                            <strong>Usado:</strong> {infoPlano.uso.quantidade_usada} de {infoPlano.uso.quantidade_plano}
+                          </p>
+                          <p style={{ margin: '5px 0', color: '#e74c3c', fontWeight: 'bold' }}>
+                            ⚠️ Limite do plano atingido para este mês
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -436,10 +557,10 @@ const AgendarServico = () => {
               </div>
             )}
 
-            {/* Resumo Final */}
+            {/* MODIFICADO: Resumo Final para incluir informação do plano */}
             {formData.cpf_barbeiro && formData.id_servico && formData.data && formData.horario && (
               <div className="agendamento-step">
-                <div className="info-box info-box-warning">
+                <div className={`info-box ${usarPlano ? 'info-box-success' : 'info-box-warning'}`}>
                   <h4>📋 Resumo do Agendamento</h4>
                   <div style={{ marginTop: '15px' }}>
                     <p><strong>Barbeiro:</strong> {barbeiroSelecionado?.nome_completo}</p>
@@ -452,12 +573,28 @@ const AgendarServico = () => {
                     })}</p>
                     <p><strong>Horário:</strong> {formData.horario}</p>
                     <p><strong>Duração:</strong> {servicoSelecionado?.duracao_estimada_min} minutos</p>
-                    <p style={{ marginTop: '15px', paddingTop: '15px', borderTop: '2px solid #f39c12' }}>
-                      <strong>Valor Total:</strong>{' '}
-                      <span style={{ fontSize: '24px', color: '#27ae60' }}>
-                        R$ {servicoSelecionado ? parseFloat(servicoSelecionado.preco).toFixed(2) : '0.00'}
-                      </span>
-                    </p>
+                    
+                    {usarPlano ? (
+                      <div style={{ 
+                        marginTop: '15px', 
+                        paddingTop: '15px', 
+                        borderTop: '2px solid #27ae60'
+                      }}>
+                        <p style={{ color: '#27ae60', fontWeight: 'bold', fontSize: '18px' }}>
+                          ✓ Usando Plano - SEM CUSTO
+                        </p>
+                        <p style={{ fontSize: '14px', color: '#666' }}>
+                          Este agendamento será coberto pelo seu plano ativo
+                        </p>
+                      </div>
+                    ) : (
+                      <p style={{ marginTop: '15px', paddingTop: '15px', borderTop: '2px solid #f39c12' }}>
+                        <strong>Valor Total:</strong>{' '}
+                        <span style={{ fontSize: '24px', color: '#27ae60' }}>
+                          R$ {servicoSelecionado ? parseFloat(servicoSelecionado.preco).toFixed(2) : '0.00'}
+                        </span>
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
