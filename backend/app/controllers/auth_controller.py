@@ -49,6 +49,22 @@ class AuthController:
                 if campo not in dados:
                     return jsonify({'error': f'Campo {campo} é obrigatório'}), 400
 
+            try:
+                data_nasc = datetime.strptime(dados['data_nascimento'], '%Y-%m-%d').date()
+                hoje = datetime.now().date()
+
+                if data_nasc > hoje:
+                    return jsonify({'error': 'Data de nascimento inválida (não pode ser no futuro)'}), 400
+
+                idade = hoje.year - data_nasc.year - ((hoje.month, hoje.day) < (data_nasc.month, data_nasc.day))
+
+                if idade < 14:
+                    return jsonify({'error': 'É necessário ter pelo menos 14 anos para se cadastrar'}), 400
+
+            except ValueError:
+                return jsonify({'error': 'Formato de data inválido. Use AAAA-MM-DD'}), 400
+            # --- FIM DA VALIDAÇÃO DE DATA ---
+
             # Verificar se já existe
             if Pessoa.buscar_por_cpf(dados['cpf']):
                 return jsonify({'error': 'CPF já cadastrado'}), 400
@@ -74,7 +90,7 @@ class AuthController:
 
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-
+        
     @staticmethod
     def registrar_barbeiro():
         try:
@@ -101,8 +117,8 @@ class AuthController:
 
             idade = hoje.year - dt_nascimento.year - ((hoje.month, hoje.day) < (dt_nascimento.month, dt_nascimento.day))
             
-            if idade < 18:
-                return jsonify({'error': 'O barbeiro deve ser maior de 18 anos.'}), 400
+            if idade < 14:
+                return jsonify({'error': 'O barbeiro deve ser maior de 14 anos.'}), 400
             if dt_inicio > hoje:
                 return jsonify({'error': 'A data de início de atividades não pode ser futura.'}), 400
             if dt_nascimento >= dt_inicio:
@@ -193,14 +209,28 @@ class AuthController:
                 if campo not in dados:
                     return jsonify({'error': f'Campo {campo} é obrigatório'}), 400
 
-            # Verificar se já existe
+            # --- INÍCIO DA NOVA VALIDAÇÃO DE DATA ---
+            try:
+                data_nasc = datetime.strptime(dados['data_nascimento'], '%Y-%m-%d').date()
+                hoje = datetime.now().date()
+
+                if data_nasc > hoje:
+                    return jsonify({'error': 'Data de nascimento inválida'}), 400
+                
+                idade = hoje.year - data_nasc.year - ((hoje.month, hoje.day) < (data_nasc.month, data_nasc.day))
+
+                if idade < 14:
+                    return jsonify({'error': 'É necessário ter pelo menos 14 anos para se cadastrar'}), 400
+
+            except ValueError:
+                return jsonify({'error': 'Formato de data inválido. Use AAAA-MM-DD'}), 400
+
             if Pessoa.buscar_por_cpf(dados['cpf']):
                 return jsonify({'error': 'CPF já cadastrado'}), 400
 
             if Pessoa.buscar_por_email(dados['email']):
                 return jsonify({'error': 'Email já cadastrado'}), 400
 
-            # Criar pessoa
             Pessoa.criar(
                 dados['cpf'],
                 dados['nome_completo'],
@@ -262,8 +292,8 @@ class AuthController:
             # Cálculo exato da idade
             idade = hoje.year - dt_nascimento.year - ((hoje.month, hoje.day) < (dt_nascimento.month, dt_nascimento.day))
 
-            if idade < 12:
-                return jsonify({'error': 'O barbeiro deve ter pelo menos 18 anos.'}), 400
+            if idade < 14:
+                return jsonify({'error': 'O barbeiro deve ter pelo menos 14 anos.'}), 400
             # ---------------------------------------------------------
             # FIM DAS VALIDAÇÕES DE DATA
             # ---------------------------------------------------------
