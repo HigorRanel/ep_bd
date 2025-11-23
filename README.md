@@ -26,7 +26,7 @@ Siga a ordem abaixo para garantir o funcionamento correto da aplicação.
 Abra o seu terminal e clone o projeto para sua máquina:
 
 ```bash
-git clone URL_DO_REPOSITORIO
+git clone git@github.com:HigorRanel/ep_bd.git
 cd ep_bd
 ````
 A url pode ser obtida clicando no botão code de cor verde localizado encima da listagem dos arquivos do projeto
@@ -49,13 +49,12 @@ DB_PASSWORD=sua_senha_do_postgres
 DB_PORT=5432
 
 # Configurações de E-mail (Para envio de notificações)
-# Exemplo usando Gmail (Requer 'Senha de App' se usar 2FA)
-MAIL_USERNAME=seu_email@gmail.com
-MAIL_PASSWORD=sua_senha_de_app
-MAIL_DEFAULT_SENDER=seu_email@gmail.com
+MAIL_USERNAME = 'epbd222@gmail.com'
+MAIL_PASSWORD = 'uwiu apmk xrmj cbxj'
+MAIL_DEFAULT_SENDER = 'epbd222@gmail.com'
 ```
 
-> **Nota:** Se você não configurar as variáveis de e-mail, as funcionalidades de notificação poderão gerar erros.
+> **Nota:** Este endereço é exclusivo para o envio de notificações da nossa aplicação.
 
 #### **Frontend**
 
