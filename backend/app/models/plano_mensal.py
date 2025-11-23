@@ -209,7 +209,6 @@ class PlanoMensal:
             """, (id_plano,))
 
             servicos = cursor.fetchall()
-            print(servicos)
             if not servicos:
                 return {
                     'valor_sem_desconto': 0,
@@ -286,6 +285,49 @@ class PlanoMensal:
                 'message': 'Plano atualizado com sucesso',
                 **valores
             }
+
+    @staticmethod
+    def buscar_por_id(id_plano):
+        """Busca um plano específico com todos os detalhes"""
+        with Database.get_cursor() as cursor:
+            cursor.execute("""
+                SELECT 
+                    pm.id_plano_mensal,
+                    pm.id_barbeiro_chefe,
+                    p.nome_completo as criador_nome
+                FROM Plano_Mensal pm
+                JOIN Barbeiro_Chefe bc ON pm.id_barbeiro_chefe = bc.id_barbeiro_chefe
+                JOIN Pessoa p ON bc.cpf_barbeiro = p.cpf
+                WHERE pm.id_plano_mensal = %s
+            """, (id_plano,))
+
+            plano = cursor.fetchone()
+
+            if not plano:
+                return None
+
+            cursor.execute("""
+                SELECT 
+                    s.id_servico,
+                    s.nome,
+                    s.preco,
+                    ps.quantidade,
+                    ps.desconto
+                FROM Possui ps
+                JOIN Servico s ON ps.id_serv = s.id_servico
+                WHERE ps.id_plano = %s
+                ORDER BY s.nome
+            """, (id_plano,))
+
+            servicos = cursor.fetchall()
+
+            plano['servicos'] = servicos if servicos else []
+
+            if plano['servicos']:
+                valores = PlanoMensal.calcular_valores_plano(id_plano)
+                plano.update(valores)
+
+            return plano
 
     @staticmethod
     def deletar(id_plano):
