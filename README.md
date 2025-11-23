@@ -23,15 +23,19 @@ Siga a ordem abaixo para garantir o funcionamento correto da aplicação.
 
 ### 1. Clonar o Repositório
 
-Abra o seu terminal e clone o projeto para sua máquina:
+Abra o seu terminal e clone o projeto para sua máquina (escolha via SSH ou HTTPS):
 
 ```bash
+# Via SSH
 git clone git@github.com:HigorRanel/ep_bd.git
-cd ep_bd
-````
-A url pode ser obtida clicando no botão code de cor verde localizado encima da listagem dos arquivos do projeto
 
-### 1.5 Configuração das Variáveis de Ambiente (.env)
+# Ou via HTTPS
+git clone https://github.com/HigorRanel/ep_bd.git
+
+cd ep_bd
+```
+
+### 2. Configuração das Variáveis de Ambiente (.env)
 
 Por questões de segurança, arquivos contendo senhas e chaves secretas não são versionados. Você precisará criar dois arquivos `.env` manualmente, um para o backend e outro para o frontend.
 
@@ -65,7 +69,7 @@ Crie um arquivo chamado `.env` dentro da pasta `frontend/` (caminho: `ep_bd/fron
     REACT_APP_API_URL=http://localhost:5000/api
     ```
 
-### 2\. Configurando o Backend (Flask)
+### 3\. Configurando o Backend (Flask)
 
 O backend gerencia a API e o banco de dados.
 
@@ -98,7 +102,7 @@ O backend gerencia a API e o banco de dados.
     Caso surja uma janela flutuante clique em permitir <br>
     *O servidor iniciará em `http://0.0.0.0:5000`*
 
-### 3\. Configurando o Frontend (React)
+### 4\. Configurando o Frontend (React)
 
 O frontend gerencia a interface do usuário. Abra um **novo terminal** (mantenha o do backend rodando).
 
@@ -122,7 +126,7 @@ O frontend gerencia a interface do usuário. Abra um **novo terminal** (mantenha
 
     *O navegador abrirá automaticamente a aplicação em `http://localhost:3000`.*
 
-### 4\. Criação do banco de dados
+### 5\. Criação do banco de dados
 
 1. No pgAdmin ou outra plataforma que deseje **crie um banco de dados com o nome barbearia**:
 
