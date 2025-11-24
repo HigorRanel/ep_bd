@@ -45,7 +45,6 @@ Crie um arquivo chamado `.env` dentro da pasta `backend/app/` (caminho: `ep_bd/b
 
 ```ini
 # Configurações do Flask e Banco de Dados
-SECRET_KEY=sua_chave_secreta_aqui_desenvolvimento
 DB_HOST=localhost
 DB_NAME=barbearia
 DB_USER=postgres
@@ -64,10 +63,10 @@ MAIL_DEFAULT_SENDER = 'epbd222@gmail.com'
 
 Crie um arquivo chamado `.env` dentro da pasta `frontend/` (caminho: `ep_bd/frontend/.env`) e adicione o seguinte conteúdo:
 
-    ```ini
+```ini
     # URL da API do Backend
     REACT_APP_API_URL=http://localhost:5000/api
-    ```
+```
 
 ### 3\. Configurando o Backend (Flask)
 
