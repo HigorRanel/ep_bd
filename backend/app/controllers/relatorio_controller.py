@@ -305,7 +305,7 @@ class RelatorioController:
                 return jsonify({'error': 'data_inicio e data_fim são obrigatórios'}), 400
 
             with Database.get_cursor() as cursor:
-                
+
                 query_mais_frequentes = """
                     SELECT 
                         c.cpf,
@@ -314,8 +314,7 @@ class RelatorioController:
                         COUNT(DISTINCT a.id_agendamento) as total_visitas,
                         COALESCE(SUM(s.preco), 0) as valor_gasto,
                         COALESCE(AVG(s.preco), 0) as ticket_medio,
-                        MAX(a.data_hora_agendamento) as ultima_visita,
-                        STRING_AGG(DISTINCT s.nome, ', ') as servicos_preferidos
+                        MAX(a.data_hora_agendamento) as ultima_visita
                     FROM Cliente c
                     JOIN Pessoa p ON c.cpf = p.cpf
                     JOIN Agendamento a ON c.cpf = a.client_id
@@ -329,6 +328,21 @@ class RelatorioController:
                 """
                 cursor.execute(query_mais_frequentes, [data_inicio, data_fim, limite])
                 mais_frequentes = cursor.fetchall()
+
+                # Buscar serviços para cada cliente
+                for cliente in mais_frequentes:
+                    cursor.execute("""
+                        SELECT DISTINCT s.nome
+                        FROM Agendamento a
+                        JOIN Contem ct ON a.id_agendamento = ct.id_agen
+                        JOIN Servico s ON ct.id_serv = s.id_servico
+                        WHERE a.client_id = %s
+                        AND a.status = 'concluido'
+                        AND DATE(a.data_hora_agendamento) BETWEEN %s AND %s
+                    """, [cliente['cpf'], data_inicio, data_fim])
+
+                    servicos = cursor.fetchall()
+                    cliente['servicos_preferidos'] = ', '.join([s['nome'] for s in servicos])
 
                 
                 query_inativos = """
