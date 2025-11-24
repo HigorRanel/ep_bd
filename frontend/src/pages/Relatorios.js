@@ -10,8 +10,7 @@ const Relatorios = () => {
   const [filtros, setFiltros] = useState({
     data_inicio: '',
     data_fim: '',
-    cpf_barbeiro: '',
-    limite: 10
+    cpf_barbeiro: ''
   });
 
   const [relatorioAtivo, setRelatorioAtivo] = useState(null);
@@ -53,6 +52,7 @@ const Relatorios = () => {
 
     try {
       let endpoint = '';
+      
       let params = {
         data_inicio: filtros.data_inicio,
         data_fim: filtros.data_fim
@@ -65,10 +65,8 @@ const Relatorios = () => {
         }
       } else if (tipo === 'produtos') {
         endpoint = '/relatorios/produtos';
-        params.limite = filtros.limite;
       } else if (tipo === 'clientes') {
         endpoint = '/relatorios/clientes';
-        params.limite = filtros.limite;
       }
 
       const response = await api.get(endpoint, { params });
@@ -124,20 +122,6 @@ const Relatorios = () => {
                 onChange={handleChange}
                 required
               />
-            </div>
-
-            <div className="form-group">
-              <label>Limite de Resultados</label>
-              <select
-                name="limite"
-                value={filtros.limite}
-                onChange={handleChange}
-              >
-                <option value="5">5 registros</option>
-                <option value="10">10 registros</option>
-                <option value="20">20 registros</option>
-                <option value="50">50 registros</option>
-              </select>
             </div>
           </div>
 
@@ -220,7 +204,6 @@ const Relatorios = () => {
     </div>
   );
 };
-
 
 const RelatorioFinanceiro = ({ dados }) => {
   const resumo = dados.resumo_financeiro;
@@ -375,7 +358,6 @@ const RelatorioFinanceiro = ({ dados }) => {
   );
 };
 
-
 const RelatorioProdutos = ({ dados }) => {
   return (
     <>
@@ -499,7 +481,6 @@ const RelatorioProdutos = ({ dados }) => {
     </>
   );
 };
-
 
 const RelatorioClientes = ({ dados }) => {
   return (

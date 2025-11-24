@@ -231,7 +231,7 @@ class RelatorioController:
                     ORDER BY quantidade_vendida ASC
                     LIMIT %s
                 """
-                cursor.execute(query_menos_vendidos, [data_inicio, data_fim, limite])
+                cursor.execute(query_menos_vendidos, [data_inicio, data_fim, 3])
                 menos_vendidos = cursor.fetchall()
 
                 
