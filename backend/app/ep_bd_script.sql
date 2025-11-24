@@ -128,8 +128,7 @@ CREATE TABLE Possui (
     desconto DECIMAL(4,2) NOT NULL DEFAULT 00.00,
     PRIMARY KEY (id_serv, id_plano)
 );
-
-// senha: 12346 (sem hash, pois se não o login não iria funcionar)
+-- senha: 12346 (sem hash, pois se não o login não iria funcionar)
 INSERT INTO Pessoa (cpf, nome_completo, data_nascimento, telefone, endereco, email, senha) VALUES
 ('00000000001', 'Artur Mendes', '1985-03-15', '(11) 98888-0001', 'Rua dos Barbeiros, 10', 'artur.mendes@email.com', '$2b$12$/34nebATvKrtzwQqA4TdMe4u5LfjYxNnAaVfnig4xSXvDsaHOuKb6'),
 ('00000000002', 'Bruno Guedes', '1990-07-20', '(11) 98888-0002', 'Avenida Principal, 20', 'bruno.guedes@email.com', '$2b$12$/34nebATvKrtzwQqA4TdMe4u5LfjYxNnAaVfnig4xSXvDsaHOuKb6'),
