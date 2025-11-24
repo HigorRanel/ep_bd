@@ -7,7 +7,6 @@ import '../styles/relatorios.css';
 const Relatorios = () => {
   const { isBarbeiroChefe } = useAuth();
 
-  // 1. Removido o campo 'limite' do estado
   const [filtros, setFiltros] = useState({
     data_inicio: '',
     data_fim: '',
@@ -54,7 +53,6 @@ const Relatorios = () => {
     try {
       let endpoint = '';
       
-      // 2. Removida a lógica de passar 'limite' nos params
       let params = {
         data_inicio: filtros.data_inicio,
         data_fim: filtros.data_fim
@@ -67,10 +65,8 @@ const Relatorios = () => {
         }
       } else if (tipo === 'produtos') {
         endpoint = '/relatorios/produtos';
-        // params.limite removido
       } else if (tipo === 'clientes') {
         endpoint = '/relatorios/clientes';
-        // params.limite removido
       }
 
       const response = await api.get(endpoint, { params });
@@ -127,8 +123,6 @@ const Relatorios = () => {
                 required
               />
             </div>
-
-            {/* 3. O Input Select de Limite foi removido daqui */}
           </div>
 
           <div className="periodos-rapidos">
@@ -210,8 +204,6 @@ const Relatorios = () => {
     </div>
   );
 };
-
-// --- SUBCOMPONENTES MANTIDOS IGUAIS ---
 
 const RelatorioFinanceiro = ({ dados }) => {
   const resumo = dados.resumo_financeiro;
