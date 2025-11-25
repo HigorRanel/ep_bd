@@ -67,7 +67,7 @@ p { margin-bottom: 1rem; }
 }
 
 .btn-primary {
-  background-color: var(--accent);
+  background-color: var(--dark);
   color: var(--white);
 }
 
@@ -128,6 +128,10 @@ p { margin-bottom: 1rem; }
   padding: 20px;
   box-shadow: var(--shadow);
   transition: var(--transition);
+  display: flex;
+  flex-direction: column; /* Organiza imagem, corpo e footer um embaixo do outro */
+  height: 100%;
+
 }
 
 .card:hover {
@@ -146,6 +150,8 @@ p { margin-bottom: 1rem; }
 
 .card-body {
   margin-bottom: 15px;
+  flex-grow: 1; /* Ocupa todo o espaço sobrando, empurrando o footer para baixo */
+
 }
 
 .card-footer {
@@ -162,11 +168,11 @@ p { margin-bottom: 1rem; }
   border-radius: 4px;
   font-size: 12px;
   font-weight: 600;
-  text-transform: uppercase;
+  color: #ffffff;
 }
 
 .badge-pendente { background-color: #fff3cd; color: #856404; }
-.badge-confirmado { background-color: #d1ecf1; color: #0c5460; }
+.badge-confirmado { background-color: #d1ecf1; color: #ffffff; }
 .badge-concluido { background-color: #d4edda; color: #155724; }
 .badge-cancelado { background-color: #f8d7da; color: #721c24; }
 .badge-reservado { background-color: #cfe2ff; color: #084298; }
@@ -205,9 +211,24 @@ p { margin-bottom: 1rem; }
 }
 
 /* Grid Systems */
-.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.grid-2 { 
+  display: grid; 
+  grid-template-columns: repeat(2, 1fr); 
+  gap: 20px; 
+}
+
+.grid-3 {  
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  
+  gap: 20px;
+}
+
+.grid-4 { 
+  display: grid; 
+  grid-template-columns: repeat(4, 1fr); 
+  gap: 20px;
+ }
 
 /* Empty State */
 .empty-state {
