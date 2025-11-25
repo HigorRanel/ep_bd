@@ -110,7 +110,7 @@ const DashboardCliente = () => {
 
         <div className="dashboard-section">
           <div className="section-header">
-            <h2>Próximos Agendamentos</h2>
+            <h2 className="h2_titulo">Próximos Agendamentos</h2>
             <Link to="/cliente/agendamentos" className="btn btn-secondary btn-sm">
               Ver Todos
             </Link>
