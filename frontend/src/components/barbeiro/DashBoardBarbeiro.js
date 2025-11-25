@@ -334,7 +334,7 @@ const DashboardBarbeiro = () => {
         {isBarbeiroChefe() && produtosBaixoEstoque.length > 0 && (
           <div className="dashboard-section">
             <div className="section-header">
-              <h2>⚠️ Produtos com Estoque Baixo</h2>
+              <h2 className="h2_titulo">⚠️ Produtos com Estoque Baixo</h2>
               <Link to="/barbeiro/produtos/novo" className="btn btn-warning btn-sm">
                 Ver Todos
               </Link>
