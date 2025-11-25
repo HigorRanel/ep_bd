@@ -216,7 +216,7 @@ const MeusAgendamentos = () => {
   const getStatusInfo = useCallback((status) => {
     const statusMap = {
       pendente: { label: 'Pendente', color: '#f39c12', icon: '⏳' },
-      confirmado: { label: 'Confirmado', color: '#3498db', icon: '✓' },
+      confirmado: { label: 'Confirmado', color: '#426947', icon: '✓' },
       concluido: { label: 'Concluído', color: '#27ae60', icon: '✓✓' },
       cancelado: { label: 'Cancelado', color: '#e74c3c', icon: '✗' }
     };

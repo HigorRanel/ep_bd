@@ -74,7 +74,7 @@ const AgendaBarbeiro = () => {
   const getStatusInfo = (status) => {
     const statusMap = {
       pendente: { className: 'badge-pendente', color: '#f39c12', icon: '⏳' },
-      confirmado: { className: 'badge-confirmado', color: '#3498db', icon: '✓' },
+      confirmado: { className: 'badge-confirmado', color: '#426947', icon: '✓' },
       concluido: { className: 'badge-concluido', color: '#27ae60', icon: '✓✓' },
       cancelado: { className: 'badge-cancelado', color: '#e74c3c', icon: '✗' },
       falta: { className: 'badge-falta', color: '#e67e22', icon: '⚠️' }
