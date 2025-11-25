@@ -172,7 +172,7 @@ p { margin-bottom: 1rem; }
 }
 
 .badge-pendente { background-color: #fff3cd; color: #856404; }
-.badge-confirmado { background-color: #d1ecf1; color: #ffffff; }
+.badge-confirmado { background-color: #426947; color: #ffffff; }
 .badge-concluido { background-color: #d4edda; color: #155724; }
 .badge-cancelado { background-color: #f8d7da; color: #721c24; }
 .badge-reservado { background-color: #cfe2ff; color: #084298; }
