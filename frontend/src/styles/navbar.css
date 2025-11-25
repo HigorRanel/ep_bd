@@ -260,6 +260,7 @@
 
 /* --- Botão Sair --- */
 .btn-logout {
+  background-color: #e74c3c;
   color: var(--white);
   border: 1px solid rgba(231, 76, 60, 0.3);
   padding: 8px 18px;
@@ -270,8 +271,8 @@
 }
 
 .btn-logout:hover {
-  background-color: #e74c3c;
-  border-color: #e74c3c;
+  background-color: #6e261e;;
+  border-color: #ffffff;
   transform: translateY(-1px);
 }
 
