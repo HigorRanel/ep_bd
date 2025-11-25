@@ -377,7 +377,7 @@ const ListarProdutos = () => {
                   <div className="card-header">
                     <h3>{produto.nome_produto}</h3>
                     {produto.quantidade_estoque <= produto.minimo_estoque && (
-                      <span className="badge" style={{ backgroundColor: '#f39c12' }}>
+                      <span className="badge" style={{ backgroundColor: '#f0901bff', textAlign: 'center' }}>
                         ⚠️ Baixo
                       </span>
                     )}
