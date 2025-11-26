@@ -142,7 +142,7 @@ class NotificacaoController:
                         </div>
 
                         <center>
-                            <a href="#" class="button">Agendar Agora</a>
+                            <a href="http://localhost:3000/cliente/agendar" class="button">Agendar Agora</a>
                         </center>
 
                         <p>Estamos ansiosos para te ver novamente!</p>
@@ -224,7 +224,7 @@ class NotificacaoController:
                         {conteudo_personalizado or '<p>Aproveite condições especiais em nossos serviços!</p>'}
 
                         <center>
-                            <a href="#" class="button">Ver Promoção</a>
+                            <a href="http://localhost:3000/cliente/agendar" class="button">Ver Promoção</a>
                         </center>
 
                         <p>Não perca essa oportunidade!</p>
@@ -264,7 +264,7 @@ class NotificacaoController:
                         {conteudo_personalizado or ''}
 
                         <center>
-                            <a href="#" class="button">Agendar Agora</a>
+                            <a href="http://localhost:3000/cliente/agendar" class="button">Agendar Agora</a>
                         </center>
 
                         <p>Te esperamos!</p>
