@@ -59,10 +59,6 @@ class ReservaController:
         try:
             dados = request.get_json()
             
-            # Debug
-            print(f"[ReservaController] Atualizando reserva ID: {id_reserva}")
-            print(f"[ReservaController] Dados recebidos: {dados}")
-
             if not dados:
                 return jsonify({'error': 'Nenhum dado fornecido no corpo da requisição'}), 400
 
