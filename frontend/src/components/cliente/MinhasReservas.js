@@ -31,6 +31,7 @@ const MinhasReservas = () => {
       setCategorias(categoriasRes.data);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
+      setMessage({ type: 'error', text: 'Erro ao carregar dados' });
     } finally {
       setLoading(false);
     }
@@ -47,29 +48,39 @@ const MinhasReservas = () => {
         type: 'error',
         text: error.response?.data?.error || 'Erro ao reservar produto'
       });
+      setTimeout(() => setMessage({ type: '', text: '' }), 4000);
     }
   };
 
-  const atualizarStatusReserva = async (idProduto, status) => {
+  const atualizarStatusReserva = async (idReserva, status) => {
     try {
-      await api.put(`/reservas/${idProduto}/status`, { status });
+      await api.put(`/reservas/${idReserva}/status`, { status });
       setMessage({ type: 'success', text: 'Status atualizado!' });
       carregarDados();
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
-      setMessage({ type: 'error', text: 'Erro ao atualizar status' });
+      setMessage({ 
+        type: 'error', 
+        text: error.response?.data?.error || 'Erro ao atualizar status' 
+      });
+      setTimeout(() => setMessage({ type: '', text: '' }), 4000);
     }
   };
 
-  const cancelarReserva = async (idProduto) => {
+  const cancelarReserva = async (idReserva) => {
     if (!window.confirm('Deseja cancelar esta reserva?')) return;
 
     try {
-      await api.delete(`/reservas/${idProduto}`);
+      await api.delete(`/reservas/${idReserva}`);
       setMessage({ type: 'success', text: 'Reserva cancelada!' });
       carregarDados();
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
-      setMessage({ type: 'error', text: 'Erro ao cancelar reserva' });
+      setMessage({ 
+        type: 'error', 
+        text: error.response?.data?.error || 'Erro ao cancelar reserva' 
+      });
+      setTimeout(() => setMessage({ type: '', text: '' }), 4000);
     }
   };
 
@@ -106,7 +117,10 @@ const MinhasReservas = () => {
     return (
       <div className="page-container">
         <Navbar />
-        <div className="loading-container">Carregando...</div>
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Carregando...</p>
+        </div>
       </div>
     );
   }
@@ -128,6 +142,7 @@ const MinhasReservas = () => {
           </div>
         )}
 
+        {/* Minhas Reservas Ativas */}
         <div className="dashboard-section">
           <h2>Minhas Reservas Ativas</h2>
           {reservas.length === 0 ? (
@@ -140,11 +155,13 @@ const MinhasReservas = () => {
           ) : (
             <div className="grid-2">
               {reservas.map((reserva) => (
-                <div key={reserva.id_prod} className="card">
+                <div key={reserva.id_reserva} className="card">
                   <div className="card-header">
                     <h3>{reserva.nome_produto}</h3>
                     <span className={`badge badge-${reserva.status}`}>
-                      {reserva.status === 'reservado' ? '🔖 Reservado' : '✅ Comprado'}
+                      {reserva.status === 'reservado' ? '🔖 Reservado' : 
+                       reserva.status === 'comprado' ? '✅ Comprado' : 
+                       reserva.status === 'retirado' ? '✅ Retirado' : reserva.status}
                     </span>
                   </div>
                   <div className="card-body">
@@ -167,7 +184,7 @@ const MinhasReservas = () => {
                       </div>
                     )}
 
-                    {reserva.status === 'comprado' && (
+                    {(reserva.status === 'comprado' || reserva.status === 'retirado') && (
                       <div style={{
                         marginTop: '15px',
                         padding: '10px',
@@ -175,7 +192,7 @@ const MinhasReservas = () => {
                         borderRadius: '4px',
                         fontSize: '13px'
                       }}>
-                        <strong>✅ Status: Comprado</strong>
+                        <strong>✅ Status: {reserva.status === 'comprado' ? 'Comprado' : 'Retirado'}</strong>
                         <p style={{ margin: '5px 0 0 0' }}>
                           Produto já foi retirado.
                         </p>
@@ -186,13 +203,13 @@ const MinhasReservas = () => {
                     {reserva.status === 'reservado' && (
                       <>
                         <button
-                          onClick={() => atualizarStatusReserva(reserva.id_prod, 'comprado')}
+                          onClick={() => atualizarStatusReserva(reserva.id_reserva, 'comprado')}
                           className="btn btn-success btn-sm"
                         >
                           Marcar como Retirado
                         </button>
                         <button
-                          onClick={() => cancelarReserva(reserva.id_prod)}
+                          onClick={() => cancelarReserva(reserva.id_reserva)}
                           className="btn btn-danger btn-sm"
                         >
                           Cancelar Reserva
@@ -200,7 +217,7 @@ const MinhasReservas = () => {
                       </>
                     )}
 
-                    {reserva.status === 'comprado' && (
+                    {(reserva.status === 'comprado' || reserva.status === 'retirado') && (
                       <span style={{ color: '#27ae60', fontSize: '13px' }}>
                         ✓ Produto retirado com sucesso
                       </span>
@@ -212,6 +229,7 @@ const MinhasReservas = () => {
           )}
         </div>
 
+        {/* Produtos Disponíveis */}
         <div className="dashboard-section">
           <h2>Produtos Disponíveis para Reserva</h2>
 
@@ -231,13 +249,6 @@ const MinhasReservas = () => {
                   placeholder="Digite o nome do produto..."
                   value={filtroNome}
                   onChange={(e) => setFiltroNome(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '6px',
-                    fontSize: '14px'
-                  }}
                 />
               </div>
 
@@ -246,13 +257,6 @@ const MinhasReservas = () => {
                 <select
                   value={filtroCategoria}
                   onChange={(e) => setFiltroCategoria(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '6px',
-                    fontSize: '14px'
-                  }}
                 >
                   <option value="todas">Todas as categorias</option>
                   {categorias.map(cat => (
@@ -372,6 +376,7 @@ const MinhasReservas = () => {
           )}
         </div>
 
+        {/* Informações */}
         <div className="card" style={{ marginTop: '40px', backgroundColor: '#f8f9fa' }}>
           <h3>ℹ️ Como Funciona</h3>
           <ul style={{ paddingLeft: '20px', marginTop: '15px', marginBottom: 0 }}>

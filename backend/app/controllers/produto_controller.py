@@ -136,21 +136,53 @@ class ProdutoController:
 
     @staticmethod
     def criar_reserva(cpf_usuario):
+        """Cria uma reserva de produto para o cliente"""
         try:
             dados = request.get_json()
 
             if 'id_produto' not in dados:
                 return jsonify({'error': 'Campo id_produto é obrigatório'}), 400
 
-            Produto.criar_reserva(cpf_usuario, dados['id_produto'])
-            return jsonify({'message': 'Reserva criada com sucesso'}), 201
+            id_produto = dados['id_produto']
+
+            # Verificar se já existe reserva ativa
+            from backend.app.models.reserva import Reserva
+            reserva_existente = Reserva.verificar_reserva_ativa(cpf_usuario, id_produto)
+            
+            if reserva_existente:
+                return jsonify({
+                    'error': 'Você já possui uma reserva ativa para este produto',
+                    'id_reserva': reserva_existente['id_reserva'],
+                    'status': reserva_existente['status']
+                }), 400
+
+            # Verificar disponibilidade do produto
+            from backend.app.models.produto import Produto
+            produto = Produto.buscar_por_id(id_produto)
+            
+            if not produto:
+                return jsonify({'error': 'Produto não encontrado'}), 404
+                
+            if produto['quantidade_estoque'] <= 0:
+                return jsonify({'error': 'Produto sem estoque disponível'}), 400
+
+            # Criar reserva
+            resultado = Reserva.criar(cpf_usuario, id_produto, 'reservado')
+            
+            return jsonify({
+                'message': 'Reserva criada com sucesso',
+                'id_reserva': resultado['id_reserva']
+            }), 201
+
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
     @staticmethod
     def minhas_reservas(cpf_usuario):
+        """Lista reservas do cliente autenticado"""
         try:
-            reservas = Produto.listar_reservas_cliente(cpf_usuario)
+            from backend.app.models.reserva import Reserva
+            reservas = Reserva.listar_por_cliente(cpf_usuario)
             return jsonify(reservas), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
@@ -220,5 +252,59 @@ class ProdutoController:
 
             Produto.deletar(id_produto)
             return jsonify({'message': 'Produto deletado com sucesso'}), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        
+    @staticmethod
+    def atualizar_status_reserva_cliente(id_reserva, cpf_usuario):
+        """Cliente atualiza status de sua própria reserva"""
+        try:
+            dados = request.get_json()
+
+            if 'status' not in dados:
+                return jsonify({'error': 'Campo status é obrigatório'}), 400
+
+            from backend.app.models.reserva import Reserva
+            
+            # Verificar se a reserva pertence ao cliente
+            reserva = Reserva.buscar_por_id(id_reserva)
+            
+            if not reserva:
+                return jsonify({'error': 'Reserva não encontrada'}), 404
+                
+            if reserva['id_cliente'] != cpf_usuario:
+                return jsonify({'error': 'Você não tem permissão para alterar esta reserva'}), 403
+
+            # Cliente só pode marcar como comprado ou cancelar
+            status_permitidos = ['comprado', 'cancelado']
+            if dados['status'] not in status_permitidos:
+                return jsonify({
+                    'error': f'Status inválido. Você pode apenas: {", ".join(status_permitidos)}'
+                }), 400
+
+            resultado = Reserva.atualizar_status(id_reserva, dados['status'])
+            return jsonify(resultado), 200
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @staticmethod
+    def cancelar_reserva_cliente(id_reserva, cpf_usuario):
+        """Cliente cancela sua própria reserva"""
+        try:
+            from backend.app.models.reserva import Reserva
+            
+            # Verificar se a reserva pertence ao cliente
+            reserva = Reserva.buscar_por_id(id_reserva)
+            
+            if not reserva:
+                return jsonify({'error': 'Reserva não encontrada'}), 404
+                
+            if reserva['id_cliente'] != cpf_usuario:
+                return jsonify({'error': 'Você não tem permissão para cancelar esta reserva'}), 403
+
+            Reserva.cancelar(id_reserva)
+            return jsonify({'message': 'Reserva cancelada com sucesso'}), 200
+
         except Exception as e:
             return jsonify({'error': str(e)}), 500

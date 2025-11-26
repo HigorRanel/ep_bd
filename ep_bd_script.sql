@@ -114,9 +114,10 @@ CREATE TABLE Reserva (
         ON DELETE CASCADE ON UPDATE CASCADE,
     id_prod INT REFERENCES Produto(id_produto)
         ON DELETE CASCADE ON UPDATE CASCADE,
+    id_reserva SERIAL NOT NULL,
     data_reserva DATE NOT NULL,
     status VARCHAR(100) NOT NULL,
-    PRIMARY KEY (id_cliente, id_prod)
+    PRIMARY KEY (id_reserva)
 );
 
 CREATE TABLE Possui (

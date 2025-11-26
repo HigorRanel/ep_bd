@@ -37,7 +37,6 @@ const ConsultarReservas = () => {
 
   const carregarDados = async () => {
     try {
-
       const response = await api.get('/reservas/todas');
       const todasReservas = response.data;
 
@@ -117,34 +116,35 @@ const ConsultarReservas = () => {
     if (!modalEditar || !novoStatus) return;
 
     try {
-      await api.put('/reservas/atualizar-status', {
-        id_cliente: modalEditar.id_cliente,
-        id_produto: modalEditar.id_prod,
+      console.log('Atualizando reserva:', modalEditar.id_reserva, 'para status:', novoStatus);
+      
+      const response = await api.put(`/reservas/${modalEditar.id_reserva}/atualizar-status`, {
         status: novoStatus,
       });
 
+      console.log('Resposta da API:', response.data);
+      
       setMessage({ type: 'success', text: 'Status da reserva alterado com sucesso!' });
       setModalEditar(null);
       carregarDados();
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
+      console.error('Erro ao alterar status:', error);
+      console.error('Detalhes do erro:', error.response?.data);
+      
       setMessage({
         type: 'error',
         text: error.response?.data?.error || 'Erro ao alterar status'
       });
+      setTimeout(() => setMessage({ type: '', text: '' }), 4000);
     }
   };
 
-  const cancelarReserva = async (idCliente, idProduto, nomeCliente) => {
+  const cancelarReserva = async (idReserva, nomeCliente) => {
     if (!window.confirm(`Deseja cancelar a reserva de ${nomeCliente}?`)) return;
 
     try {
-      await api.delete('/reservas/cancelar', {
-        data: {
-          id_cliente: idCliente,
-          id_produto: idProduto,
-        }
-      });
+      await api.delete(`/reservas/${idReserva}/cancelar`);
 
       setMessage({ type: 'success', text: 'Reserva cancelada com sucesso!' });
       carregarDados();
@@ -154,6 +154,7 @@ const ConsultarReservas = () => {
         type: 'error',
         text: error.response?.data?.error || 'Erro ao cancelar reserva'
       });
+      setTimeout(() => setMessage({ type: '', text: '' }), 4000);
     }
   };
 
@@ -323,7 +324,7 @@ const ConsultarReservas = () => {
               const statusInfo = getStatusInfo(reserva.status);
 
               return (
-                <div key={`${reserva.id_cliente}-${reserva.id_prod}`} className="card">
+                <div key={reserva.id_reserva} className="card">
                   <div className="card-header">
                     <div>
                       <h3>{reserva.cliente_nome}</h3>
@@ -344,6 +345,9 @@ const ConsultarReservas = () => {
                     <p><strong>Categoria:</strong> {reserva.categoria}</p>
                     <p><strong>Preço:</strong> R$ {parseFloat(reserva.preco_venda).toFixed(2)}</p>
                     <p><strong>Estoque disponível:</strong> {reserva.quantidade_estoque}</p>
+                    <p style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
+                      <strong>ID da Reserva:</strong> #{reserva.id_reserva}
+                    </p>
 
                     <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #ecf0f1' }}>
                       <p style={{ fontSize: '13px', marginBottom: '5px' }}>
@@ -372,7 +376,7 @@ const ConsultarReservas = () => {
                           Alterar Status
                         </button>
                         <button
-                          onClick={() => cancelarReserva(reserva.id_cliente, reserva.id_prod, reserva.cliente_nome)}
+                          onClick={() => cancelarReserva(reserva.id_reserva, reserva.cliente_nome)}
                           className="btn btn-danger btn-sm"
                         >
                           Cancelar
@@ -402,6 +406,7 @@ const ConsultarReservas = () => {
               <h3>Gerenciar Reserva</h3>
 
               <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                <p><strong>ID da Reserva:</strong> #{modalEditar.id_reserva}</p>
                 <p><strong>Cliente:</strong> {modalEditar.cliente_nome}</p>
                 <p><strong>Produto:</strong> {modalEditar.nome_produto}</p>
                 <p><strong>Data da Reserva:</strong> {formatarData(modalEditar.data_reserva)}</p>

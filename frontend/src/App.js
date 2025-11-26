@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import PrivateRoute from './components/common/PrivateRoute';
 
-// Páginas públicas
 import Home from './pages/Home';
 import Login from './pages/Login';
 import CadastroCliente from './pages/CadastroCliente';
@@ -11,17 +10,14 @@ import EsqueciSenha from './pages/EsqueciSenha';
 import RedefinirSenha from './pages/RedefinirSenha';
 import NotFound from './pages/NotFound';
 
-// Páginas comuns (qualquer usuário logado)
 import Perfil from './pages/Perfil';
 
-// Páginas do Cliente
 import DashboardCliente from './components/cliente/DashBoardCliente';
 import AgendarServico from './components/cliente/AgendarServico';
 import MeusAgendamentos from './components/cliente/MeusAgendamentos';
 import MinhasReservas from './components/cliente/MinhasReservas';
 import MeusPlanos from './components/cliente/MeusPlanos';
 
-// Páginas do Barbeiro
 import DashboardBarbeiro from './components/barbeiro/DashBoardBarbeiro';
 import AgendaBarbeiro from './components/barbeiro/AgendaBarbeiro';
 import CadastrarServico from './components/barbeiro/CadastrarServico';

@@ -1,4 +1,4 @@
-from flask import jsonify, request
+from flask import app, jsonify, request
 from backend.app.controllers.auth_controller import AuthController
 from backend.app.controllers.cliente_controller import ClienteController
 from backend.app.controllers.barbeiro_controller import BarbeiroController
@@ -196,14 +196,15 @@ def register_routes(app):
     @app.route('/api/produtos/reservar', methods=['POST'])
     @token_required
     def criar_reserva_produto():
+        """Cliente cria uma reserva de produto"""
         return ProdutoController.criar_reserva(request.user_cpf)
 
     @app.route('/api/produtos/minhas-reservas', methods=['GET'])
     @token_required
     def listar_minhas_reservas():
+        """Cliente lista suas reservas"""
         return ProdutoController.minhas_reservas(request.user_cpf)
-
-    
+        
     @app.route('/api/planos', methods=['POST'])
     @token_required
     @barbeiro_chefe_required
@@ -393,64 +394,31 @@ def register_routes(app):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
-    @app.route('/api/reservas/<int:id_produto>/status', methods=['PUT'])
+    @app.route('/api/reservas/<int:id_reserva>/status', methods=['PUT'])
     @token_required
-    def atualizar_status_reserva(id_produto):
-        try:
-            dados = request.get_json()
+    def atualizar_status_minha_reserva(id_reserva):
+        """Cliente atualiza status de sua reserva"""
+        return ProdutoController.atualizar_status_reserva_cliente(id_reserva, request.user_cpf)
 
-            if 'status' not in dados:
-                return jsonify({'error': 'Campo status é obrigatório'}), 400
-
-            status_validos = ['pendente', 'comprado', 'cancelado']
-            if dados['status'] not in status_validos:
-                return jsonify({'error': f'Status deve ser um de: {", ".join(status_validos)}'}), 400
-
-            from backend.app.models.produto import Produto
-            reserva = Produto.atualizar_status_reserva(
-                request.user_cpf,
-                id_produto,
-                dados['status']
-            )
-
-            if not reserva:
-                return jsonify({'error': 'Reserva não encontrada'}), 404
-
-            return jsonify(reserva), 200
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-
-    @app.route('/api/reservas/<int:id_produto>', methods=['DELETE'])
+    @app.route('/api/reservas/<int:id_reserva>', methods=['DELETE'])
     @token_required
-    def cancelar_reserva(id_produto):
-        try:
-            from backend.app.models.produto import Produto
-            Produto.cancelar_reserva(request.user_cpf, id_produto)
-            return jsonify({'message': 'Reserva cancelada com sucesso'}), 200
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
+    def cancelar_minha_reserva(id_reserva):
+        """Cliente cancela sua reserva"""
+        return ProdutoController.cancelar_reserva_cliente(id_reserva, request.user_cpf)
+    
+    @app.route('/api/reservas/<int:id_reserva>', methods=['GET'])
+    @token_required
+    @barbeiro_required
+    def buscar_reserva_por_id(id_reserva):
+        """Barbeiro busca reserva por ID"""
+        return ReservaController.buscar_por_id(id_reserva)
 
     @app.route('/api/reservas/produto/<int:id_produto>', methods=['GET'])
     @token_required
     @barbeiro_required
     def listar_reservas_produto(id_produto):
-
-        try:
-            from backend.app.models.produto import Produto
-            reservas = Produto.listar_reservas_por_produto(id_produto)
-            return jsonify(reservas), 200
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-
-    @app.route('/api/planos/<int:id_plano>/servicos', methods=['GET'])
-    @token_required
-    def buscar_servicos_plano(id_plano):
-        try:
-            from backend.app.models.plano_mensal import PlanoMensal
-            servicos = PlanoMensal.buscar_servicos_plano(id_plano)
-            return jsonify(servicos), 200
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
+        """Lista reservas de um produto"""
+        return ReservaController.listar_por_produto(id_produto)
 
     @app.route('/api/planos/<int:id_plano>/servicos', methods=['POST'])
     @token_required
@@ -520,38 +488,44 @@ def register_routes(app):
     @app.route('/api/reservas/todas', methods=['GET'])
     @token_required
     @barbeiro_required
-    def listar_todas_reservas_otimizado():
+    def listar_todas_reservas():
+        """Barbeiro lista todas as reservas"""
         return ReservaController.listar_todas()
 
     @app.route('/api/reservas/status/<status>', methods=['GET'])
     @token_required
     @barbeiro_required
-    def listar_reservas_por_status_v2(status):
+    def listar_reservas_por_status(status):
+        """Lista reservas por status"""
         return ReservaController.listar_por_status(status)
 
     @app.route('/api/reservas/periodo', methods=['GET'])
     @token_required
     @barbeiro_required
-    def listar_reservas_por_periodo_v2():
+    def listar_reservas_por_periodo():
+        """Lista reservas por período"""
         return ReservaController.listar_por_periodo()
 
     @app.route('/api/reservas/estatisticas', methods=['GET'])
     @token_required
     @barbeiro_required
-    def estatisticas_reservas_v2():
+    def estatisticas_reservas():
+        """Estatísticas de reservas"""
         return ReservaController.estatisticas()
 
-    @app.route('/api/reservas/atualizar-status', methods=['PUT'])
+    @app.route('/api/reservas/<int:id_reserva>/atualizar-status', methods=['PUT'])
     @token_required
     @barbeiro_required
-    def atualizar_status_reserva_v2():
-        return ReservaController.atualizar_status()
+    def atualizar_status_reserva_barbeiro(id_reserva):
+        """Barbeiro atualiza status de reserva"""
+        return ReservaController.atualizar_status(id_reserva)
 
-    @app.route('/api/reservas/cancelar', methods=['DELETE'])
+    @app.route('/api/reservas/<int:id_reserva>/cancelar', methods=['DELETE'])
     @token_required
     @barbeiro_required
-    def cancelar_reserva_v2():
-        return ReservaController.cancelar()
+    def cancelar_reserva_barbeiro(id_reserva):
+        """Barbeiro cancela reserva"""
+        return ReservaController.cancelar(id_reserva)
 
     @app.route('/api/produtos/paginado', methods=['GET'])
     @token_required
