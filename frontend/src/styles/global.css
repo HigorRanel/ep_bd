@@ -169,6 +169,7 @@ p { margin-bottom: 1rem; }
   font-size: 12px;
   font-weight: 600;
   color: #ffffff;
+  margin-left: 10px;
 }
 
 .badge-pendente { background-color: #fff3cd; color: #856404; }
