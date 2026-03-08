@@ -1,0 +1,156 @@
+<resources>
+    <string name="app_name">Barbearia</string>
+    
+    <!-- Login e Registro -->
+    <string name="login_title">Entrar</string>
+    <string name="register_title">Cadastrar</string>
+    <string name="email">E-mail</string>
+    <string name="password">Senha</string>
+    <string name="cpf">CPF</string>
+    <string name="full_name">Nome Completo</string>
+    <string name="phone">Telefone</string>
+    <string name="birth_date">Data de Nascimento</string>
+    <string name="address">Endereço</string>
+    <string name="confirm_password">Confirmar Senha</string>
+    <string name="login_button">Entrar</string>
+    <string name="register_button">Cadastrar</string>
+    <string name="dont_have_account">Não tem uma conta?</string>
+    <string name="register_here">Cadastre-se aqui</string>
+    <string name="already_have_account">Já tem uma conta?</string>
+    <string name="login_here">Entre aqui</string>
+    <string name="forgot_password">Esqueceu a senha?</string>
+    
+    <!-- Menu Principal -->
+    <string name="nav_home">Início</string>
+    <string name="nav_appointments">Agendamentos</string>
+    <string name="nav_plans">Planos</string>
+    <string name="nav_products">Produtos</string>
+    <string name="nav_profile">Perfil</string>
+    
+    <!-- Agendamentos -->
+    <string name="my_appointments">Meus Agendamentos</string>
+    <string name="new_appointment">Novo Agendamento</string>
+    <string name="appointment_details">Detalhes do Agendamento</string>
+    <string name="select_service">Selecione o Serviço</string>
+    <string name="select_barber">Selecione o Barbeiro</string>
+    <string name="select_date">Selecione a Data</string>
+    <string name="select_time">Selecione o Horário</string>
+    <string name="appointment_service">Serviço</string>
+    <string name="appointment_barber">Barbeiro</string>
+    <string name="appointment_date">Data</string>
+    <string name="appointment_time">Horário</string>
+    <string name="appointment_price">Preço</string>
+    <string name="appointment_duration">Duração</string>
+    <string name="appointment_status">Status</string>
+    <string name="schedule_appointment">Agendar</string>
+    <string name="cancel_appointment">Cancelar Agendamento</string>
+    <string name="evaluate_appointment">Avaliar Atendimento</string>
+    
+    <!-- Status de Agendamento -->
+    <string name="status_pending">Pendente</string>
+    <string name="status_confirmed">Confirmado</string>
+    <string name="status_completed">Concluído</string>
+    <string name="status_cancelled">Cancelado</string>
+    <string name="status_no_show">Falta</string>
+    
+    <!-- Avaliação -->
+    <string name="rating_title">Como foi o atendimento?</string>
+    <string name="rating_comment">Comentário (opcional)</string>
+    <string name="submit_rating">Enviar Avaliação</string>
+    <string name="rating_success">Avaliação enviada com sucesso!</string>
+    
+    <!-- Planos -->
+    <string name="my_plans">Meus Planos</string>
+    <string name="available_plans">Planos Disponíveis</string>
+    <string name="subscribe_plan">Assinar Plano</string>
+    <string name="cancel_subscription">Cancelar Assinatura</string>
+    <string name="plan_services">Serviços Inclusos</string>
+    <string name="plan_price">Valor Mensal</string>
+    <string name="plan_discount">Desconto</string>
+    <string name="plan_savings">Economia</string>
+    <string name="plan_validity">Validade</string>
+    <string name="plan_subscribe_button">Assinar</string>
+    
+    <!-- Produtos -->
+    <string name="my_reservations">Minhas Reservas</string>
+    <string name="available_products">Produtos Disponíveis</string>
+    <string name="reserve_product">Reservar Produto</string>
+    <string name="product_name">Produto</string>
+    <string name="product_category">Categoria</string>
+    <string name="product_price">Preço</string>
+    <string name="product_stock">Estoque</string>
+    <string name="product_description">Descrição</string>
+    <string name="reserve_button">Reservar</string>
+    <string name="mark_as_purchased">Marcar como Comprado</string>
+    <string name="cancel_reservation">Cancelar Reserva</string>
+    
+    <!-- Status de Reserva -->
+    <string name="reservation_status_reserved">Reservado</string>
+    <string name="reservation_status_purchased">Comprado</string>
+    <string name="reservation_status_cancelled">Cancelado</string>
+    
+    <!-- Perfil -->
+    <string name="profile">Perfil</string>
+    <string name="edit_profile">Editar Perfil</string>
+    <string name="change_password">Alterar Senha</string>
+    <string name="current_password">Senha Atual</string>
+    <string name="new_password">Nova Senha</string>
+    <string name="save_changes">Salvar Alterações</string>
+    <string name="logout">Sair</string>
+    <string name="language">Idioma</string>
+    <string name="portuguese">Português</string>
+    <string name="english">Inglês</string>
+    
+    <!-- Notificações -->
+    <string name="notification_appointment_title">Lembrete de Agendamento</string>
+    <string name="notification_appointment_message">Você tem %1$s agendado com %2$s em %3$s</string>
+    
+    <!-- Mensagens de Erro -->
+    <string name="error_network">Sem conexão com a internet</string>
+    <string name="error_generic">Ocorreu um erro. Tente novamente.</string>
+    <string name="error_login_failed">Email ou senha incorretos</string>
+    <string name="error_registration_failed">Erro ao cadastrar. Verifique os dados.</string>
+    <string name="error_field_required">Este campo é obrigatório</string>
+    <string name="error_invalid_email">E-mail inválido</string>
+    <string name="error_invalid_cpf">CPF inválido</string>
+    <string name="error_password_mismatch">As senhas não coincidem</string>
+    <string name="error_password_short">A senha deve ter pelo menos 6 caracteres</string>
+    <string name="error_no_appointments">Você não possui agendamentos</string>
+    <string name="error_no_plans">Você não possui planos ativos</string>
+    <string name="error_no_reservations">Você não possui reservas</string>
+    
+    <!-- Mensagens de Sucesso -->
+    <string name="success_login">Login realizado com sucesso!</string>
+    <string name="success_registration">Cadastro realizado com sucesso!</string>
+    <string name="success_appointment_created">Agendamento criado com sucesso!</string>
+    <string name="success_appointment_cancelled">Agendamento cancelado</string>
+    <string name="success_plan_subscribed">Plano assinado com sucesso!</string>
+    <string name="success_plan_cancelled">Assinatura cancelada</string>
+    <string name="success_reservation_created">Produto reservado com sucesso!</string>
+    <string name="success_reservation_cancelled">Reserva cancelada</string>
+    <string name="success_profile_updated">Perfil atualizado com sucesso!</string>
+    <string name="success_password_changed">Senha alterada com sucesso!</string>
+    
+    <!-- Diálogos -->
+    <string name="dialog_confirm_title">Confirmar</string>
+    <string name="dialog_confirm_cancel_appointment">Deseja realmente cancelar este agendamento?</string>
+    <string name="dialog_confirm_cancel_plan">Deseja realmente cancelar esta assinatura?</string>
+    <string name="dialog_confirm_cancel_reservation">Deseja realmente cancelar esta reserva?</string>
+    <string name="dialog_confirm_logout">Deseja realmente sair?</string>
+    <string name="dialog_yes">Sim</string>
+    <string name="dialog_no">Não</string>
+    <string name="dialog_ok">OK</string>
+    <string name="dialog_cancel">Cancelar</string>
+    
+    <!-- Outros -->
+    <string name="loading">Carregando…</string>
+    <string name="no_data">Nenhum dado disponível</string>
+    <string name="minutes_short">min</string>
+    <string name="discount_format">%d%% OFF</string>
+    
+    <!-- Validação -->
+    <string name="validation_age_minimum">É necessário ter pelo menos 14 anos</string>
+    
+    <!-- Fragmento de descrição de conteúdo -->
+    <string name="content_description_app_logo">Logo da Barbearia</string>
+</resources>

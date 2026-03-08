@@ -1,0 +1,156 @@
+<resources>
+    <string name="app_name">Barbershop</string>
+    
+    <!-- Login and Registration -->
+    <string name="login_title">Login</string>
+    <string name="register_title">Register</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="cpf">CPF</string>
+    <string name="full_name">Full Name</string>
+    <string name="phone">Phone</string>
+    <string name="birth_date">Birth Date</string>
+    <string name="address">Address</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="login_button">Login</string>
+    <string name="register_button">Register</string>
+    <string name="dont_have_account">Don\'t have an account?</string>
+    <string name="register_here">Register here</string>
+    <string name="already_have_account">Already have an account?</string>
+    <string name="login_here">Login here</string>
+    <string name="forgot_password">Forgot password?</string>
+    
+    <!-- Main Menu -->
+    <string name="nav_home">Home</string>
+    <string name="nav_appointments">Appointments</string>
+    <string name="nav_plans">Plans</string>
+    <string name="nav_products">Products</string>
+    <string name="nav_profile">Profile</string>
+    
+    <!-- Appointments -->
+    <string name="my_appointments">My Appointments</string>
+    <string name="new_appointment">New Appointment</string>
+    <string name="appointment_details">Appointment Details</string>
+    <string name="select_service">Select Service</string>
+    <string name="select_barber">Select Barber</string>
+    <string name="select_date">Select Date</string>
+    <string name="select_time">Select Time</string>
+    <string name="appointment_service">Service</string>
+    <string name="appointment_barber">Barber</string>
+    <string name="appointment_date">Date</string>
+    <string name="appointment_time">Time</string>
+    <string name="appointment_price">Price</string>
+    <string name="appointment_duration">Duration</string>
+    <string name="appointment_status">Status</string>
+    <string name="schedule_appointment">Schedule</string>
+    <string name="cancel_appointment">Cancel Appointment</string>
+    <string name="evaluate_appointment">Evaluate Service</string>
+    
+    <!-- Appointment Status -->
+    <string name="status_pending">Pending</string>
+    <string name="status_confirmed">Confirmed</string>
+    <string name="status_completed">Completed</string>
+    <string name="status_cancelled">Cancelled</string>
+    <string name="status_no_show">No Show</string>
+    
+    <!-- Rating -->
+    <string name="rating_title">How was the service?</string>
+    <string name="rating_comment">Comment (optional)</string>
+    <string name="submit_rating">Submit Rating</string>
+    <string name="rating_success">Rating submitted successfully!</string>
+    
+    <!-- Plans -->
+    <string name="my_plans">My Plans</string>
+    <string name="available_plans">Available Plans</string>
+    <string name="subscribe_plan">Subscribe to Plan</string>
+    <string name="cancel_subscription">Cancel Subscription</string>
+    <string name="plan_services">Included Services</string>
+    <string name="plan_price">Monthly Price</string>
+    <string name="plan_discount">Discount</string>
+    <string name="plan_savings">Savings</string>
+    <string name="plan_validity">Validity</string>
+    <string name="plan_subscribe_button">Subscribe</string>
+    
+    <!-- Products -->
+    <string name="my_reservations">My Reservations</string>
+    <string name="available_products">Available Products</string>
+    <string name="reserve_product">Reserve Product</string>
+    <string name="product_name">Product</string>
+    <string name="product_category">Category</string>
+    <string name="product_price">Price</string>
+    <string name="product_stock">Stock</string>
+    <string name="product_description">Description</string>
+    <string name="reserve_button">Reserve</string>
+    <string name="mark_as_purchased">Mark as Purchased</string>
+    <string name="cancel_reservation">Cancel Reservation</string>
+    
+    <!-- Reservation Status -->
+    <string name="reservation_status_reserved">Reserved</string>
+    <string name="reservation_status_purchased">Purchased</string>
+    <string name="reservation_status_cancelled">Cancelled</string>
+    
+    <!-- Profile -->
+    <string name="profile">Profile</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="change_password">Change Password</string>
+    <string name="current_password">Current Password</string>
+    <string name="new_password">New Password</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="logout">Logout</string>
+    <string name="language">Language</string>
+    <string name="portuguese">Portuguese</string>
+    <string name="english">English</string>
+    
+    <!-- Notifications -->
+    <string name="notification_appointment_title">Appointment Reminder</string>
+    <string name="notification_appointment_message">You have %1$s scheduled with %2$s at %3$s</string>
+    
+    <!-- Error Messages -->
+    <string name="error_network">No internet connection</string>
+    <string name="error_generic">An error occurred. Please try again.</string>
+    <string name="error_login_failed">Incorrect email or password</string>
+    <string name="error_registration_failed">Registration error. Please check your data.</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="error_invalid_email">Invalid email</string>
+    <string name="error_invalid_cpf">Invalid CPF</string>
+    <string name="error_password_mismatch">Passwords do not match</string>
+    <string name="error_password_short">Password must be at least 6 characters</string>
+    <string name="error_no_appointments">You have no appointments</string>
+    <string name="error_no_plans">You have no active plans</string>
+    <string name="error_no_reservations">You have no reservations</string>
+    
+    <!-- Success Messages -->
+    <string name="success_login">Login successful!</string>
+    <string name="success_registration">Registration successful!</string>
+    <string name="success_appointment_created">Appointment created successfully!</string>
+    <string name="success_appointment_cancelled">Appointment cancelled</string>
+    <string name="success_plan_subscribed">Plan subscribed successfully!</string>
+    <string name="success_plan_cancelled">Subscription cancelled</string>
+    <string name="success_reservation_created">Product reserved successfully!</string>
+    <string name="success_reservation_cancelled">Reservation cancelled</string>
+    <string name="success_profile_updated">Profile updated successfully!</string>
+    <string name="success_password_changed">Password changed successfully!</string>
+    
+    <!-- Dialogs -->
+    <string name="dialog_confirm_title">Confirm</string>
+    <string name="dialog_confirm_cancel_appointment">Do you really want to cancel this appointment?</string>
+    <string name="dialog_confirm_cancel_plan">Do you really want to cancel this subscription?</string>
+    <string name="dialog_confirm_cancel_reservation">Do you really want to cancel this reservation?</string>
+    <string name="dialog_confirm_logout">Do you really want to logout?</string>
+    <string name="dialog_yes">Yes</string>
+    <string name="dialog_no">No</string>
+    <string name="dialog_ok">OK</string>
+    <string name="dialog_cancel">Cancel</string>
+    
+    <!-- Other -->
+    <string name="loading">Loading…</string>
+    <string name="no_data">No data available</string>
+    <string name="minutes_short">min</string>
+    <string name="discount_format">%d%% OFF</string>
+    
+    <!-- Validation -->
+    <string name="validation_age_minimum">Must be at least 14 years old</string>
+    
+    <!-- Content description fragments -->
+    <string name="content_description_app_logo">Barbershop Logo</string>
+</resources>
