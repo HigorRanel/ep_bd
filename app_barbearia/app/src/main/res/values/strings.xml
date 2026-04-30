@@ -83,6 +83,7 @@
     <string name="reserve_button">Reservar</string>
     <string name="mark_as_purchased">Marcar como Comprado</string>
     <string name="cancel_reservation">Cancelar Reserva</string>
+    <string name="product_unavailable">Indisponível</string>
     
     <!-- Status de Reserva -->
     <string name="reservation_status_reserved">Reservado</string>

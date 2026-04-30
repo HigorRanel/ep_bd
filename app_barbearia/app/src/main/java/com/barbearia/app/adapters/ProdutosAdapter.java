@@ -29,7 +29,7 @@ import retrofit2.Response;
 
 /**
  * Adapter para lista de produtos.
- * Implementa reserva com diálogo de confirmação e atualização de estoque.
+ * Corrigido: botão habilitado com base em estoque > 0, independente do campo "status".
  */
 public class ProdutosAdapter extends RecyclerView.Adapter<ProdutosAdapter.ViewHolder> {
 
@@ -60,11 +60,38 @@ public class ProdutosAdapter extends RecyclerView.Adapter<ProdutosAdapter.ViewHo
         holder.txtEstoque.setText(context.getString(R.string.product_stock) +
                 ": " + produto.getQuantidadeEstoque());
 
-        boolean disponivel = produto.isDisponivel();
+        // FIX: considera disponível se estoque > 0, independente do campo status
+        // A API pode retornar status null, vazio, ou com valor diferente do esperado
+        boolean disponivel = isDisponivel(produto);
         holder.btnReservar.setEnabled(disponivel);
         holder.btnReservar.setAlpha(disponivel ? 1f : 0.5f);
+        holder.btnReservar.setText(disponivel
+                ? context.getString(R.string.reserve_button)
+                : context.getString(R.string.product_unavailable));
 
         holder.btnReservar.setOnClickListener(v -> showConfirmDialog(produto, position));
+    }
+
+    /**
+     * Verifica disponibilidade de forma robusta:
+     * - Aceita status "disponivel", "ativo", "active", null ou vazio (confia no estoque)
+     * - Bloqueia apenas quando status é explicitamente "indisponivel" / "inativo"
+     */
+    private boolean isDisponivel(Produto produto) {
+        if (produto.getQuantidadeEstoque() <= 0) return false;
+
+        String status = produto.getStatus();
+        if (status == null || status.isEmpty()) return true; // sem status → confia no estoque
+
+        switch (status.toLowerCase().trim()) {
+            case "indisponivel":
+            case "inativo":
+            case "inactive":
+            case "unavailable":
+                return false;
+            default:
+                return true; // "disponivel", "ativo", "active" ou qualquer outro valor
+        }
     }
 
     @Override
@@ -93,7 +120,6 @@ public class ProdutosAdapter extends RecyclerView.Adapter<ProdutosAdapter.ViewHo
             public void onResponse(Call<ApiResponse<Reserva>> call,
                                    Response<ApiResponse<Reserva>> response) {
                 if (response.isSuccessful()) {
-                    // Atualizar estoque localmente
                     produto.setQuantidadeEstoque(produto.getQuantidadeEstoque() - 1);
                     notifyItemChanged(position);
                     Toast.makeText(context,
@@ -103,6 +129,8 @@ public class ProdutosAdapter extends RecyclerView.Adapter<ProdutosAdapter.ViewHo
                     String msg = context.getString(R.string.error_generic);
                     if (response.code() == 400) {
                         msg = "Produto indisponível ou sem estoque";
+                    } else if (response.code() == 409) {
+                        msg = "Você já possui uma reserva deste produto";
                     }
                     Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
                 }

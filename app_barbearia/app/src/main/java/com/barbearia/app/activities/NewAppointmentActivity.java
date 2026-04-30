@@ -21,8 +21,10 @@ import com.barbearia.app.api.BarbeariaApi;
 import com.barbearia.app.models.Agendamento;
 import com.barbearia.app.models.Barbeiro;
 import com.barbearia.app.models.Servico;
+import com.barbearia.app.models.User;
 import com.barbearia.app.models.responses.ApiResponse;
 import com.barbearia.app.utils.NotificationHelper;
+import com.barbearia.app.utils.SessionManager;
 import com.barbearia.app.utils.Utils;
 
 import java.text.SimpleDateFormat;
@@ -39,12 +41,19 @@ import retrofit2.Response;
 
 /**
  * Activity para criar um novo agendamento.
- * Fluxo: Selecionar serviço → Selecionar barbeiro → Selecionar data → Selecionar horário → Confirmar
+ *
+ * Fluxo corrigido:
+ *  1. Selecionar barbeiro
+ *  2. Selecionar serviço (filtrado pelos serviços do barbeiro escolhido)
+ *  3. Selecionar data
+ *  4. Selecionar horário disponível
+ *  5. Confirmar → envia cpf_cliente junto com os demais dados
  */
 public class NewAppointmentActivity extends AppCompatActivity {
 
-    private Spinner spinnerServico;
+    // ── Views ──────────────────────────────────────────────────────────────
     private Spinner spinnerBarbeiro;
+    private Spinner spinnerServico;
     private Button btnSelectDate;
     private RecyclerView recyclerHorarios;
     private Button btnAgendar;
@@ -52,42 +61,68 @@ public class NewAppointmentActivity extends AppCompatActivity {
     private TextView txtSelectedDate;
     private TextView txtPrecoEstimado;
 
+    // ── API / Session ──────────────────────────────────────────────────────
     private BarbeariaApi api;
+    private SessionManager sessionManager;
 
-    private List<Servico> servicos = new ArrayList<>();
-    private List<Barbeiro> barbeiros = new ArrayList<>();
-    private List<String> horariosDisponiveis = new ArrayList<>();
+    // ── Dados carregados ───────────────────────────────────────────────────
+    /** Lista completa de barbeiros (carregada uma única vez) */
+    private final List<Barbeiro> todosBarbeiros = new ArrayList<>();
 
-    private Servico servicoSelecionado;
+    /** Todos os serviços da barbearia (carregados uma única vez) */
+    private final List<Servico> todosServicos = new ArrayList<>();
+
+    /** Serviços filtrados conforme o barbeiro selecionado */
+    private final List<Servico> servicosFiltrados = new ArrayList<>();
+
+    /** Horários disponíveis para a combinação barbeiro + serviço + data */
+    private final List<String> horariosDisponiveis = new ArrayList<>();
+
+    // ── Seleções do usuário ────────────────────────────────────────────────
     private Barbeiro barbeiroSelecionado;
-    private String dataSelecionada; // yyyy-MM-dd
-    private String horarioSelecionado; // HH:mm
+    private Servico  servicoSelecionado;
+    private String   dataSelecionada;   // yyyy-MM-dd
+    private String   horarioSelecionado; // HH:mm
 
+    // ── Flags de carregamento ──────────────────────────────────────────────
+    private boolean barbeirosCarregados = false;
+    private boolean servicosCarregados  = false;
+
+    // ══════════════════════════════════════════════════════════════════════
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_appointment);
 
-        api = ApiClient.getApiService(this);
+        api            = ApiClient.getApiService(this);
+        sessionManager = new SessionManager(this);
 
         initViews();
         setupListeners();
-        loadServicos();
+
+        // Carrega barbeiros e todos os serviços em paralelo
         loadBarbeiros();
+        loadTodosServicos();
     }
 
+    // ── Inicialização ──────────────────────────────────────────────────────
+
     private void initViews() {
-        spinnerServico = findViewById(R.id.spinner_servico);
-        spinnerBarbeiro = findViewById(R.id.spinner_barbeiro);
-        btnSelectDate = findViewById(R.id.btn_select_date);
+        spinnerBarbeiro  = findViewById(R.id.spinner_barbeiro);
+        spinnerServico   = findViewById(R.id.spinner_servico);
+        btnSelectDate    = findViewById(R.id.btn_select_date);
         recyclerHorarios = findViewById(R.id.recycler_horarios);
-        btnAgendar = findViewById(R.id.btn_agendar);
-        progressBar = findViewById(R.id.progress_bar);
-        txtSelectedDate = findViewById(R.id.txt_selected_date);
+        btnAgendar       = findViewById(R.id.btn_agendar);
+        progressBar      = findViewById(R.id.progress_bar);
+        txtSelectedDate  = findViewById(R.id.txt_selected_date);
         txtPrecoEstimado = findViewById(R.id.txt_preco_estimado);
 
         progressBar.setVisibility(View.GONE);
         btnAgendar.setEnabled(false);
+
+        // Desabilita serviço e data enquanto barbeiro não for escolhido
+        spinnerServico.setEnabled(false);
+        btnSelectDate.setEnabled(false);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle(getString(R.string.new_appointment));
@@ -96,19 +131,23 @@ public class NewAppointmentActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
-        spinnerServico.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
+        // 1. Barbeiro selecionado → filtra serviços
+        spinnerBarbeiro.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position > 0 && position - 1 < servicos.size()) {
-                    servicoSelecionado = servicos.get(position - 1);
-                    txtPrecoEstimado.setText(servicoSelecionado.getPrecoFormatado() +
-                            " · " + servicoSelecionado.getDuracaoFormatada());
-                    resetHorarios();
+                if (position > 0 && position - 1 < todosBarbeiros.size()) {
+                    barbeiroSelecionado = todosBarbeiros.get(position - 1);
+                    filtrarServicosDoBarbeiro();
+                    spinnerServico.setEnabled(true);
                 } else {
-                    servicoSelecionado = null;
-                    txtPrecoEstimado.setText("");
-                    resetHorarios();
+                    barbeiroSelecionado = null;
+                    servicoSelecionado  = null;
+                    spinnerServico.setEnabled(false);
+                    btnSelectDate.setEnabled(false);
+                    limparServicosSpinner();
                 }
+                resetHorarios();
                 checkPodeAgendar();
             }
 
@@ -116,13 +155,19 @@ public class NewAppointmentActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {}
         });
 
-        spinnerBarbeiro.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        // 2. Serviço selecionado → habilita escolha de data
+        spinnerServico.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position > 0 && position - 1 < barbeiros.size()) {
-                    barbeiroSelecionado = barbeiros.get(position - 1);
+                if (position > 0 && position - 1 < servicosFiltrados.size()) {
+                    servicoSelecionado = servicosFiltrados.get(position - 1);
+                    txtPrecoEstimado.setText(servicoSelecionado.getPrecoFormatado()
+                            + " · " + servicoSelecionado.getDuracaoFormatada());
+                    btnSelectDate.setEnabled(true);
                 } else {
-                    barbeiroSelecionado = null;
+                    servicoSelecionado = null;
+                    txtPrecoEstimado.setText("");
+                    btnSelectDate.setEnabled(false);
                 }
                 resetHorarios();
                 checkPodeAgendar();
@@ -133,69 +178,36 @@ public class NewAppointmentActivity extends AppCompatActivity {
         });
 
         btnSelectDate.setOnClickListener(v -> mostrarDatePicker());
-
         btnAgendar.setOnClickListener(v -> criarAgendamento());
     }
 
-    private void mostrarDatePicker() {
-        Calendar calendar = Calendar.getInstance();
+    // ── Carregamento de dados ──────────────────────────────────────────────
 
-        DatePickerDialog dialog = new DatePickerDialog(
-                this,
-                (view, year, month, dayOfMonth) -> {
-                    Calendar selected = Calendar.getInstance();
-                    selected.set(year, month, dayOfMonth);
-
-                    // Não permitir datas no passado
-                    Calendar hoje = Calendar.getInstance();
-                    hoje.set(Calendar.HOUR_OF_DAY, 0);
-                    hoje.set(Calendar.MINUTE, 0);
-                    hoje.set(Calendar.SECOND, 0);
-
-                    if (selected.before(hoje)) {
-                        Toast.makeText(this, "Selecione uma data futura", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    dataSelecionada = String.format(Locale.getDefault(), "%04d-%02d-%02d",
-                            year, month + 1, dayOfMonth);
-                    String dataFormatada = String.format(Locale.getDefault(), "%02d/%02d/%04d",
-                            dayOfMonth, month + 1, year);
-                    txtSelectedDate.setText(dataFormatada);
-                    btnSelectDate.setText(dataFormatada);
-
-                    loadHorariosDisponiveis();
-                },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-        );
-
-        // Não permitir datas passadas
-        dialog.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
-        dialog.show();
-    }
-
-    private void loadServicos() {
+    private void loadBarbeiros() {
         setLoading(true);
-        Call<List<Servico>> call = api.getServicos();
-        call.enqueue(new Callback<List<Servico>>() {
+        Call<List<Barbeiro>> call = api.getBarbeiros();
+        call.enqueue(new Callback<List<Barbeiro>>() {
             @Override
-            public void onResponse(Call<List<Servico>> call, Response<List<Servico>> response) {
+            public void onResponse(Call<List<Barbeiro>> call, Response<List<Barbeiro>> response) {
                 runOnUiThread(() -> {
-                    setLoading(false);
+                    barbeirosCarregados = true;
                     if (response.isSuccessful() && response.body() != null) {
-                        servicos.clear();
-                        servicos.addAll(response.body());
-                        popularSpinnerServicos();
+                        todosBarbeiros.clear();
+                        todosBarbeiros.addAll(response.body());
+                        popularSpinnerBarbeiros();
+                    } else {
+                        Toast.makeText(NewAppointmentActivity.this,
+                                getString(R.string.error_generic), Toast.LENGTH_SHORT).show();
                     }
+                    atualizarLoading();
                 });
             }
 
             @Override
-            public void onFailure(Call<List<Servico>> call, Throwable t) {
+            public void onFailure(Call<List<Barbeiro>> call, Throwable t) {
                 runOnUiThread(() -> {
-                    setLoading(false);
+                    barbeirosCarregados = true;
+                    atualizarLoading();
                     Toast.makeText(NewAppointmentActivity.this,
                             getString(R.string.error_network), Toast.LENGTH_SHORT).show();
                 });
@@ -203,24 +215,31 @@ public class NewAppointmentActivity extends AppCompatActivity {
         });
     }
 
-    private void loadBarbeiros() {
-        Call<List<Barbeiro>> call = api.getBarbeiros();
-        call.enqueue(new Callback<List<Barbeiro>>() {
+    private void loadTodosServicos() {
+        Call<List<Servico>> call = api.getServicos();
+        call.enqueue(new Callback<List<Servico>>() {
             @Override
-            public void onResponse(Call<List<Barbeiro>> call, Response<List<Barbeiro>> response) {
+            public void onResponse(Call<List<Servico>> call, Response<List<Servico>> response) {
                 runOnUiThread(() -> {
+                    servicosCarregados = true;
                     if (response.isSuccessful() && response.body() != null) {
-                        barbeiros.clear();
-                        barbeiros.addAll(response.body());
-                        popularSpinnerBarbeiros();
+                        todosServicos.clear();
+                        todosServicos.addAll(response.body());
+                        // Se barbeiro já estiver selecionado quando os serviços chegarem, filtra
+                        if (barbeiroSelecionado != null) filtrarServicosDoBarbeiro();
                     }
+                    atualizarLoading();
                 });
             }
 
             @Override
-            public void onFailure(Call<List<Barbeiro>> call, Throwable t) {
-                runOnUiThread(() -> Toast.makeText(NewAppointmentActivity.this,
-                        getString(R.string.error_network), Toast.LENGTH_SHORT).show());
+            public void onFailure(Call<List<Servico>> call, Throwable t) {
+                runOnUiThread(() -> {
+                    servicosCarregados = true;
+                    atualizarLoading();
+                    Toast.makeText(NewAppointmentActivity.this,
+                            getString(R.string.error_network), Toast.LENGTH_SHORT).show();
+                });
             }
         });
     }
@@ -249,7 +268,12 @@ public class NewAppointmentActivity extends AppCompatActivity {
                                 horariosDisponiveis.add(h.toString());
                             }
                         }
-                        popularRecyclerHorarios();
+                        if (horariosDisponiveis.isEmpty()) {
+                            Toast.makeText(NewAppointmentActivity.this,
+                                    "Nenhum horário disponível para esta data", Toast.LENGTH_SHORT).show();
+                        } else {
+                            popularRecyclerHorarios();
+                        }
                     } else {
                         Toast.makeText(NewAppointmentActivity.this,
                                 "Nenhum horário disponível para esta data", Toast.LENGTH_SHORT).show();
@@ -268,10 +292,67 @@ public class NewAppointmentActivity extends AppCompatActivity {
         });
     }
 
+    // ── Filtro de serviços por barbeiro ────────────────────────────────────
+
+    /**
+     * Filtra todosServicos mantendo apenas os que o barbeiro selecionado oferece.
+     * A API retorna em Servico.getBarbeiros() uma lista de CPFs ou nomes dos barbeiros.
+     * Se a lista de barbeiros do serviço estiver vazia/null, exibe o serviço para todos.
+     */
+    private void filtrarServicosDoBarbeiro() {
+        servicosFiltrados.clear();
+        servicoSelecionado = null;
+        txtPrecoEstimado.setText("");
+
+        if (barbeiroSelecionado == null) {
+            limparServicosSpinner();
+            return;
+        }
+
+        String cpfBarbeiro  = barbeiroSelecionado.getCpf();
+        String nomeBarbeiro = barbeiroSelecionado.getNomeCompleto();
+
+        for (Servico s : todosServicos) {
+            List<String> barbeirosDoServico = s.getBarbeiros();
+            if (barbeirosDoServico == null || barbeirosDoServico.isEmpty()) {
+                // Sem restrição de barbeiro → disponível para todos
+                servicosFiltrados.add(s);
+            } else {
+                // Verifica se o CPF ou nome do barbeiro está na lista
+                for (String b : barbeirosDoServico) {
+                    if (b != null && (b.equals(cpfBarbeiro) || b.equalsIgnoreCase(nomeBarbeiro))) {
+                        servicosFiltrados.add(s);
+                        break;
+                    }
+                }
+            }
+        }
+
+        popularSpinnerServicos();
+    }
+
+    // ── Populadores de UI ──────────────────────────────────────────────────
+
+    private void popularSpinnerBarbeiros() {
+        List<String> nomes = new ArrayList<>();
+        nomes.add(getString(R.string.select_barber));
+        for (Barbeiro b : todosBarbeiros) {
+            String label = b.getNomeCompleto();
+            if (b.getMediaAvaliacoes() != null && b.getMediaAvaliacoes() > 0) {
+                label += " ★" + b.getMediaFormatada();
+            }
+            nomes.add(label);
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, nomes);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerBarbeiro.setAdapter(adapter);
+    }
+
     private void popularSpinnerServicos() {
         List<String> nomes = new ArrayList<>();
         nomes.add(getString(R.string.select_service));
-        for (Servico s : servicos) {
+        for (Servico s : servicosFiltrados) {
             nomes.add(s.getNome() + " — " + s.getPrecoFormatado());
         }
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
@@ -280,16 +361,14 @@ public class NewAppointmentActivity extends AppCompatActivity {
         spinnerServico.setAdapter(adapter);
     }
 
-    private void popularSpinnerBarbeiros() {
-        List<String> nomes = new ArrayList<>();
-        nomes.add(getString(R.string.select_barber));
-        for (Barbeiro b : barbeiros) {
-            nomes.add(b.getNomeCompleto());
-        }
+    private void limparServicosSpinner() {
+        servicosFiltrados.clear();
+        List<String> placeholder = new ArrayList<>();
+        placeholder.add(getString(R.string.select_service));
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, nomes);
+                android.R.layout.simple_spinner_item, placeholder);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerBarbeiro.setAdapter(adapter);
+        spinnerServico.setAdapter(adapter);
     }
 
     private void popularRecyclerHorarios() {
@@ -301,30 +380,59 @@ public class NewAppointmentActivity extends AppCompatActivity {
         recyclerHorarios.setAdapter(adapter);
     }
 
-    private void resetHorarios() {
-        horariosDisponiveis.clear();
-        horarioSelecionado = null;
-        if (recyclerHorarios.getAdapter() != null) {
-            recyclerHorarios.setAdapter(null);
-        }
-        // Recarregar se tiver data selecionada
-        if (dataSelecionada != null && barbeiroSelecionado != null && servicoSelecionado != null) {
-            loadHorariosDisponiveis();
-        }
+    // ── Date picker ────────────────────────────────────────────────────────
+
+    private void mostrarDatePicker() {
+        Calendar calendar = Calendar.getInstance();
+
+        DatePickerDialog dialog = new DatePickerDialog(
+                this,
+                (view, year, month, dayOfMonth) -> {
+                    Calendar selected = Calendar.getInstance();
+                    selected.set(year, month, dayOfMonth);
+
+                    Calendar hoje = Calendar.getInstance();
+                    hoje.set(Calendar.HOUR_OF_DAY, 0);
+                    hoje.set(Calendar.MINUTE, 0);
+                    hoje.set(Calendar.SECOND, 0);
+                    hoje.set(Calendar.MILLISECOND, 0);
+
+                    if (selected.before(hoje)) {
+                        Toast.makeText(this, "Selecione uma data futura", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    dataSelecionada = String.format(Locale.getDefault(), "%04d-%02d-%02d",
+                            year, month + 1, dayOfMonth);
+                    String dataFormatada = String.format(Locale.getDefault(), "%02d/%02d/%04d",
+                            dayOfMonth, month + 1, year);
+                    txtSelectedDate.setText(dataFormatada);
+                    btnSelectDate.setText(dataFormatada);
+
+                    horarioSelecionado = null;
+                    loadHorariosDisponiveis();
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+        );
+
+        dialog.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
+        dialog.show();
     }
 
-    private void checkPodeAgendar() {
-        btnAgendar.setEnabled(
-                servicoSelecionado != null &&
-                        barbeiroSelecionado != null &&
-                        dataSelecionada != null &&
-                        horarioSelecionado != null
-        );
-    }
+    // ── Criação do agendamento ─────────────────────────────────────────────
 
     private void criarAgendamento() {
         if (!Utils.isNetworkAvailable(this)) {
             Toast.makeText(this, getString(R.string.error_network), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // FIX: obtém cpf_cliente da sessão e inclui na requisição
+        User usuarioLogado = sessionManager.getUser();
+        if (usuarioLogado == null || usuarioLogado.getCpf() == null) {
+            Toast.makeText(this, "Sessão inválida. Faça login novamente.", Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -334,6 +442,7 @@ public class NewAppointmentActivity extends AppCompatActivity {
         String dataHora = dataSelecionada + " " + horarioSelecionado + ":00";
 
         Map<String, Object> dados = new HashMap<>();
+        dados.put("cpf_cliente", usuarioLogado.getCpf());          // FIX: campo ausente adicionado
         dados.put("cpf_barbeiro", barbeiroSelecionado.getCpf());
         dados.put("id_servico", servicoSelecionado.getIdServico());
         dados.put("data_hora_agendamento", dataHora);
@@ -349,7 +458,6 @@ public class NewAppointmentActivity extends AppCompatActivity {
                             && response.body().isSuccessful()) {
                         Agendamento agendamento = response.body().getData();
                         if (agendamento != null) {
-                            // Agendar notificação
                             new NotificationHelper(NewAppointmentActivity.this)
                                     .scheduleAppointmentNotification(agendamento);
                         }
@@ -380,8 +488,36 @@ public class NewAppointmentActivity extends AppCompatActivity {
         });
     }
 
+    // ── Helpers ────────────────────────────────────────────────────────────
+
+    private void resetHorarios() {
+        horariosDisponiveis.clear();
+        horarioSelecionado = null;
+        recyclerHorarios.setAdapter(null);
+        dataSelecionada = null;
+        txtSelectedDate.setText("");
+        btnSelectDate.setText(getString(R.string.select_date));
+        checkPodeAgendar();
+    }
+
+    private void checkPodeAgendar() {
+        btnAgendar.setEnabled(
+                barbeiroSelecionado != null &&
+                        servicoSelecionado  != null &&
+                        dataSelecionada     != null &&
+                        horarioSelecionado  != null
+        );
+    }
+
     private void setLoading(boolean loading) {
         progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
+    }
+
+    /** Esconde o loading global apenas quando ambas as chamadas paralelas terminarem */
+    private void atualizarLoading() {
+        if (barbeirosCarregados && servicosCarregados) {
+            setLoading(false);
+        }
     }
 
     @Override
@@ -390,7 +526,7 @@ public class NewAppointmentActivity extends AppCompatActivity {
         return true;
     }
 
-    // ── Adapter interno para horários ──────────────────────────────────────
+    // ── Adapter interno de horários ────────────────────────────────────────
 
     public interface OnHorarioClickListener {
         void onClick(String horario);
