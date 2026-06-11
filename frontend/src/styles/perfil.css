@@ -2,23 +2,25 @@
   max-width: 800px;
   margin: 2rem auto;
   padding: 0 1rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: var(--font-sans);
 }
 
 .perfil-card {
-  background: #fff;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-lg);
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-/* Cabeçalho do Card (Parte Colorida) */
+/* Cabeçalho do Card */
 .perfil-header {
-  background: linear-gradient(135deg, #2c3e50, #3498db);
+  background: var(--color-surface-2);
+  border-bottom: 1px solid var(--color-border);
   padding: 2rem;
-  color: white;
+  color: var(--color-text);
   display: flex;
   align-items: center;
   gap: 1.5rem;
@@ -27,28 +29,31 @@
 .avatar-circle {
   width: 80px;
   height: 80px;
-  background-color: white;
-  color: #2c3e50;
+  background-color: var(--color-accent);
+  color: var(--color-bg);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: var(--font-display);
   font-size: 2.5rem;
-  font-weight: bold;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  font-weight: 600;
 }
 
 .user-welcome h2 {
   margin: 0;
   font-size: 1.8rem;
-  color: white;
+  color: var(--color-text);
 }
 
 .user-welcome span {
-  opacity: 0.9;
-  font-size: 0.9rem;
-  background: rgba(255,255,255,0.2);
-  padding: 4px 10px;
+  display: inline-block;
+  margin-top: 6px;
+  color: var(--color-accent-text);
+  background: var(--color-accent-soft);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 12px;
   border-radius: 20px;
 }
 
@@ -66,10 +71,11 @@
   }
 }
 
-/* Seção de Informações */
-.info-section h3, .password-section h3 {
-  color: #2c3e50;
-  border-bottom: 2px solid #ecf0f1;
+/* Seções */
+.info-section h3,
+.password-section h3 {
+  color: var(--color-text);
+  border-bottom: 2px solid var(--color-border);
   padding-bottom: 0.5rem;
   margin-bottom: 1.5rem;
   font-size: 1.2rem;
@@ -82,7 +88,7 @@
 .info-label {
   display: block;
   font-size: 0.85rem;
-  color: #7f8c8d;
+  color: var(--color-text-muted);
   font-weight: 600;
   text-transform: uppercase;
   margin-bottom: 4px;
@@ -90,32 +96,37 @@
 
 .info-value {
   font-size: 1.1rem;
-  color: #2c3e50;
+  color: var(--color-text);
   font-weight: 500;
 }
 
-/* Estilização dos Inputs */
+/* Inputs */
 .modern-input {
   width: 100%;
   padding: 12px;
-  border: 1px solid #ddd;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   font-size: 1rem;
   transition: border-color 0.3s, box-shadow 0.3s;
-  background-color: #fcfcfc;
+}
+
+.modern-input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.7;
 }
 
 .modern-input:focus {
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
   outline: none;
-  background-color: #fff;
 }
 
-/* Botão Moderno */
+/* Botão */
 .btn-update {
-  background-color: #3498db;
-  color: white;
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   border: none;
   padding: 12px 24px;
   border-radius: 8px;
@@ -128,7 +139,7 @@
 }
 
 .btn-update:hover {
-  background-color: #2980b9;
+  background-color: var(--btn-primary-bg-hover);
 }
 
 .btn-update:active {
@@ -136,11 +147,11 @@
 }
 
 .btn-update:disabled {
-  background-color: #bdc3c7;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* Alertas Personalizados */
+/* Alertas */
 .custom-alert {
   padding: 12px 16px;
   border-radius: 8px;
@@ -151,14 +162,14 @@
   gap: 10px;
 }
 
-.alert-error {
-  background-color: #fee2e2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
+.custom-alert.alert-error {
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger-text);
+  border: 1px solid var(--color-danger);
 }
 
-.alert-success {
-  background-color: #dcfce7;
-  color: #166534;
-  border: 1px solid #bbf7d0;
+.custom-alert.alert-success {
+  background-color: var(--color-success-soft);
+  color: var(--color-success-text);
+  border: 1px solid var(--color-success);
 }

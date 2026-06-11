@@ -1,18 +1,15 @@
-:root {
-  /* --- PALETA --- */
-  --primary-bg: #1e272e;
-  --primary-blue: #2980b9;
-  --accent-blue: #3498db;
-  --white: #ffffff;
-  --text-gray: #b2bec3;
-  --admin-highlight: #00d2d3; /* Ciano */
-  --shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-  --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
+/* A navbar é escura nos dois temas (claro clássico / escuro premium).
+   A paleta fica escopada em .navbar para NÃO vazar para o :root global
+   (a versão antiga redefinia --white/--shadow/--transition e quebrava os tokens). */
 
 .navbar {
-  background: rgba(30, 39, 46, 0.98);
-  backdrop-filter: blur(10px);
+  --nav-bg: #1b1f26;
+  --nav-text: #b9b4a8;
+  --nav-text-strong: #f3f1ea;
+  --nav-border: rgba(255, 255, 255, 0.08);
+  --nav-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+
+  background: var(--nav-bg);
   height: 80px;
   display: flex;
   justify-content: center;
@@ -20,8 +17,8 @@
   position: sticky;
   top: 0;
   z-index: 1000;
-  box-shadow: var(--shadow);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: var(--nav-shadow);
+  border-bottom: 1px solid var(--nav-border);
 }
 
 .navbar-container {
@@ -31,26 +28,27 @@
   width: 100%;
   max-width: 1280px;
   padding: 0 40px;
-  justify-content: flex-start; 
-  gap: 40px; 
+  justify-content: flex-start;
+  gap: 40px;
 }
 
 /* --- Logo --- */
 .navbar-logo {
-  color: var(--white);
+  color: var(--nav-text-strong);
   text-decoration: none;
+  font-family: var(--font-display);
   font-size: 1.6rem;
-  font-weight: 800;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 12px; 
-  letter-spacing: -0.5px;
-  margin-right: auto; 
+  gap: 12px;
+  letter-spacing: -0.3px;
+  margin-right: auto;
+  transition: var(--transition);
 }
 
 .navbar-logo:hover {
-  color: var(--accent-blue);
-  transition: var(--transition);
+  color: var(--color-accent);
 }
 
 /* --- Menu Principal --- */
@@ -58,13 +56,13 @@
   display: flex;
   align-items: center;
   list-style: none;
-  gap: 25px; 
+  gap: 25px;
   height: 100%;
 }
 
 /* Links Normais */
 .navbar-link {
-  color: var(--text-gray);
+  color: var(--nav-text);
   text-decoration: none;
   font-size: 0.95rem;
   font-weight: 500;
@@ -85,12 +83,12 @@
   height: 2px;
   bottom: 0;
   left: 0;
-  background-color: var(--accent-blue);
+  background-color: var(--color-accent);
   transition: width 0.3s ease;
 }
 
 .navbar-link:hover {
-  color: var(--white);
+  color: var(--nav-text-strong);
 }
 
 .navbar-link:hover::after {
@@ -99,44 +97,38 @@
 
 /* --- Saudação do Usuário --- */
 .navbar-user {
-  color: var(--white);
+  color: var(--nav-text-strong);
   font-weight: 600;
   display: flex;
   align-items: center;
   padding-left: 25px;
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 1px solid var(--nav-border);
   margin-left: 5px;
   height: 35px;
 }
 
 .navbar-user:hover {
-  color: var(--accent-blue);
+  color: var(--color-accent);
 }
 
-/* ============================================ */
-/* DROPDOWN PARA GESTÃO (NOVO) */
-/* ============================================ */
-
+/* --- Dropdown de Gestão --- */
 .navbar-dropdown {
   position: relative;
   display: inline-flex;
   align-items: center;
   height: 100%;
-  
-  /* Separador sutil */
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 1px solid var(--nav-border);
   padding-left: 20px;
   margin-left: 10px;
 }
 
-/* Botão Trigger do Dropdown */
 .dropdown-trigger {
-  color: var(--admin-highlight) !important;
+  color: var(--color-accent) !important;
   font-size: 0.95rem;
   font-weight: 600;
   padding: 8px 16px;
   border-radius: 6px;
-  border: 1px solid rgba(0, 210, 211, 0.3);
+  border: 1px solid var(--nav-border);
   background: transparent;
   transition: var(--transition);
   display: flex;
@@ -145,30 +137,27 @@
   cursor: pointer;
 }
 
-/* Remove underline do botão */
 .dropdown-trigger::after {
   display: none !important;
 }
 
 .dropdown-trigger:hover {
-  background-color: rgba(0, 210, 211, 0.1);
-  color: var(--white) !important;
-  border-color: var(--admin-highlight);
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--nav-text-strong) !important;
+  border-color: var(--color-accent);
   transform: translateY(-1px);
 }
 
-/* Menu Dropdown */
 .dropdown-menu {
   position: absolute;
   top: calc(100% + 12px);
   right: 0;
-  background: rgba(30, 39, 46, 0.98);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--nav-bg);
+  border: 1px solid var(--nav-border);
   border-radius: 8px;
   min-width: 240px;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
   animation: dropdownFadeIn 0.2s ease;
   z-index: 1001;
 }
@@ -184,18 +173,17 @@
   }
 }
 
-/* Itens do Dropdown */
 .dropdown-item {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 12px 20px;
-  color: var(--text-gray);
+  color: var(--nav-text);
   text-decoration: none;
   transition: var(--transition);
   font-size: 0.95rem;
   font-weight: 500;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--nav-border);
 }
 
 .dropdown-item:last-child {
@@ -203,19 +191,17 @@
 }
 
 .dropdown-item:hover {
-  background: rgba(0, 210, 211, 0.1);
-  color: var(--white);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--nav-text-strong);
   padding-left: 25px;
 }
 
-/* ============================================ */
-/* FALLBACK: Se ainda usar .navbar-admin-group */
-/* ============================================ */
+/* Fallback: .navbar-admin-group */
 .navbar-admin-group {
   display: flex !important;
   align-items: center;
   gap: 15px;
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 1px solid var(--nav-border);
   padding-left: 20px;
   margin-left: 10px;
   height: 35px;
@@ -225,7 +211,7 @@
 }
 
 .admin-label {
-  color: var(--text-gray);
+  color: var(--nav-text);
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -236,7 +222,7 @@
 }
 
 .admin-link {
-  color: var(--admin-highlight) !important; 
+  color: var(--color-accent) !important;
   font-size: 0.9rem;
   font-weight: 500;
   text-decoration: none;
@@ -252,35 +238,44 @@
 }
 
 .admin-link:hover {
-  background-color: rgba(0, 210, 211, 0.1);
-  color: var(--white) !important;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--nav-text-strong) !important;
   transform: translateY(-1px);
   box-shadow: none;
 }
 
 /* --- Botão Sair --- */
 .btn-logout {
-  background-color: #e74c3c;
-  color: var(--white);
-  border: 1px solid rgba(231, 76, 60, 0.3);
+  background-color: var(--color-danger);
+  color: #ffffff;
+  border: 1px solid transparent;
   padding: 8px 18px;
   border-radius: 6px;
   font-size: 0.9rem;
+  cursor: pointer;
   transition: var(--transition);
   margin-left: 10px;
 }
 
 .btn-logout:hover {
-  background-color: #6e261e;;
-  border-color: #ffffff;
+  filter: brightness(0.9);
   transform: translateY(-1px);
 }
 
+/* Botão "Cadastrar" em destaque na navbar (visitante) */
 .btn-primary.navbar-link {
-  background-color: var(--primary-blue);
-  color: white !important;
+  background-color: var(--color-accent);
+  color: var(--color-bg) !important;
   padding: 8px 24px;
   border-radius: 6px;
+}
+
+.btn-primary.navbar-link:hover {
+  color: var(--color-bg) !important;
+}
+
+.btn-primary.navbar-link::after {
+  display: none !important;
 }
 
 /* --- RESPONSIVIDADE --- */
@@ -295,7 +290,7 @@
     top: 80px;
     left: -100%;
     flex-direction: column;
-    background: var(--primary-bg);
+    background: var(--nav-bg);
     width: 100%;
     height: calc(100vh - 80px);
     padding: 2rem 0;
@@ -307,11 +302,11 @@
   .navbar-menu.active {
     left: 0;
   }
-  
+
   .navbar-logo {
     margin-right: 0;
   }
-  
+
   .navbar-user {
     border-left: none;
     padding-left: 0;
@@ -319,22 +314,21 @@
     height: auto;
     margin-bottom: 10px;
   }
-  
-  /* Dropdown no Mobile */
+
   .navbar-dropdown {
     width: 100%;
     border-left: none;
     padding-left: 0;
     margin-left: 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid var(--nav-border);
     padding-top: 20px;
   }
-  
+
   .dropdown-trigger {
     width: 90%;
     justify-content: center;
   }
-  
+
   .dropdown-menu {
     position: relative;
     top: 0;
@@ -342,14 +336,13 @@
     width: 90%;
     margin: 10px auto 0;
     box-shadow: none;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--nav-border);
   }
-  
+
   .dropdown-item {
     justify-content: center;
   }
-  
-  /* Fallback para admin-group no mobile */
+
   .navbar-admin-group {
     flex-direction: column;
     width: 100%;
@@ -357,17 +350,17 @@
     padding: 20px 0;
     margin: 0;
     border-left: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid var(--nav-border);
     gap: 15px;
   }
-  
+
   .admin-label {
     margin-bottom: 5px;
   }
-  
+
   .admin-link {
     width: 80%;
     text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--nav-border);
   }
 }

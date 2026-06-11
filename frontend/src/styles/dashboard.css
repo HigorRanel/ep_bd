@@ -29,6 +29,7 @@
 
 .stat-card {
   background: var(--white);
+  border: 1px solid var(--color-border);
   border-radius: var(--border-radius);
   padding: 25px;
   display: flex;
@@ -106,6 +107,7 @@
 
 .action-card {
   background: var(--white);
+  border: 1px solid var(--color-border);
   border-radius: var(--border-radius);
   padding: 30px;
   text-align: center;
@@ -121,6 +123,7 @@
 .action-card:hover {
   transform: translateY(-5px);
   box-shadow: var(--shadow-lg);
+  border-color: var(--color-accent);
 }
 
 .action-icon {
@@ -150,22 +153,23 @@
 .home-hero {
   text-align: center;
   padding: 80px 20px;
-  background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
-  color: var(--white);
+  background: var(--color-accent);
+  color: var(--color-bg);
   border-radius: var(--border-radius);
   margin-bottom: 60px;
   box-shadow: var(--shadow-lg);
 }
 
 .home-hero h1 {
-  color: var(--white);
+  color: var(--color-bg);
   font-size: 3rem;
   margin-bottom: 20px;
 }
 
 .home-subtitle {
+  color: var(--color-bg);
   font-size: 1.3rem;
-  opacity: 0.95;
+  opacity: 0.85;
   max-width: 600px;
   margin: 0 auto;
 }
@@ -179,6 +183,7 @@
 
 .feature-card {
   background: var(--white);
+  border: 1px solid var(--color-border);
   padding: 40px;
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
@@ -239,6 +244,7 @@
   text-align: center;
   padding: 30px 20px;
   background: var(--white);
+  border: 1px solid var(--color-border);
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
   transition: var(--transition);
@@ -282,6 +288,7 @@
 
 .modal-content {
   background: var(--white);
+  border: 1px solid var(--color-border);
   border-radius: var(--border-radius);
   padding: 30px;
   max-width: 600px;
@@ -310,7 +317,7 @@
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .actions-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -320,38 +327,38 @@
   .dashboard-container {
     padding: 20px 10px;
   }
-  
+
   .dashboard-header h1 {
     font-size: 2rem;
   }
-  
+
   .stats-grid,
   .actions-grid,
   .home-features,
   .info-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .cards-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .stat-card {
     padding: 20px;
   }
-  
+
   .home-hero {
     padding: 40px 20px;
   }
-  
+
   .home-hero h1 {
     font-size: 2rem;
   }
-  
+
   .home-subtitle {
     font-size: 1.1rem;
   }
-  
+
   .section-header {
     flex-direction: column;
     align-items: flex-start;
@@ -363,11 +370,11 @@
   .stat-icon {
     font-size: 36px;
   }
-  
+
   .stat-content h3 {
     font-size: 28px;
   }
-  
+
   .action-icon {
     font-size: 36px;
   }

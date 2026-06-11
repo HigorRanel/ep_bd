@@ -11,6 +11,7 @@
 /* === FILTROS === */
 .filtros-card {
   background: var(--white);
+  border: 1px solid var(--color-border);
   border-radius: var(--border-radius);
   padding: 30px;
   box-shadow: var(--shadow);
@@ -35,7 +36,7 @@
   gap: 10px;
   flex-wrap: wrap;
   padding-top: 20px;
-  border-top: 1px solid var(--light);
+  border-top: 1px solid var(--color-border);
 }
 
 .periodos-rapidos span {
@@ -61,7 +62,7 @@
   text-align: center;
   cursor: pointer;
   transition: var(--transition);
-  border: 2px solid transparent;
+  border: 2px solid var(--color-border);
   box-shadow: var(--shadow);
 }
 
@@ -73,7 +74,7 @@
 
 .tipo-card.active {
   border-color: var(--accent);
-  background: linear-gradient(135deg, rgba(52, 152, 219, 0.05), rgba(41, 128, 185, 0.1));
+  background: var(--color-surface-2);
 }
 
 .tipo-icon {
@@ -95,6 +96,7 @@
 /* === RESULTADO DO RELATÓRIO === */
 .relatorio-resultado {
   background: var(--white);
+  border: 1px solid var(--color-border);
   border-radius: var(--border-radius);
   padding: 30px;
   box-shadow: var(--shadow-lg);
@@ -107,7 +109,7 @@
   align-items: center;
   margin-bottom: 20px;
   padding-bottom: 20px;
-  border-bottom: 2px solid var(--light);
+  border-bottom: 2px solid var(--color-border);
 }
 
 .resultado-header h3 {
@@ -116,7 +118,7 @@
 }
 
 .relatorio-periodo {
-  background: var(--light);
+  background: var(--color-surface-2);
   padding: 15px;
   border-radius: var(--border-radius);
   margin-bottom: 30px;
@@ -143,7 +145,7 @@
   align-items: center;
   gap: 20px;
   box-shadow: var(--shadow);
-  border: 1px solid var(--light);
+  border: 1px solid var(--color-border);
 }
 
 .stat-card .stat-icon {
@@ -204,7 +206,7 @@
 }
 
 .relatorio-table thead {
-  background: var(--light);
+  background: var(--color-surface-2);
 }
 
 .relatorio-table th {
@@ -212,16 +214,17 @@
   text-align: left;
   font-weight: 600;
   color: var(--dark);
-  border-bottom: 2px solid #ddd;
+  border-bottom: 2px solid var(--color-border);
 }
 
 .relatorio-table td {
   padding: 12px;
-  border-bottom: 1px solid var(--light);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
 }
 
 .relatorio-table tbody tr:hover {
-  background: rgba(52, 152, 219, 0.05);
+  background: var(--color-surface-2);
 }
 
 /* Cores especiais nas tabelas */
@@ -247,7 +250,7 @@
   padding: 25px;
   box-shadow: var(--shadow);
   margin-bottom: 25px;
-  border: 1px solid var(--light);
+  border: 1px solid var(--color-border);
 }
 
 .card h4 {
@@ -255,7 +258,7 @@
   color: var(--dark);
   font-size: 18px;
   padding-bottom: 10px;
-  border-bottom: 2px solid var(--light);
+  border-bottom: 2px solid var(--color-border);
 }
 
 /* === IMPRESSÃO (EXPORT PDF) === */
@@ -352,7 +355,6 @@
     padding: 8px;
   }
 
-  /* Scroll horizontal para tabelas em mobile */
   .table-responsive {
     overflow-x: scroll;
   }

@@ -6,10 +6,9 @@ class PlanoMensal:
     def criar(id_barbeiro_chefe, servicos):
         with Database.get_cursor() as cursor:
             cursor.execute("""
-                    INSERT INTO Plano_Mensal (id_barbeiro_chefe)
-                    VALUES (%s)
-                    RETURNING id_plano_mensal
-                """, (id_barbeiro_chefe,))
+                           INSERT INTO Plano_Mensal (id_barbeiro_chefe)
+                           VALUES (%s) RETURNING id_plano_mensal
+                           """, (id_barbeiro_chefe,))
 
             id_plano = cursor.fetchone()['id_plano_mensal']
 
@@ -20,9 +19,9 @@ class PlanoMensal:
                     raise ValueError('Desconto deve ser entre 0 e 100')
 
                 cursor.execute("""
-                        INSERT INTO Possui (id_serv, id_plano, quantidade, desconto)
-                        VALUES (%s, %s, %s, %s)
-                    """, (servico['id_servico'], id_plano, servico['quantidade'], desconto_servico))
+                               INSERT INTO Possui (id_serv, id_plano, quantidade, desconto)
+                               VALUES (%s, %s, %s, %s)
+                               """, (servico['id_servico'], id_plano, servico['quantidade'], desconto_servico))
 
             return {
                 'id_plano_mensal': id_plano,
@@ -33,22 +32,21 @@ class PlanoMensal:
 
         with Database.get_cursor() as cursor:
             cursor.execute("""
-                SELECT 
-                    pm.id_plano_mensal,
-                    pm.id_barbeiro_chefe,
-                    p.nome_completo as criador_nome,
-                    s.id_servico,
-                    s.nome as servico_nome,
-                    s.preco as servico_preco,
-                    ps.quantidade as servico_quantidade,
-                    ps.desconto as servico_desconto
-                FROM Plano_Mensal pm
-                JOIN Barbeiro_Chefe bc ON pm.id_barbeiro_chefe = bc.id_barbeiro_chefe
-                JOIN Pessoa p ON bc.cpf_barbeiro = p.cpf
-                LEFT JOIN Possui ps ON pm.id_plano_mensal = ps.id_plano
-                LEFT JOIN Servico s ON ps.id_serv = s.id_servico
-                ORDER BY pm.id_plano_mensal DESC, s.nome
-            """)
+                           SELECT pm.id_plano_mensal,
+                                  pm.id_barbeiro_chefe,
+                                  p.nome_completo as criador_nome,
+                                  s.id_servico,
+                                  s.nome          as servico_nome,
+                                  s.preco         as servico_preco,
+                                  ps.quantidade   as servico_quantidade,
+                                  ps.desconto     as servico_desconto
+                           FROM Plano_Mensal pm
+                                    JOIN Barbeiro_Chefe bc ON pm.id_barbeiro_chefe = bc.id_barbeiro_chefe
+                                    JOIN Pessoa p ON bc.cpf_barbeiro = p.cpf
+                                    LEFT JOIN Possui ps ON pm.id_plano_mensal = ps.id_plano
+                                    LEFT JOIN Servico s ON ps.id_serv = s.id_servico
+                           ORDER BY pm.id_plano_mensal DESC, s.nome
+                           """)
 
             resultados = cursor.fetchall()
 
@@ -102,7 +100,7 @@ class PlanoMensal:
                     plano['valor_desconto_total'] = total_desconto
                     plano['desconto_medio'] = desconto_medio
                 else:
-                    
+
                     plano['valor_sem_desconto'] = 0
                     plano['valor_com_desconto'] = 0
                     plano['valor_desconto_total'] = 0
@@ -114,47 +112,43 @@ class PlanoMensal:
     def assinar_plano(cpf_cliente, id_plano, data_inicio, data_fim):
         with Database.get_cursor() as cursor:
             cursor.execute("""
-                INSERT INTO Assina (id_cliente, id_plano, data_inicio, data_fim)
-                VALUES (%s, %s, %s, %s)
-            """, (cpf_cliente, id_plano, data_inicio, data_fim))
+                           INSERT INTO Assina (id_cliente, id_plano, data_inicio, data_fim)
+                           VALUES (%s, %s, %s, %s)
+                           """, (cpf_cliente, id_plano, data_inicio, data_fim))
             return True
 
     @staticmethod
     def listar_assinaturas_cliente(cpf_cliente):
         """Lista assinaturas do cliente com informações completas do plano (Sem JSON no SQL)"""
         with Database.get_cursor() as cursor:
-            
+
             cursor.execute("""
-                SELECT 
-                    a.id_cliente,
-                    a.id_plano,
-                    a.data_inicio,
-                    a.data_fim,
-                    pm.id_plano_mensal,
-                    s.id_servico,
-                    s.nome as nome_servico,
-                    s.preco as preco_servico,
-                    ps.quantidade,
-                    ps.desconto
-                FROM Assina a
-                JOIN Plano_Mensal pm ON a.id_plano = pm.id_plano_mensal
-                LEFT JOIN Possui ps ON pm.id_plano_mensal = ps.id_plano
-                LEFT JOIN Servico s ON ps.id_serv = s.id_servico
-                WHERE a.id_cliente = %s
-                ORDER BY a.data_fim DESC, s.nome ASC
-            """, (cpf_cliente,))
+                           SELECT a.id_cliente,
+                                  a.id_plano,
+                                  a.data_inicio,
+                                  a.data_fim,
+                                  pm.id_plano_mensal,
+                                  s.id_servico,
+                                  s.nome  as nome_servico,
+                                  s.preco as preco_servico,
+                                  ps.quantidade,
+                                  ps.desconto
+                           FROM Assina a
+                                    JOIN Plano_Mensal pm ON a.id_plano = pm.id_plano_mensal
+                                    LEFT JOIN Possui ps ON pm.id_plano_mensal = ps.id_plano
+                                    LEFT JOIN Servico s ON ps.id_serv = s.id_servico
+                           WHERE a.id_cliente = %s
+                           ORDER BY a.data_fim DESC, s.nome ASC
+                           """, (cpf_cliente,))
 
             rows = cursor.fetchall()
 
-            
             assinaturas_map = {}
 
             for row in rows:
-                
-                
+
                 chave_unica = (row['id_plano'], row['data_inicio'])
 
-                
                 if chave_unica not in assinaturas_map:
                     assinaturas_map[chave_unica] = {
                         'id_cliente': row['id_cliente'],
@@ -162,10 +156,9 @@ class PlanoMensal:
                         'data_inicio': row['data_inicio'],
                         'data_fim': row['data_fim'],
                         'id_plano_mensal': row['id_plano_mensal'],
-                        'servicos': [] 
+                        'servicos': []
                     }
 
-                
                 if row['id_servico'] and row['quantidade'] > 0:
                     assinaturas_map[chave_unica]['servicos'].append({
                         'id_servico': row['id_servico'],
@@ -175,14 +168,11 @@ class PlanoMensal:
                         'desconto': row['desconto']
                     })
 
-            
             lista_assinaturas = list(assinaturas_map.values())
 
-            
             for assinatura in lista_assinaturas:
-                
+
                 if assinatura['servicos']:
-                    
                     valores = PlanoMensal.calcular_valores_plano(assinatura['id_plano'])
                     assinatura.update(valores)
 
@@ -197,16 +187,15 @@ class PlanoMensal:
             dict com valor_sem_desconto, valor_desconto_total, valor_com_desconto, desconto_medio
         """
         with Database.get_cursor() as cursor:
-            
+
             cursor.execute("""
-                SELECT 
-                    s.preco,
-                    ps.quantidade,
-                    ps.desconto
-                FROM Possui ps
-                JOIN Servico s ON ps.id_serv = s.id_servico
-                WHERE ps.id_plano = %s
-            """, (id_plano,))
+                           SELECT s.preco,
+                                  ps.quantidade,
+                                  ps.desconto
+                           FROM Possui ps
+                                    JOIN Servico s ON ps.id_serv = s.id_servico
+                           WHERE ps.id_plano = %s
+                           """, (id_plano,))
 
             servicos = cursor.fetchall()
             if not servicos:
@@ -220,26 +209,21 @@ class PlanoMensal:
             valor_sem_desconto = 0
             valor_com_desconto = 0
 
-            
             for servico in servicos:
                 preco = float(servico['preco'])
                 quantidade = int(servico['quantidade'])
                 desconto_percentual = float(servico['desconto'] or 0)
 
-                
                 valor_servico_sem_desconto = preco * quantidade
 
-                
                 desconto_servico = valor_servico_sem_desconto * (desconto_percentual / 100)
                 valor_servico_com_desconto = valor_servico_sem_desconto - desconto_servico
 
                 valor_sem_desconto += valor_servico_sem_desconto
                 valor_com_desconto += valor_servico_com_desconto
 
-            
             valor_desconto_total = valor_sem_desconto - valor_com_desconto
 
-            
             desconto_medio = (valor_desconto_total / valor_sem_desconto * 100) if valor_sem_desconto > 0 else 0
 
             return {
@@ -260,12 +244,11 @@ class PlanoMensal:
             desconto: desconto padrão para serviços que não especificarem (opcional)
         """
         with Database.get_cursor() as cursor:
-            
+
             cursor.execute("DELETE FROM Possui WHERE id_plano = %s", (id_plano,))
 
-            
             for servico in servicos:
-                
+
                 desconto_servico = servico.get('desconto', desconto if desconto is not None else 0)
                 desconto_servico = float(desconto_servico)
 
@@ -273,11 +256,10 @@ class PlanoMensal:
                     raise ValueError('Desconto deve ser entre 0 e 100')
 
                 cursor.execute("""
-                    INSERT INTO Possui (id_serv, id_plano, quantidade, desconto)
-                    VALUES (%s, %s, %s, %s)
-                """, (servico['id_servico'], id_plano, servico['quantidade'], desconto_servico))
+                               INSERT INTO Possui (id_serv, id_plano, quantidade, desconto)
+                               VALUES (%s, %s, %s, %s)
+                               """, (servico['id_servico'], id_plano, servico['quantidade'], desconto_servico))
 
-            
             valores = PlanoMensal.calcular_valores_plano(id_plano)
 
             return {
@@ -291,15 +273,14 @@ class PlanoMensal:
         """Busca um plano específico com todos os detalhes"""
         with Database.get_cursor() as cursor:
             cursor.execute("""
-                SELECT 
-                    pm.id_plano_mensal,
-                    pm.id_barbeiro_chefe,
-                    p.nome_completo as criador_nome
-                FROM Plano_Mensal pm
-                JOIN Barbeiro_Chefe bc ON pm.id_barbeiro_chefe = bc.id_barbeiro_chefe
-                JOIN Pessoa p ON bc.cpf_barbeiro = p.cpf
-                WHERE pm.id_plano_mensal = %s
-            """, (id_plano,))
+                           SELECT pm.id_plano_mensal,
+                                  pm.id_barbeiro_chefe,
+                                  p.nome_completo as criador_nome
+                           FROM Plano_Mensal pm
+                                    JOIN Barbeiro_Chefe bc ON pm.id_barbeiro_chefe = bc.id_barbeiro_chefe
+                                    JOIN Pessoa p ON bc.cpf_barbeiro = p.cpf
+                           WHERE pm.id_plano_mensal = %s
+                           """, (id_plano,))
 
             plano = cursor.fetchone()
 
@@ -307,17 +288,16 @@ class PlanoMensal:
                 return None
 
             cursor.execute("""
-                SELECT 
-                    s.id_servico,
-                    s.nome,
-                    s.preco,
-                    ps.quantidade,
-                    ps.desconto
-                FROM Possui ps
-                JOIN Servico s ON ps.id_serv = s.id_servico
-                WHERE ps.id_plano = %s
-                ORDER BY s.nome
-            """, (id_plano,))
+                           SELECT s.id_servico,
+                                  s.nome,
+                                  s.preco,
+                                  ps.quantidade,
+                                  ps.desconto
+                           FROM Possui ps
+                                    JOIN Servico s ON ps.id_serv = s.id_servico
+                           WHERE ps.id_plano = %s
+                           ORDER BY s.nome
+                           """, (id_plano,))
 
             servicos = cursor.fetchall()
 
@@ -336,25 +316,22 @@ class PlanoMensal:
             cursor.execute("DELETE FROM Plano_Mensal WHERE id_plano_mensal = %s", (id_plano,))
             return True
 
-    
     @staticmethod
     def pode_agendar_com_plano(cpf_cliente, id_servico):
         """Verifica se o cliente pode agendar um serviço usando um plano ativo"""
         with Database.get_cursor() as cursor:
             cursor.execute("""
-                SELECT 
-                    a.id_plano,
-                    ps.quantidade as quantidade_plano,
-                    ps.desconto as desconto_servico
-                FROM Assina a
-                JOIN Plano_Mensal pm ON a.id_plano = pm.id_plano_mensal
-                JOIN Possui ps ON pm.id_plano_mensal = ps.id_plano
-                WHERE a.id_cliente = %s
-                AND ps.id_serv = %s
-                AND a.data_fim >= CURRENT_DATE
-                ORDER BY a.data_fim DESC
-                LIMIT 1
-            """, (cpf_cliente, id_servico))
+                           SELECT a.id_plano,
+                                  ps.quantidade as quantidade_plano,
+                                  ps.desconto   as desconto_servico
+                           FROM Assina a
+                                    JOIN Plano_Mensal pm ON a.id_plano = pm.id_plano_mensal
+                                    JOIN Possui ps ON pm.id_plano_mensal = ps.id_plano
+                           WHERE a.id_cliente = %s
+                             AND ps.id_serv = %s
+                             AND a.data_fim >= CURRENT_DATE
+                           ORDER BY a.data_fim DESC LIMIT 1
+                           """, (cpf_cliente, id_servico))
 
             plano = cursor.fetchone()
             if not plano:
@@ -388,42 +365,49 @@ class PlanoMensal:
         """Verifica quantos serviços do plano o cliente já usou"""
         with Database.get_cursor() as cursor:
             cursor.execute("""
-                SELECT data_inicio, data_fim
-                FROM Assina
-                WHERE id_cliente = %s AND id_plano = %s
-                AND data_fim >= CURRENT_DATE
-                ORDER BY data_fim DESC
-                LIMIT 1
-            """, (cpf_cliente, id_plano))
+                           SELECT data_inicio, data_fim
+                           FROM Assina
+                           WHERE id_cliente = %s
+                             AND id_plano = %s
+                             AND data_fim >= CURRENT_DATE
+                           ORDER BY data_fim DESC LIMIT 1
+                           """, (cpf_cliente, id_plano))
 
             assinatura = cursor.fetchone()
             if not assinatura:
                 return None
 
+            # Uma única query agregada: serviços do plano + quanto o cliente já
+            # consumiu de cada um na janela da assinatura (elimina o N+1 anterior,
+            # que rodava um COUNT por serviço dentro de um loop).
+            # As condições do agendamento ficam no ON do LEFT JOIN de propósito,
+            # para que serviços sem uso ainda apareçam com usado = 0.
             cursor.execute("""
-                SELECT ps.id_serv, ps.quantidade, ps.desconto, s.nome, s.preco
-                FROM Possui ps
-                JOIN Servico s ON ps.id_serv = s.id_servico
-                WHERE ps.id_plano = %s
-            """, (id_plano,))
+                           SELECT ps.id_serv,
+                                  ps.quantidade,
+                                  ps.desconto,
+                                  s.nome,
+                                  s.preco,
+                                  COUNT(a.id_agendamento) AS usado
+                           FROM Possui ps
+                                    JOIN Servico s ON ps.id_serv = s.id_servico
+                                    LEFT JOIN Contem c ON c.id_serv = ps.id_serv
+                                    LEFT JOIN Agendamento a
+                                              ON a.id_agendamento = c.id_agen
+                                                  AND a.client_id = %s
+                                                  AND a.data_hora_agendamento >= %s
+                                                  AND a.data_hora_agendamento <= %s
+                                                  AND a.status IN ('concluido', 'confirmado', 'pendente')
+                           WHERE ps.id_plano = %s
+                           GROUP BY ps.id_serv, ps.quantidade, ps.desconto, s.nome, s.preco
+                           """, (cpf_cliente, assinatura['data_inicio'],
+                                 assinatura['data_fim'], id_plano))
 
             servicos_plano = cursor.fetchall()
 
             uso_servicos = []
             for servico in servicos_plano:
-                cursor.execute("""
-                    SELECT COUNT(*) as usado
-                    FROM Agendamento a
-                    JOIN Contem c ON a.id_agendamento = c.id_agen
-                    WHERE a.client_id = %s
-                    AND c.id_serv = %s
-                    AND a.data_hora_agendamento >= %s
-                    AND a.data_hora_agendamento <= %s
-                    AND a.status IN ('concluido', 'confirmado', 'pendente')
-                """, (cpf_cliente, servico['id_serv'],
-                      assinatura['data_inicio'], assinatura['data_fim']))
-
-                usado = cursor.fetchone()['usado']
+                usado = servico['usado']
 
                 uso_servicos.append({
                     'id_servico': servico['id_serv'],
@@ -446,19 +430,18 @@ class PlanoMensal:
     def listar_planos_proximos_vencimento(cpf_cliente, dias=7):
         with Database.get_cursor() as cursor:
             cursor.execute("""
-                SELECT 
-                    a.id_plano,
-                    a.data_inicio,
-                    a.data_fim,
-                    pm.id_plano_mensal,
-                    (a.data_fim::DATE - CURRENT_DATE) as dias_restantes
-                FROM Assina a
-                JOIN Plano_Mensal pm ON a.id_plano = pm.id_plano_mensal
-                WHERE a.id_cliente = %s
-                AND a.data_fim::DATE >= CURRENT_DATE
+                           SELECT a.id_plano,
+                                  a.data_inicio,
+                                  a.data_fim,
+                                  pm.id_plano_mensal,
+                                  (a.data_fim::DATE - CURRENT_DATE) as dias_restantes
+                           FROM Assina a
+                                    JOIN Plano_Mensal pm ON a.id_plano = pm.id_plano_mensal
+                           WHERE a.id_cliente = %s
+                             AND a.data_fim::DATE >= CURRENT_DATE
                 AND (a.data_fim::DATE - CURRENT_DATE) <= %s
-                ORDER BY a.data_fim ASC
-            """, (cpf_cliente, dias))
+                           ORDER BY a.data_fim ASC
+                           """, (cpf_cliente, dias))
             return cursor.fetchall()
 
     @staticmethod
@@ -470,10 +453,10 @@ class PlanoMensal:
                 raise ValueError('Desconto deve ser entre 0 e 100')
 
             cursor.execute("""
-                UPDATE Possui
-                SET desconto = %s
-                WHERE id_plano = %s
-            """, (desconto, id_plano))
+                           UPDATE Possui
+                           SET desconto = %s
+                           WHERE id_plano = %s
+                           """, (desconto, id_plano))
 
             valores = PlanoMensal.calcular_valores_plano(id_plano)
 
@@ -487,31 +470,35 @@ class PlanoMensal:
     def buscar_servicos_plano(id_plano):
         with Database.get_cursor() as cursor:
             cursor.execute("""
-                SELECT s.*, ps.quantidade, ps.desconto
-                FROM Servico s
-                JOIN Possui ps ON s.id_servico = ps.id_serv
-                WHERE ps.id_plano = %s
-                ORDER BY s.nome
-            """, (id_plano,))
+                           SELECT s.*, ps.quantidade, ps.desconto
+                           FROM Servico s
+                                    JOIN Possui ps ON s.id_servico = ps.id_serv
+                           WHERE ps.id_plano = %s
+                           ORDER BY s.nome
+                           """, (id_plano,))
             return cursor.fetchall()
 
     @staticmethod
     def cancelar_assinatura(cpf_cliente, id_plano):
         with Database.get_cursor() as cursor:
             cursor.execute("""
-                DELETE FROM Assina 
-                WHERE id_cliente = %s AND id_plano = %s
-            """, (cpf_cliente, id_plano))
+                           DELETE
+                           FROM Assina
+                           WHERE id_cliente = %s
+                             AND id_plano = %s
+                           """, (cpf_cliente, id_plano))
             return True
 
     @staticmethod
     def verificar_assinatura_ativa(cpf_cliente, id_plano):
         with Database.get_cursor() as cursor:
             cursor.execute("""
-                SELECT * FROM Assina 
-                WHERE id_cliente = %s AND id_plano = %s
-                AND data_fim >= CURRENT_DATE
-            """, (cpf_cliente, id_plano))
+                           SELECT *
+                           FROM Assina
+                           WHERE id_cliente = %s
+                             AND id_plano = %s
+                             AND data_fim >= CURRENT_DATE
+                           """, (cpf_cliente, id_plano))
             return cursor.fetchone()
 
     @staticmethod
@@ -523,18 +510,19 @@ class PlanoMensal:
     def contar_assinaturas_ativas(id_plano):
         with Database.get_cursor() as cursor:
             cursor.execute("""
-                SELECT COUNT(*) as total
-                FROM Assina
-                WHERE id_plano = %s AND data_fim >= CURRENT_DATE
-            """, (id_plano,))
+                           SELECT COUNT(*) as total
+                           FROM Assina
+                           WHERE id_plano = %s
+                             AND data_fim >= CURRENT_DATE
+                           """, (id_plano,))
             return cursor.fetchone()['total']
 
     @staticmethod
     def contar_assinaturas(id_plano):
         with Database.get_cursor() as cursor:
             cursor.execute("""
-                SELECT COUNT(*) as total
-                FROM Assina
-                WHERE id_plano = %s
-            """, (id_plano,))
+                           SELECT COUNT(*) as total
+                           FROM Assina
+                           WHERE id_plano = %s
+                           """, (id_plano,))
             return cursor.fetchone()['total']

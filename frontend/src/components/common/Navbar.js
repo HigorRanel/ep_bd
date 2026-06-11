@@ -30,7 +30,7 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="navbar-container">
         <Link to="/" className="navbar-logo">
-          ✂️ Barbearia
+          Barbearia
         </Link>
 
         <div className="navbar-menu">
