@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Navbar from '../common/Navbar';
+import Icon from '../common/Icon';
 import api from '../../services/api';
 import '../../styles/dashboard.css';
 
 const DetalhesCliente = () => {
   const { cpf } = useParams();
-  const { user } = useAuth(); 
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [cliente, setCliente] = useState(null);
   const [historico, setHistorico] = useState([]);
@@ -59,11 +60,11 @@ const DetalhesCliente = () => {
   const carregarHorariosDisponiveis = async () => {
     try {
       setLoadingHorarios(true);
-      
+
       const cpf_barbeiro = user.cpf;
-      
+
       const servico = servicos.find(s => s.id_servico === parseInt(formEncaixe.id_servico));
-      
+
       const response = await api.get('/agendamentos/horarios-disponiveis', {
         params: {
           cpf_barbeiro,
@@ -71,7 +72,7 @@ const DetalhesCliente = () => {
           duracao_servico_min: servico?.duracao_estimada_min || 30
         }
       });
-      
+
       setHorariosDisponiveis(response.data.horarios_disponiveis);
     } catch (error) {
       console.error('Erro ao carregar horários:', error);
@@ -88,9 +89,8 @@ const DetalhesCliente = () => {
     }
 
     try {
-      
       const cpf_barbeiro = user.cpf;
-      
+
       await api.post('/agendamentos', {
         data_hora_agendamento: `${formEncaixe.data} ${formEncaixe.horario}:00`,
         cpf_cliente: cpf,
@@ -105,9 +105,9 @@ const DetalhesCliente = () => {
       carregarDados();
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.error || 'Erro ao realizar encaixe' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.error || 'Erro ao realizar encaixe'
       });
     }
   };
@@ -122,9 +122,13 @@ const DetalhesCliente = () => {
 
   const renderEstrelas = (nota) => {
     return Array.from({ length: 5 }, (_, i) => (
-      <span key={i} style={{ color: i < nota ? '#f39c12' : '#ddd', fontSize: '16px' }}>
-        ★
-      </span>
+      <Icon
+        key={i}
+        name="star"
+        filled={i < nota}
+        size={16}
+        style={{ color: i < nota ? 'var(--color-accent)' : 'var(--color-border)' }}
+      />
     ));
   };
 
@@ -156,6 +160,9 @@ const DetalhesCliente = () => {
     );
   }
 
+  const accent = { color: 'var(--color-accent)' };
+  const muted = { color: 'var(--color-text-muted)' };
+
   return (
     <div className="page-container">
       <Navbar />
@@ -166,7 +173,7 @@ const DetalhesCliente = () => {
             <p>Detalhes e histórico do cliente</p>
           </div>
           <button onClick={() => navigate('/barbeiro/clientes')} className="btn btn-secondary">
-            ← Voltar
+            Voltar
           </button>
         </div>
 
@@ -179,40 +186,40 @@ const DetalhesCliente = () => {
         {/* Informações do Cliente */}
         <div className="stats-grid">
           <div className="stat-card">
-            <div className="stat-icon">✅</div>
+            <span className="stat-icon"><Icon name="check" size={28} style={accent} /></span>
             <div className="stat-content">
               <h3>{cliente.total_atendimentos}</h3>
-              <p>Atendimentos Concluídos</p>
+              <p>Atendimentos concluídos</p>
             </div>
           </div>
 
           <div className="stat-card">
-            <div className="stat-icon">❌</div>
+            <span className="stat-icon"><Icon name="x" size={28} style={accent} /></span>
             <div className="stat-content">
               <h3>{cliente.total_faltas}</h3>
-              <p>Faltas Registradas</p>
+              <p>Faltas registradas</p>
             </div>
           </div>
 
           <div className="stat-card">
-            <div className="stat-icon">📅</div>
+            <span className="stat-icon"><Icon name="calendar" size={28} style={accent} /></span>
             <div className="stat-content">
               <h3 style={{ fontSize: '18px' }}>
-                {cliente.ultima_visita 
+                {cliente.ultima_visita
                   ? new Date(cliente.ultima_visita).toLocaleDateString('pt-BR')
                   : 'Nunca'
                 }
               </h3>
-              <p>Última Visita</p>
+              <p>Última visita</p>
             </div>
           </div>
 
           <div className="stat-card">
-            <div className="stat-icon">⭐</div>
+            <span className="stat-icon"><Icon name="star" size={28} style={accent} /></span>
             <div className="stat-content">
               <h3>{parseFloat(cliente.media_avaliacoes || 0).toFixed(1)}</h3>
-              <p>Média de Avaliações</p>
-              <small style={{ fontSize: '11px', color: '#666' }}>
+              <p>Média de avaliações</p>
+              <small style={{ fontSize: '11px', ...muted }}>
                 {cliente.total_avaliacoes} avaliação(ões)
               </small>
             </div>
@@ -221,23 +228,23 @@ const DetalhesCliente = () => {
 
         {/* Dados de Contato */}
         <div className="card" style={{ marginBottom: '30px' }}>
-          <h3>Dados de Contato</h3>
+          <h3>Dados de contato</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px', marginTop: '15px' }}>
             <div>
-              <strong style={{ display: 'block', fontSize: '12px', color: '#666', marginBottom: '5px' }}>
+              <strong style={{ display: 'block', fontSize: '12px', ...muted, marginBottom: '5px' }}>
                 Email
               </strong>
               <span>{cliente.email}</span>
             </div>
             <div>
-              <strong style={{ display: 'block', fontSize: '12px', color: '#666', marginBottom: '5px' }}>
+              <strong style={{ display: 'block', fontSize: '12px', ...muted, marginBottom: '5px' }}>
                 Telefone
               </strong>
               <span>{cliente.telefone || 'Não informado'}</span>
             </div>
             {cliente.endereco && (
               <div style={{ gridColumn: '1 / -1' }}>
-                <strong style={{ display: 'block', fontSize: '12px', color: '#666', marginBottom: '5px' }}>
+                <strong style={{ display: 'block', fontSize: '12px', ...muted, marginBottom: '5px' }}>
                   Endereço
                 </strong>
                 <span>{cliente.endereco}</span>
@@ -249,17 +256,17 @@ const DetalhesCliente = () => {
         {/* Botão para Realizar Encaixe */}
         <button
           onClick={() => setMostrarEncaixe(!mostrarEncaixe)}
-          className="btn btn-success"
+          className={mostrarEncaixe ? 'btn btn-secondary' : 'btn btn-success'}
           style={{ marginBottom: '20px' }}
         >
-          {mostrarEncaixe ? '✕ Cancelar Encaixe' : '+ Realizar Encaixe'}
+          {mostrarEncaixe ? 'Cancelar encaixe' : '+ Realizar encaixe'}
         </button>
 
         {/* Formulário de Encaixe */}
         {mostrarEncaixe && (
-          <div className="card" style={{ marginBottom: '30px', background: '#e3f2fd' }}>
-            <h3>Realizar Encaixe para {cliente.nome_completo}</h3>
-            
+          <div className="card" style={{ marginBottom: '30px', background: 'var(--color-surface-2)' }}>
+            <h3>Realizar encaixe para {cliente.nome_completo}</h3>
+
             <div style={{ marginTop: '20px' }}>
               <div className="form-group">
                 <label>Serviço *</label>
@@ -294,7 +301,7 @@ const DetalhesCliente = () => {
                   {loadingHorarios ? (
                     <p>Carregando horários...</p>
                   ) : horariosDisponiveis.length === 0 ? (
-                    <p style={{ color: '#e74c3c' }}>Nenhum horário disponível nesta data</p>
+                    <p style={{ color: 'var(--color-danger)' }}>Nenhum horário disponível nesta data</p>
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '10px' }}>
                       {horariosDisponiveis.map(horario => (
@@ -317,7 +324,7 @@ const DetalhesCliente = () => {
                 className="btn btn-success"
                 disabled={!formEncaixe.id_servico || !formEncaixe.data || !formEncaixe.horario}
               >
-                Confirmar Encaixe
+                Confirmar encaixe
               </button>
             </div>
           </div>
@@ -325,8 +332,8 @@ const DetalhesCliente = () => {
 
         {/* Histórico de Agendamentos */}
         <div className="dashboard-section">
-          <h2>Histórico de Atendimentos ({historico.length})</h2>
-          
+          <h2>Histórico de atendimentos ({historico.length})</h2>
+
           {historico.length === 0 ? (
             <div className="empty-state">
               <p>Nenhum histórico de atendimento</p>
@@ -338,7 +345,7 @@ const DetalhesCliente = () => {
                   <div className="card-header">
                     <div>
                       <h3>{item.servico_nome}</h3>
-                      <p style={{ margin: '5px 0 0 0', color: '#666', fontSize: '13px' }}>
+                      <p style={{ margin: '5px 0 0 0', ...muted, fontSize: '13px' }}>
                         {formatarData(item.data_hora_agendamento)}
                       </p>
                     </div>
@@ -350,16 +357,18 @@ const DetalhesCliente = () => {
                   <div className="card-body">
                     <p><strong>Barbeiro:</strong> {item.barbeiro_nome}</p>
                     <p><strong>Preço:</strong> R$ {parseFloat(item.preco).toFixed(2)}</p>
-                    
+
                     {item.nota && (
-                      <div style={{ 
-                        marginTop: '15px', 
-                        padding: '10px', 
-                        backgroundColor: '#f8f9fa',
-                        borderRadius: '4px'
+                      <div style={{
+                        marginTop: '15px',
+                        padding: '10px',
+                        backgroundColor: 'var(--color-surface-2)',
+                        borderRadius: '6px'
                       }}>
                         <strong>Avaliação:</strong>
-                        <div>{renderEstrelas(item.nota)}</div>
+                        <div style={{ display: 'flex', gap: '2px', marginTop: '4px' }}>
+                          {renderEstrelas(item.nota)}
+                        </div>
                         {item.comentario && (
                           <p style={{ marginTop: '5px', fontSize: '13px', fontStyle: 'italic' }}>
                             "{item.comentario}"

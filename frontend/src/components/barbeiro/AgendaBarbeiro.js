@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import Navbar from '../common/Navbar';
+import Icon from '../common/Icon';
 import api from '../../services/api';
 import '../../styles/dashboard.css';
 
@@ -63,7 +64,7 @@ const AgendaBarbeiro = () => {
     });
 
     Object.keys(grupos).forEach((data) => {
-      grupos[data].sort((a, b) => 
+      grupos[data].sort((a, b) =>
         new Date(a.data_hora_agendamento) - new Date(b.data_hora_agendamento)
       );
     });
@@ -71,15 +72,16 @@ const AgendaBarbeiro = () => {
     return grupos;
   };
 
-  const getStatusInfo = (status) => {
-    const statusMap = {
-      pendente: { className: 'badge-pendente', color: '#f39c12', icon: '⏳' },
-      confirmado: { className: 'badge-confirmado', color: '#426947', icon: '✓' },
-      concluido: { className: 'badge-concluido', color: '#27ae60', icon: '✓✓' },
-      cancelado: { className: 'badge-cancelado', color: '#e74c3c', icon: '✗' },
-      falta: { className: 'badge-falta', color: '#e67e22', icon: '⚠️' }
+  // Mapeia o status para a classe de badge temática (sem cor inline).
+  const getStatusClasse = (status) => {
+    const map = {
+      pendente: 'badge-pendente',
+      confirmado: 'badge-confirmado',
+      concluido: 'badge-concluido',
+      cancelado: 'badge-cancelado',
+      falta: 'badge-falta',
     };
-    return statusMap[status] || statusMap.pendente;
+    return map[status] || 'badge-pendente';
   };
 
   const agendamentosPorData = agruparPorData();
@@ -93,12 +95,27 @@ const AgendaBarbeiro = () => {
     );
   }
 
+  const accent = { color: 'var(--color-accent)' };
+
+  // Nota de status no rodapé do card, com cores de token.
+  const nota = (bg, fg, texto) => (
+    <div style={{
+      padding: '10px',
+      backgroundColor: bg,
+      color: fg,
+      borderRadius: '6px',
+      fontSize: '13px',
+    }}>
+      {texto}
+    </div>
+  );
+
   return (
     <div className="page-container">
       <Navbar />
       <div className="dashboard-container">
         <div className="dashboard-header">
-          <h1>Minha Agenda</h1>
+          <h1>Minha agenda</h1>
           <p>Gerencie seus atendimentos</p>
         </div>
 
@@ -113,7 +130,7 @@ const AgendaBarbeiro = () => {
           <h3>Filtros</h3>
           <div className="form-row">
             <div className="form-group">
-              <label>Data Início</label>
+              <label>Data início</label>
               <input
                 type="date"
                 value={filtros.data_inicio}
@@ -121,7 +138,7 @@ const AgendaBarbeiro = () => {
               />
             </div>
             <div className="form-group">
-              <label>Data Fim</label>
+              <label>Data fim</label>
               <input
                 type="date"
                 value={filtros.data_fim}
@@ -133,35 +150,35 @@ const AgendaBarbeiro = () => {
             onClick={() => setFiltros({ data_inicio: '', data_fim: '' })}
             className="btn btn-secondary btn-sm"
           >
-            Limpar Filtros
+            Limpar filtros
           </button>
         </div>
 
         {/* Estatísticas */}
         <div className="stats-grid" style={{ marginBottom: '30px' }}>
           <div className="stat-card">
-            <div className="stat-icon">📅</div>
+            <span className="stat-icon"><Icon name="calendar" size={28} style={accent} /></span>
             <div className="stat-content">
               <h3>{agendamentos.length}</h3>
-              <p>Total de Agendamentos</p>
+              <p>Total de agendamentos</p>
             </div>
           </div>
           <div className="stat-card">
-            <div className="stat-icon">⏳</div>
+            <span className="stat-icon"><Icon name="clock" size={28} style={accent} /></span>
             <div className="stat-content">
               <h3>{agendamentos.filter(a => a.status === 'pendente').length}</h3>
               <p>Pendentes</p>
             </div>
           </div>
           <div className="stat-card">
-            <div className="stat-icon">✅</div>
+            <span className="stat-icon"><Icon name="check" size={28} style={accent} /></span>
             <div className="stat-content">
               <h3>{agendamentos.filter(a => a.status === 'concluido').length}</h3>
               <p>Concluídos</p>
             </div>
           </div>
           <div className="stat-card">
-            <div className="stat-icon">⚠️</div>
+            <span className="stat-icon"><Icon name="alert" size={28} style={accent} /></span>
             <div className="stat-content">
               <h3>{agendamentos.filter(a => a.status === 'falta').length}</h3>
               <p>Faltas</p>
@@ -181,17 +198,13 @@ const AgendaBarbeiro = () => {
               <div className="grid-2">
                 {agendamentosPorData[data].map((agendamento) => {
                   const { hora } = formatarDataHora(agendamento.data_hora_agendamento);
-                  const statusInfo = getStatusInfo(agendamento.status);
-                  
+
                   return (
                     <div key={agendamento.id_agendamento} className="card">
                       <div className="card-header">
                         <h3>{hora} - {agendamento.cliente_nome}</h3>
-                        <span 
-                          className={`badge ${statusInfo.className}`}
-                          style={{ backgroundColor: statusInfo.color }}
-                        >
-                          {statusInfo.icon} {agendamento.status}
+                        <span className={`badge ${getStatusClasse(agendamento.status)}`}>
+                          {agendamento.status}
                         </span>
                       </div>
                       <div className="card-body">
@@ -209,19 +222,19 @@ const AgendaBarbeiro = () => {
                             onClick={() => atualizarStatus(agendamento.id_agendamento, 'confirmado')}
                             className="btn btn-success btn-sm"
                           >
-                            ✓ Confirmar
+                            Confirmar
                           </button>
                           <button
                             onClick={() => atualizarStatus(agendamento.id_agendamento, 'concluido')}
                             className="btn btn-primary btn-sm"
                           >
-                            ✅ Concluir
+                            Concluir
                           </button>
                           <button
                             onClick={() => atualizarStatus(agendamento.id_agendamento, 'cancelado')}
                             className="btn btn-danger btn-sm"
                           >
-                            ✗ Cancelar
+                            Cancelar
                           </button>
                         </div>
                       )}
@@ -233,20 +246,20 @@ const AgendaBarbeiro = () => {
                             onClick={() => atualizarStatus(agendamento.id_agendamento, 'concluido')}
                             className="btn btn-primary btn-sm"
                           >
-                            ✅ Concluir
+                            Concluir
                           </button>
                           <button
                             onClick={() => atualizarStatus(agendamento.id_agendamento, 'falta')}
                             className="btn btn-warning btn-sm"
                             title="Cliente não compareceu"
                           >
-                            ⚠️ Registrar Falta
+                            Registrar falta
                           </button>
                           <button
                             onClick={() => atualizarStatus(agendamento.id_agendamento, 'cancelado')}
                             className="btn btn-danger btn-sm"
                           >
-                            ✗ Cancelar
+                            Cancelar
                           </button>
                         </div>
                       )}
@@ -254,45 +267,24 @@ const AgendaBarbeiro = () => {
                       {/* MENSAGEM PARA AGENDAMENTOS COM FALTA */}
                       {agendamento.status === 'falta' && (
                         <div className="card-footer">
-                          <div style={{
-                            padding: '10px',
-                            backgroundColor: '#fff3cd',
-                            borderRadius: '4px',
-                            fontSize: '13px',
-                            color: '#856404'
-                          }}>
-                            ⚠️ <strong>Cliente não compareceu</strong> ao agendamento
-                          </div>
+                          {nota('var(--color-warning-soft)', 'var(--color-warning-text)',
+                            <span><strong>Cliente não compareceu</strong> ao agendamento</span>)}
                         </div>
                       )}
 
                       {/* MENSAGEM PARA AGENDAMENTOS CONCLUÍDOS */}
                       {agendamento.status === 'concluido' && (
                         <div className="card-footer">
-                          <div style={{
-                            padding: '10px',
-                            backgroundColor: '#d4edda',
-                            borderRadius: '4px',
-                            fontSize: '13px',
-                            color: '#155724'
-                          }}>
-                            ✅ Atendimento concluído
-                          </div>
+                          {nota('var(--color-success-soft)', 'var(--color-success-text)',
+                            'Atendimento concluído')}
                         </div>
                       )}
 
                       {/* MENSAGEM PARA AGENDAMENTOS CANCELADOS */}
                       {agendamento.status === 'cancelado' && (
                         <div className="card-footer">
-                          <div style={{
-                            padding: '10px',
-                            backgroundColor: '#f8d7da',
-                            borderRadius: '4px',
-                            fontSize: '13px',
-                            color: '#721c24'
-                          }}>
-                            ✗ Agendamento cancelado
-                          </div>
+                          {nota('var(--color-danger-soft)', 'var(--color-danger-text)',
+                            'Agendamento cancelado')}
                         </div>
                       )}
                     </div>

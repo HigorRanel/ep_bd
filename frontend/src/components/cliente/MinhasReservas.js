@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import Navbar from '../common/Navbar';
 import api from '../../services/api';
 import '../../styles/dashboard.css';
@@ -59,9 +58,9 @@ const MinhasReservas = () => {
       carregarDados();
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.error || 'Erro ao atualizar status' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.error || 'Erro ao atualizar status'
       });
       setTimeout(() => setMessage({ type: '', text: '' }), 4000);
     }
@@ -76,9 +75,9 @@ const MinhasReservas = () => {
       carregarDados();
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.error || 'Erro ao cancelar reserva' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.error || 'Erro ao cancelar reserva'
       });
       setTimeout(() => setMessage({ type: '', text: '' }), 4000);
     }
@@ -113,6 +112,11 @@ const MinhasReservas = () => {
     setFiltroCategoria('todas');
   };
 
+  const statusLabel = (status) => {
+    const map = { reservado: 'Reservado', comprado: 'Comprado', retirado: 'Retirado' };
+    return map[status] || status;
+  };
+
   if (loading) {
     return (
       <div className="page-container">
@@ -125,13 +129,20 @@ const MinhasReservas = () => {
     );
   }
 
+  const muted = { color: 'var(--color-text-muted)' };
+  const chip = {
+    backgroundColor: 'var(--color-accent-soft)',
+    color: 'var(--color-accent-text)',
+    fontSize: '11px',
+  };
+
   return (
     <div className="page-container">
       <Navbar />
       <div className="dashboard-container">
         <div className="dashboard-header">
           <div>
-            <h1>Reservas de Produtos</h1>
+            <h1>Reservas de produtos</h1>
             <p>Reserve produtos para retirar na barbearia</p>
           </div>
         </div>
@@ -144,11 +155,11 @@ const MinhasReservas = () => {
 
         {/* Minhas Reservas Ativas */}
         <div className="dashboard-section">
-          <h2>Minhas Reservas Ativas</h2>
+          <h2>Minhas reservas ativas</h2>
           {reservas.length === 0 ? (
             <div className="empty-state">
               <p>Você não tem reservas ativas</p>
-              <p style={{ fontSize: '14px', color: '#666', marginTop: '10px' }}>
+              <p style={{ fontSize: '14px', ...muted, marginTop: '10px' }}>
                 Navegue pelos produtos disponíveis abaixo e faça sua primeira reserva!
               </p>
             </div>
@@ -159,9 +170,7 @@ const MinhasReservas = () => {
                   <div className="card-header">
                     <h3>{reserva.nome_produto}</h3>
                     <span className={`badge badge-${reserva.status}`}>
-                      {reserva.status === 'reservado' ? '🔖 Reservado' : 
-                       reserva.status === 'comprado' ? '✅ Comprado' : 
-                       reserva.status === 'retirado' ? '✅ Retirado' : reserva.status}
+                      {statusLabel(reserva.status)}
                     </span>
                   </div>
                   <div className="card-body">
@@ -173,11 +182,12 @@ const MinhasReservas = () => {
                       <div style={{
                         marginTop: '15px',
                         padding: '10px',
-                        backgroundColor: '#e3f2fd',
-                        borderRadius: '4px',
+                        backgroundColor: 'var(--color-accent-soft)',
+                        color: 'var(--color-accent-text)',
+                        borderRadius: '6px',
                         fontSize: '13px'
                       }}>
-                        <strong>ℹ️ Status: Reservado</strong>
+                        <strong>Status: reservado</strong>
                         <p style={{ margin: '5px 0 0 0' }}>
                           Seu produto está reservado! Retire na barbearia quando desejar.
                         </p>
@@ -188,11 +198,12 @@ const MinhasReservas = () => {
                       <div style={{
                         marginTop: '15px',
                         padding: '10px',
-                        backgroundColor: '#e8f5e9',
-                        borderRadius: '4px',
+                        backgroundColor: 'var(--color-success-soft)',
+                        color: 'var(--color-success-text)',
+                        borderRadius: '6px',
                         fontSize: '13px'
                       }}>
-                        <strong>✅ Status: {reserva.status === 'comprado' ? 'Comprado' : 'Retirado'}</strong>
+                        <strong>Status: {reserva.status === 'comprado' ? 'comprado' : 'retirado'}</strong>
                         <p style={{ margin: '5px 0 0 0' }}>
                           Produto já foi retirado.
                         </p>
@@ -206,20 +217,20 @@ const MinhasReservas = () => {
                           onClick={() => atualizarStatusReserva(reserva.id_reserva, 'comprado')}
                           className="btn btn-success btn-sm"
                         >
-                          Marcar como Retirado
+                          Marcar como retirado
                         </button>
                         <button
                           onClick={() => cancelarReserva(reserva.id_reserva)}
                           className="btn btn-danger btn-sm"
                         >
-                          Cancelar Reserva
+                          Cancelar reserva
                         </button>
                       </>
                     )}
 
                     {(reserva.status === 'comprado' || reserva.status === 'retirado') && (
-                      <span style={{ color: '#27ae60', fontSize: '13px' }}>
-                        ✓ Produto retirado com sucesso
+                      <span style={{ color: 'var(--color-success)', fontSize: '13px' }}>
+                        Produto retirado com sucesso
                       </span>
                     )}
                   </div>
@@ -231,10 +242,10 @@ const MinhasReservas = () => {
 
         {/* Produtos Disponíveis */}
         <div className="dashboard-section">
-          <h2>Produtos Disponíveis para Reserva</h2>
+          <h2>Produtos disponíveis para reserva</h2>
 
           <div className="card" style={{ marginBottom: '30px' }}>
-            <h3 style={{ marginBottom: '15px' }}>🔍 Filtrar Produtos</h3>
+            <h3 style={{ marginBottom: '15px' }}>Filtrar produtos</h3>
 
             <div style={{
               display: 'grid',
@@ -243,7 +254,7 @@ const MinhasReservas = () => {
               marginBottom: '15px'
             }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label>Buscar por Nome</label>
+                <label>Buscar por nome</label>
                 <input
                   type="text"
                   placeholder="Digite o nome do produto..."
@@ -271,9 +282,9 @@ const MinhasReservas = () => {
               justifyContent: 'space-between',
               alignItems: 'center',
               paddingTop: '15px',
-              borderTop: '1px solid #ecf0f1'
+              borderTop: '1px solid var(--color-border)'
             }}>
-              <div style={{ color: '#666', fontSize: '14px' }}>
+              <div style={{ ...muted, fontSize: '14px' }}>
                 {produtosFiltrados.length === produtos.filter(p => p.quantidade_estoque > 0).length ? (
                   `Mostrando todos os ${produtosFiltrados.length} produtos disponíveis`
                 ) : (
@@ -286,7 +297,7 @@ const MinhasReservas = () => {
                   onClick={limparFiltros}
                   className="btn btn-secondary btn-sm"
                 >
-                  🔄 Limpar Filtros
+                  Limpar filtros
                 </button>
               )}
             </div>
@@ -302,7 +313,7 @@ const MinhasReservas = () => {
               </p>
               {(filtroNome || filtroCategoria !== 'todas') && (
                 <button onClick={limparFiltros} className="btn btn-primary">
-                  Limpar Filtros
+                  Limpar filtros
                 </button>
               )}
             </div>
@@ -319,22 +330,19 @@ const MinhasReservas = () => {
                     <div className="card-header">
                       <h3>{produto.nome_produto}</h3>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', alignItems: 'flex-end' }}>
-                        <span className="badge" style={{
-                          backgroundColor: '#3498db',
-                          fontSize: '11px'
-                        }}>
+                        <span className="badge" style={chip}>
                           {produto.categoria}
                         </span>
                         {produto.quantidade_estoque <= produto.minimo_estoque && (
-                          <span className="badge" style={{ backgroundColor: '#f39c12' }}>
-                            Estoque Baixo
+                          <span className="badge badge-falta">
+                            Estoque baixo
                           </span>
                         )}
                       </div>
                     </div>
                     <div className="card-body">
                       {produto.descricao && (
-                        <p style={{ fontSize: '13px', color: '#666', marginTop: '0', marginBottom: '10px' }}>
+                        <p style={{ fontSize: '13px', ...muted, marginTop: '0', marginBottom: '10px' }}>
                           {produto.descricao.length > 80
                             ? `${produto.descricao.substring(0, 80)}...`
                             : produto.descricao
@@ -343,7 +351,7 @@ const MinhasReservas = () => {
                       )}
                       <p style={{ marginTop: '10px' }}>
                         <strong>Preço:</strong>{' '}
-                        <span style={{ fontSize: '18px', color: '#27ae60' }}>
+                        <span style={{ fontSize: '18px', color: 'var(--color-accent)' }}>
                           R$ {parseFloat(produto.preco_venda).toFixed(2)}
                         </span>
                       </p>
@@ -355,13 +363,13 @@ const MinhasReservas = () => {
                         className="btn btn-primary btn-sm btn-block"
                         disabled={jaReservado}
                       >
-                        {jaReservado ? '✓ Já Reservado' : '🔖 Reservar Produto'}
+                        {jaReservado ? 'Já reservado' : 'Reservar produto'}
                       </button>
                       {jaReservado && (
                         <small style={{
                           display: 'block',
                           marginTop: '8px',
-                          color: '#666',
+                          ...muted,
                           fontSize: '12px',
                           textAlign: 'center'
                         }}>
@@ -377,14 +385,14 @@ const MinhasReservas = () => {
         </div>
 
         {/* Informações */}
-        <div className="card" style={{ marginTop: '40px', backgroundColor: '#f8f9fa' }}>
-          <h3>ℹ️ Como Funciona</h3>
+        <div className="card" style={{ marginTop: '40px', backgroundColor: 'var(--color-surface-2)' }}>
+          <h3>Como funciona</h3>
           <ul style={{ paddingLeft: '20px', marginTop: '15px', marginBottom: 0 }}>
-            <li><strong>Reservar:</strong> Ao clicar em "Reservar Produto", o item fica reservado automaticamente para você</li>
-            <li><strong>Status Reservado:</strong> O produto está garantido e aguardando sua retirada na barbearia</li>
-            <li><strong>Retirar:</strong> Vá até a barbearia e retire seu produto. Marque como "Retirado" após a retirada</li>
-            <li><strong>Cancelar:</strong> Caso não queira mais o produto, você pode cancelar a reserva a qualquer momento</li>
-            <li><strong>Busca:</strong> Use os filtros acima para encontrar produtos por nome ou categoria</li>
+            <li><strong>Reservar:</strong> ao clicar em "Reservar produto", o item fica reservado automaticamente para você</li>
+            <li><strong>Status reservado:</strong> o produto está garantido e aguardando sua retirada na barbearia</li>
+            <li><strong>Retirar:</strong> vá até a barbearia e retire seu produto. Marque como "Retirado" após a retirada</li>
+            <li><strong>Cancelar:</strong> caso não queira mais o produto, você pode cancelar a reserva a qualquer momento</li>
+            <li><strong>Busca:</strong> use os filtros acima para encontrar produtos por nome ou categoria</li>
           </ul>
         </div>
       </div>

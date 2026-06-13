@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Navbar from '../common/Navbar';
+import Icon from '../common/Icon';
 import api from '../../services/api';
 import '../../styles/dashboard.css';
 
@@ -73,6 +74,8 @@ const DashboardCliente = () => {
     );
   }
 
+  const accent = { color: 'var(--color-accent)' };
+
   return (
     <div className="page-container">
       <Navbar />
@@ -84,35 +87,35 @@ const DashboardCliente = () => {
 
         <div className="stats-grid">
           <div className="stat-card">
-            <div className="stat-icon">📅</div>
+            <span className="stat-icon"><Icon name="calendar" size={30} style={accent} /></span>
             <div className="stat-content">
               <h3>{stats.agendamentosPendentes}</h3>
-              <p>Agendamentos Pendentes</p>
+              <p>Agendamentos pendentes</p>
             </div>
           </div>
 
           <div className="stat-card">
-            <div className="stat-icon">🛒</div>
+            <span className="stat-icon"><Icon name="bag" size={30} style={accent} /></span>
             <div className="stat-content">
               <h3>{stats.reservasAtivas}</h3>
-              <p>Reservas Ativas</p>
+              <p>Reservas ativas</p>
             </div>
           </div>
 
           <div className="stat-card">
-            <div className="stat-icon">💳</div>
+            <span className="stat-icon"><Icon name="card" size={30} style={accent} /></span>
             <div className="stat-content">
               <h3>{stats.planosAtivos}</h3>
-              <p>Planos Ativos</p>
+              <p>Planos ativos</p>
             </div>
           </div>
         </div>
 
         <div className="dashboard-section">
           <div className="section-header">
-            <h2 className="h2_titulo">Próximos Agendamentos</h2>
+            <h2 className="h2_titulo">Próximos agendamentos</h2>
             <Link to="/cliente/agendamentos" className="btn btn-secondary btn-sm">
-              Ver Todos
+              Ver todos
             </Link>
           </div>
 
@@ -120,7 +123,7 @@ const DashboardCliente = () => {
             <div className="empty-state">
               <p>Você não tem agendamentos pendentes</p>
               <Link to="/cliente/agendar" className="btn btn-primary">
-                Agendar Serviço
+                Agendar serviço
               </Link>
             </div>
           ) : (
@@ -145,29 +148,29 @@ const DashboardCliente = () => {
         </div>
 
         <div className="quick-actions">
-          <h2>Ações Rápidas</h2>
+          <h2>Ações rápidas</h2>
           <div className="actions-grid">
             <Link to="/cliente/agendar" className="action-card">
-              <span className="action-icon">✂️</span>
-              <h3>Agendar Serviço</h3>
+              <span className="action-icon"><Icon name="scissors" size={30} style={accent} /></span>
+              <h3>Agendar serviço</h3>
               <p>Marque seu próximo corte</p>
             </Link>
 
             <Link to="/cliente/reservas" className="action-card">
-              <span className="action-icon">🛒</span>
-              <h3>Reservar Produto</h3>
+              <span className="action-icon"><Icon name="bag" size={30} style={accent} /></span>
+              <h3>Reservar produto</h3>
               <p>Reserve produtos para retirar</p>
             </Link>
 
             <Link to="/cliente/planos" className="action-card">
-              <span className="action-icon">💳</span>
-              <h3>Ver Planos</h3>
+              <span className="action-icon"><Icon name="card" size={30} style={accent} /></span>
+              <h3>Ver planos</h3>
               <p>Assine um plano mensal</p>
             </Link>
 
             <Link to="/cliente/agendamentos" className="action-card">
-              <span className="action-icon">📋</span>
-              <h3>Meus Agendamentos</h3>
+              <span className="action-icon"><Icon name="list" size={30} style={accent} /></span>
+              <h3>Meus agendamentos</h3>
               <p>Veja todos seus agendamentos</p>
             </Link>
           </div>

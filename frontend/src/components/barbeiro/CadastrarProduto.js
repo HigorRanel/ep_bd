@@ -105,7 +105,7 @@ const CadastrarProduto = () => {
       <Navbar />
       <div className="form-container">
         <div className="form-card">
-          <h2>Cadastrar Produto</h2>
+          <h2>Cadastrar produto</h2>
           <p className="form-subtitle">Adicione um novo produto ao estoque</p>
 
           {message.text && (
@@ -116,7 +116,7 @@ const CadastrarProduto = () => {
 
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label htmlFor="nome_produto">Nome do Produto *</label>
+              <label htmlFor="nome_produto">Nome do produto *</label>
               <input
                 type="text"
                 id="nome_produto"
@@ -124,7 +124,7 @@ const CadastrarProduto = () => {
                 value={formData.nome_produto}
                 onChange={handleChange}
                 required
-                placeholder="Ex: Pomada Fixadora"
+                placeholder="Ex: Pomada fixadora"
               />
             </div>
 
@@ -163,7 +163,7 @@ const CadastrarProduto = () => {
 
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="preco_compra">Preço de Compra (R$) *</label>
+                <label htmlFor="preco_compra">Preço de compra (R$) *</label>
                 <input
                   type="number"
                   id="preco_compra"
@@ -178,7 +178,7 @@ const CadastrarProduto = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="preco_venda">Preço de Venda (R$) *</label>
+                <label htmlFor="preco_venda">Preço de venda (R$) *</label>
                 <input
                   type="number"
                   id="preco_venda"
@@ -195,7 +195,7 @@ const CadastrarProduto = () => {
 
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="quantidade_estoque">Quantidade em Estoque *</label>
+                <label htmlFor="quantidade_estoque">Quantidade em estoque *</label>
                 <input
                   type="number"
                   id="quantidade_estoque"
@@ -209,7 +209,7 @@ const CadastrarProduto = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="minimo_estoque">Estoque Mínimo *</label>
+                <label htmlFor="minimo_estoque">Estoque mínimo *</label>
                 <input
                   type="number"
                   id="minimo_estoque"
@@ -228,7 +228,7 @@ const CadastrarProduto = () => {
               className="btn btn-primary btn-block"
               disabled={loading}
             >
-              {loading ? 'Cadastrando...' : 'Cadastrar Produto'}
+              {loading ? 'Cadastrando...' : 'Cadastrar produto'}
             </button>
           </form>
         </div>
@@ -236,13 +236,13 @@ const CadastrarProduto = () => {
         {/* Produtos com Estoque Baixo */}
         {produtosBaixoEstoque.length > 0 && (
           <div className="form-card" style={{ marginTop: '30px' }}>
-            <h2>⚠️ Produtos com Estoque Baixo</h2>
+            <h2>Produtos com estoque baixo</h2>
             <div className="grid-2">
               {produtosBaixoEstoque.map((produto) => (
-                <div key={produto.id_produto} className="card" style={{ borderLeft: '4px solid var(--danger)' }}>
+                <div key={produto.id_produto} className="card" style={{ borderLeft: '4px solid var(--color-warning)' }}>
                   <div className="card-header">
                     <h3>{produto.nome_produto}</h3>
-                    <span className="badge badge-cancelado">Baixo</span>
+                    <span className="badge badge-falta">Baixo</span>
                   </div>
                   <div className="card-body">
                     <p><strong>Estoque:</strong> {produto.quantidade_estoque} / {produto.minimo_estoque} mínimo</p>
@@ -253,7 +253,7 @@ const CadastrarProduto = () => {
                       onClick={() => atualizarEstoque(produto.id_produto)}
                       className="btn btn-primary btn-sm"
                     >
-                      Atualizar Estoque
+                      Atualizar estoque
                     </button>
                   </div>
                 </div>
@@ -264,7 +264,7 @@ const CadastrarProduto = () => {
 
         {/* Todos os Produtos */}
         <div className="form-card" style={{ marginTop: '30px' }}>
-          <h2>Todos os Produtos</h2>
+          <h2>Todos os produtos</h2>
           <div className="grid-3">
             {produtos.map((produto) => (
               <div key={produto.id_produto} className="card">
@@ -282,7 +282,7 @@ const CadastrarProduto = () => {
                     onClick={() => atualizarEstoque(produto.id_produto)}
                     className="btn btn-secondary btn-sm"
                   >
-                    Ajustar Estoque
+                    Ajustar estoque
                   </button>
                 </div>
               </div>

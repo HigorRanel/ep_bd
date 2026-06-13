@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../common/Navbar';
+import Icon from '../common/Icon';
 import api from '../../services/api';
 import '../../styles/dashboard.css';
 
@@ -11,7 +12,7 @@ const MinhasAvaliacoes = () => {
     total_avaliacoes: 0,
   });
   const [loading, setLoading] = useState(true);
-  
+
   const [filtros, setFiltros] = useState({
     page: 1,
     per_page: 10,
@@ -45,7 +46,6 @@ const MinhasAvaliacoes = () => {
         has_prev: avaliacoesRes.data.tem_anterior,
         page: avaliacoesRes.data.pagina_atual,
         pages: avaliacoesRes.data.total_paginas,
-
       });
       setEstatisticas(mediaRes.data);
     } catch (error) {
@@ -54,19 +54,18 @@ const MinhasAvaliacoes = () => {
       setLoading(false);
     }
   };
+
   const renderEstrelas = (nota) => {
     const estrelas = [];
     for (let i = 1; i <= 5; i++) {
       estrelas.push(
-        <span
+        <Icon
           key={i}
-          style={{
-            color: i <= nota ? '#f39c12' : '#ddd',
-            fontSize: '20px',
-          }}
-        >
-          ★
-        </span>
+          name="star"
+          filled={i <= nota}
+          size={20}
+          style={{ color: i <= nota ? 'var(--color-accent)' : 'var(--color-border)' }}
+        />
       );
     }
     return estrelas;
@@ -111,39 +110,44 @@ const MinhasAvaliacoes = () => {
     );
   }
 
+  const accent = { color: 'var(--color-accent)' };
+  const muted = { color: 'var(--color-text-muted)' };
+
   return (
     <div className="page-container">
       <Navbar />
       <div className="dashboard-container">
         <div className="dashboard-header">
-          <h1>Minhas Avaliações</h1>
+          <h1>Minhas avaliações</h1>
           <p>Veja o feedback dos seus clientes</p>
         </div>
 
         {/* Estatísticas */}
         <div className="stats-grid" style={{ marginBottom: '40px' }}>
           <div className="stat-card">
-            <div className="stat-icon">⭐</div>
+            <span className="stat-icon"><Icon name="star" size={28} style={accent} /></span>
             <div className="stat-content">
               <h3>{parseFloat(estatisticas.media_nota || 0).toFixed(1)}</h3>
-              <p>Média de Avaliações</p>
-              <div>{renderEstrelas(Math.round(estatisticas.media_nota))}</div>
+              <p>Média de avaliações</p>
+              <div style={{ display: 'flex', gap: '2px', marginTop: '4px' }}>
+                {renderEstrelas(Math.round(estatisticas.media_nota))}
+              </div>
             </div>
           </div>
 
           <div className="stat-card">
-            <div className="stat-icon">💬</div>
+            <span className="stat-icon"><Icon name="mail" size={28} style={accent} /></span>
             <div className="stat-content">
               <h3>{estatisticas.total_avaliacoes || 0}</h3>
-              <p>Total de Avaliações</p>
+              <p>Total de avaliações</p>
             </div>
           </div>
 
           <div className="stat-card">
-            <div className="stat-icon">📊</div>
+            <span className="stat-icon"><Icon name="chart" size={28} style={accent} /></span>
             <div className="stat-content">
               <h3>{distribuicao[5]}</h3>
-              <p>Avaliações 5 Estrelas</p>
+              <p>Avaliações 5 estrelas</p>
             </div>
           </div>
         </div>
@@ -154,14 +158,14 @@ const MinhasAvaliacoes = () => {
             <h3 style={{ margin: 0 }}>Filtros</h3>
             {(filtros.data_inicio || filtros.data_fim) && (
               <button onClick={limparFiltros} className="btn btn-secondary btn-sm">
-                Limpar Filtros
+                Limpar filtros
               </button>
             )}
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label>Data Início</label>
+              <label>Data início</label>
               <input
                 type="date"
                 value={filtros.data_inicio}
@@ -169,7 +173,7 @@ const MinhasAvaliacoes = () => {
               />
             </div>
             <div className="form-group">
-              <label>Data Fim</label>
+              <label>Data fim</label>
               <input
                 type="date"
                 value={filtros.data_fim}
@@ -179,7 +183,7 @@ const MinhasAvaliacoes = () => {
           </div>
 
           {pagination.total !== undefined && (
-            <div style={{ marginTop: '15px', color: '#666', fontSize: '14px' }}>
+            <div style={{ marginTop: '15px', ...muted, fontSize: '14px' }}>
               Mostrando {avaliacoes.length} de {pagination.total} avaliações
             </div>
           )}
@@ -200,12 +204,14 @@ const MinhasAvaliacoes = () => {
                     <div className="card-header">
                       <div>
                         <h3>{avaliacao.cliente_nome}</h3>
-                        <p style={{ margin: 0, color: '#666', fontSize: '12px' }}>
+                        <p style={{ margin: 0, ...muted, fontSize: '12px' }}>
                           {formatarData(avaliacao.data_hora_agendamento)}
                         </p>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        {renderEstrelas(avaliacao.nota)}
+                        <div style={{ display: 'flex', gap: '2px', justifyContent: 'flex-end' }}>
+                          {renderEstrelas(avaliacao.nota)}
+                        </div>
                         <p style={{ margin: '5px 0 0 0', fontSize: '14px', fontWeight: 'bold' }}>
                           {avaliacao.nota}/5
                         </p>
@@ -218,7 +224,7 @@ const MinhasAvaliacoes = () => {
                           style={{
                             marginTop: '15px',
                             padding: '15px',
-                            backgroundColor: '#f8f9fa',
+                            backgroundColor: 'var(--color-surface-2)',
                             borderRadius: '8px',
                             fontStyle: 'italic',
                           }}
@@ -234,14 +240,14 @@ const MinhasAvaliacoes = () => {
               {/* Paginação */}
               {pagination.pages > 1 && (
                 <div className="card" style={{ marginTop: '30px' }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
                     alignItems: 'center',
                     flexWrap: 'wrap',
                     gap: '15px'
                   }}>
-                    <div style={{ color: '#666' }}>
+                    <div style={muted}>
                       Página {pagination.page} de {pagination.pages}
                     </div>
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../common/Navbar';
+import Icon from '../common/Icon';
 import api from '../../services/api';
 import '../../styles/dashboard.css';
 
@@ -183,14 +184,14 @@ const MeusAgendamentos = () => {
     return Array.from({ length: 5 }, (_, i) => (
       <span
         key={i}
-        style={{
-          fontSize: '24px',
-          color: i < nota ? '#f39c12' : '#ddd',
-          cursor: 'pointer'
-        }}
         onClick={() => setAvaliacao(prev => ({ ...prev, nota: i + 1 }))}
+        style={{
+          cursor: 'pointer',
+          display: 'inline-flex',
+          color: i < nota ? 'var(--color-accent)' : 'var(--color-border)',
+        }}
       >
-        ★
+        <Icon name="star" filled={i < nota} size={26} />
       </span>
     ));
   }, []);
@@ -213,14 +214,14 @@ const MeusAgendamentos = () => {
     return diferencaHoras > 2;
   }, []);
 
-  const getStatusInfo = useCallback((status) => {
-    const statusMap = {
-      pendente: { label: 'Pendente', color: '#f39c12', icon: '⏳' },
-      confirmado: { label: 'Confirmado', color: '#426947', icon: '✓' },
-      concluido: { label: 'Concluído', color: '#27ae60', icon: '✓✓' },
-      cancelado: { label: 'Cancelado', color: '#e74c3c', icon: '✗' }
+  const getStatusLabel = useCallback((status) => {
+    const map = {
+      pendente: 'Pendente',
+      confirmado: 'Confirmado',
+      concluido: 'Concluído',
+      cancelado: 'Cancelado',
     };
-    return statusMap[status] || statusMap.pendente;
+    return map[status] || 'Pendente';
   }, []);
 
   const estatisticas = useMemo(() => ({
@@ -241,17 +242,28 @@ const MeusAgendamentos = () => {
     );
   }
 
+  const muted = { color: 'var(--color-text-muted)' };
+  const inputInline = {
+    width: '100%',
+    padding: '12px',
+    background: 'var(--color-surface)',
+    color: 'var(--color-text)',
+    border: '1px solid var(--color-border)',
+    borderRadius: '8px',
+    fontSize: '14px',
+  };
+
   return (
     <div className="page-container">
       <Navbar />
       <div className="dashboard-container">
         <div className="dashboard-header">
           <div>
-            <h1>Meus Agendamentos</h1>
+            <h1>Meus agendamentos</h1>
             <p>Gerencie seus agendamentos e avalie os serviços</p>
           </div>
           <Link to="/cliente/agendar" className="btn btn-primary">
-            + Novo Agendamento
+            + Novo agendamento
           </Link>
         </div>
 
@@ -263,21 +275,21 @@ const MeusAgendamentos = () => {
 
         <div className="stats-grid">
           <div className="stat-card">
-            <div className="stat-icon">📅</div>
+            <span className="stat-icon"><Icon name="calendar" size={28} style={{ color: 'var(--color-accent)' }} /></span>
             <div className="stat-content">
               <h3>{estatisticas.total}</h3>
-              <p>Total de Agendamentos</p>
+              <p>Total de agendamentos</p>
             </div>
           </div>
           <div className="stat-card">
-            <div className="stat-icon">⏳</div>
+            <span className="stat-icon"><Icon name="clock" size={28} style={{ color: 'var(--color-accent)' }} /></span>
             <div className="stat-content">
               <h3>{estatisticas.pendentes}</h3>
               <p>Pendentes</p>
             </div>
           </div>
           <div className="stat-card">
-            <div className="stat-icon">✅</div>
+            <span className="stat-icon"><Icon name="check" size={28} style={{ color: 'var(--color-accent)' }} /></span>
             <div className="stat-content">
               <h3>{estatisticas.concluidos}</h3>
               <p>Concluídos</p>
@@ -287,7 +299,7 @@ const MeusAgendamentos = () => {
 
         <div className="card" style={{ marginBottom: '30px' }}>
           <div style={{ marginBottom: '20px' }}>
-            <h3 style={{ marginBottom: '15px' }}>🔍 Filtros e Busca</h3>
+            <h3 style={{ marginBottom: '15px' }}>Filtros e busca</h3>
 
             <div style={{ marginBottom: '15px' }}>
               <input
@@ -295,13 +307,7 @@ const MeusAgendamentos = () => {
                 placeholder="Buscar por serviço ou barbeiro..."
                 value={termoBusca}
                 onChange={(e) => setTermoBusca(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '1px solid #ddd',
-                  borderRadius: '8px',
-                  fontSize: '14px'
-                }}
+                style={inputInline}
               />
             </div>
 
@@ -339,7 +345,9 @@ const MeusAgendamentos = () => {
                 onChange={(e) => setOrdenacao(e.target.value)}
                 style={{
                   padding: '8px 12px',
-                  border: '1px solid #ddd',
+                  background: 'var(--color-surface)',
+                  color: 'var(--color-text)',
+                  border: '1px solid var(--color-border)',
                   borderRadius: '6px',
                   fontSize: '14px'
                 }}
@@ -352,8 +360,8 @@ const MeusAgendamentos = () => {
 
           <div style={{
             paddingTop: '15px',
-            borderTop: '1px solid #ecf0f1',
-            color: '#666',
+            borderTop: '1px solid var(--color-border)',
+            ...muted,
             fontSize: '14px'
           }}>
             Mostrando <strong>{agendamentosPaginados.length}</strong> de <strong>{agendamentosFiltrados.length}</strong> agendamentos
@@ -369,7 +377,7 @@ const MeusAgendamentos = () => {
             </p>
             {!termoBusca && (
               <Link to="/cliente/agendar" className="btn btn-primary">
-                Fazer Primeiro Agendamento
+                Fazer primeiro agendamento
               </Link>
             )}
           </div>
@@ -378,7 +386,6 @@ const MeusAgendamentos = () => {
             <div className="grid-2">
               {agendamentosPaginados.map((agendamento) => {
                 const { data, hora } = formatarData(agendamento.data_hora_agendamento);
-                const statusInfo = getStatusInfo(agendamento.status);
                 const avaliado = jaAvaliou(agendamento);
 
                 return (
@@ -386,15 +393,12 @@ const MeusAgendamentos = () => {
                     <div className="card-header">
                       <div>
                         <h3>{agendamento.servico_nome}</h3>
-                        <p style={{ margin: '5px 0 0 0', color: '#666', fontSize: '14px' }}>
+                        <p style={{ margin: '5px 0 0 0', ...muted, fontSize: '14px' }}>
                           {data} às {hora}
                         </p>
                       </div>
-                      <span
-                        className={`badge badge-${agendamento.status}`}
-                        style={{ backgroundColor: statusInfo.color }}
-                      >
-                        {statusInfo.icon} {statusInfo.label}
+                      <span className={`badge badge-${agendamento.status}`}>
+                        {getStatusLabel(agendamento.status)}
                       </span>
                     </div>
 
@@ -407,12 +411,13 @@ const MeusAgendamentos = () => {
                         <div style={{
                           marginTop: '15px',
                           padding: '10px',
-                          backgroundColor: avaliado ? '#e3f2fd' : '#e8f5e9',
-                          borderRadius: '4px'
+                          backgroundColor: avaliado ? 'var(--color-accent-soft)' : 'var(--color-success-soft)',
+                          color: avaliado ? 'var(--color-accent-text)' : 'var(--color-success-text)',
+                          borderRadius: '6px'
                         }}>
-                          <strong>{avaliado ? '⭐ Já avaliado' : '✓ Serviço concluído'}</strong>
+                          <strong>{avaliado ? 'Já avaliado' : 'Serviço concluído'}</strong>
                           {avaliado && (
-                            <p style={{ margin: '5px 0 0 0', fontSize: '13px', color: '#666' }}>
+                            <p style={{ margin: '5px 0 0 0', fontSize: '13px' }}>
                               Você já avaliou este agendamento
                             </p>
                           )}
@@ -423,10 +428,11 @@ const MeusAgendamentos = () => {
                         <div style={{
                           marginTop: '15px',
                           padding: '10px',
-                          backgroundColor: '#ffebee',
-                          borderRadius: '4px'
+                          backgroundColor: 'var(--color-danger-soft)',
+                          color: 'var(--color-danger-text)',
+                          borderRadius: '6px'
                         }}>
-                          <strong>✗ Agendamento cancelado</strong>
+                          <strong>Agendamento cancelado</strong>
                         </div>
                       )}
                     </div>
@@ -437,23 +443,13 @@ const MeusAgendamentos = () => {
                           onClick={() => abrirAvaliacao(agendamento)}
                           className="btn btn-success btn-sm"
                         >
-                          ⭐ Avaliar Serviço
+                          Avaliar serviço
                         </button>
                       )}
 
                       {avaliado && (
-                        <button
-                          disabled
-                          className="btn btn-sm"
-                          style={{
-                            backgroundColor: '#e0e0e0',
-                            color: '#666',
-                            cursor: 'not-allowed',
-                            opacity: 0.6
-                          }}
-                          title="Você já avaliou este agendamento"
-                        >
-                          ✓ Já Avaliado
+                        <button disabled className="btn btn-secondary btn-sm" title="Você já avaliou este agendamento">
+                          Já avaliado
                         </button>
                       )}
 
@@ -467,8 +463,8 @@ const MeusAgendamentos = () => {
                       )}
 
                       {!podeCancelar(agendamento) && (agendamento.status === 'pendente' || agendamento.status === 'confirmado') && (
-                        <small style={{ color: '#e74c3c' }}>
-                          ⚠️ Falta menos de 2h - não pode cancelar
+                        <small style={{ color: 'var(--color-danger)' }}>
+                          Falta menos de 2h — não pode cancelar
                         </small>
                       )}
                     </div>
@@ -486,7 +482,7 @@ const MeusAgendamentos = () => {
                   flexWrap: 'wrap',
                   gap: '15px'
                 }}>
-                  <div style={{ color: '#666', fontSize: '14px' }}>
+                  <div style={{ ...muted, fontSize: '14px' }}>
                     Página <strong>{paginaAtual}</strong> de <strong>{totalPaginas}</strong>
                   </div>
 
@@ -523,8 +519,7 @@ const MeusAgendamentos = () => {
                         <button
                           key={pageNum}
                           onClick={() => mudarPagina(pageNum)}
-                          className={`btn btn-sm ${pageNum === paginaAtual ? 'btn-primary' : 'btn-secondary'
-                            }`}
+                          className={`btn btn-sm ${pageNum === paginaAtual ? 'btn-primary' : 'btn-secondary'}`}
                         >
                           {pageNum}
                         </button>
@@ -556,7 +551,7 @@ const MeusAgendamentos = () => {
         {avaliacaoModal && (
           <div className="modal-overlay" onClick={() => setAvaliacaoModal(null)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <h3>Avaliar Serviço</h3>
+              <h3>Avaliar serviço</h3>
 
               <div style={{ marginBottom: '20px' }}>
                 <p><strong>Serviço:</strong> {avaliacaoModal.servico_nome}</p>
@@ -567,11 +562,11 @@ const MeusAgendamentos = () => {
               </div>
 
               <div className="form-group">
-                <label>Sua Nota (1-5 estrelas) *</label>
-                <div style={{ fontSize: '24px', marginTop: '10px' }}>
+                <label>Sua nota (1-5 estrelas) *</label>
+                <div style={{ marginTop: '10px', display: 'flex', gap: '4px' }}>
                   {renderEstrelas(avaliacao.nota)}
                 </div>
-                <p style={{ marginTop: '10px', color: '#666' }}>
+                <p style={{ marginTop: '10px', ...muted }}>
                   Nota selecionada: {avaliacao.nota} {avaliacao.nota === 1 ? 'estrela' : 'estrelas'}
                 </p>
               </div>
@@ -586,14 +581,14 @@ const MeusAgendamentos = () => {
                   placeholder="Conte-nos sobre sua experiência..."
                   maxLength="255"
                 />
-                <small style={{ color: '#666' }}>
+                <small style={muted}>
                   {avaliacao.comentario.length}/255 caracteres
                 </small>
               </div>
 
               <div className="modal-footer">
                 <button onClick={enviarAvaliacao} className="btn btn-primary">
-                  Enviar Avaliação
+                  Enviar avaliação
                 </button>
                 <button onClick={() => setAvaliacaoModal(null)} className="btn btn-secondary">
                   Cancelar

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../common/Navbar';
+import Icon from '../common/Icon';
 import api from '../../services/api';
 import '../../styles/dashboard.css';
 
@@ -14,16 +15,16 @@ const ListarProdutos = () => {
     tem_proxima: false,
     tem_anterior: false
   });
-  
-  
+
+
   const [filtros, setFiltros] = useState({
     nome: '',
     categoria: '',
     status: ''
   });
-  
+
   const [categorias, setCategorias] = useState([]);
-  
+
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
@@ -51,12 +52,12 @@ const ListarProdutos = () => {
   const carregarProdutos = async () => {
     try {
       setLoading(true);
-      
+
       const params = {
         pagina: paginacao.pagina_atual,
         por_pagina: paginacao.por_pagina
       };
-      
+
       if (filtros.nome.trim()) {
         params.nome = filtros.nome.trim();
       }
@@ -66,9 +67,9 @@ const ListarProdutos = () => {
       if (filtros.status) {
         params.status = filtros.status;
       }
-      
+
       const response = await api.get('/produtos/paginado', { params });
-      
+
       setProdutos(response.data.produtos);
       setPaginacao({
         total_produtos: response.data.total_produtos,
@@ -80,9 +81,9 @@ const ListarProdutos = () => {
       });
     } catch (error) {
       console.error('Erro ao carregar produtos:', error);
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.error || 'Erro ao carregar produtos' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.error || 'Erro ao carregar produtos'
       });
     } finally {
       setLoading(false);
@@ -129,7 +130,7 @@ const ListarProdutos = () => {
     setPaginacao(prev => ({
       ...prev,
       por_pagina: parseInt(novoValor),
-      pagina_atual: 1 
+      pagina_atual: 1
     }));
   };
 
@@ -138,7 +139,7 @@ const ListarProdutos = () => {
       `${nomeProduto}\nEstoque atual: ${estoqueAtual}\n\nQuantidade a adicionar (use valor negativo para subtrair):`,
       '0'
     );
-    
+
     if (qtd === null) return;
 
     try {
@@ -149,9 +150,9 @@ const ListarProdutos = () => {
       carregarProdutos();
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.error || 'Erro ao atualizar estoque' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.error || 'Erro ao atualizar estoque'
       });
       setTimeout(() => setMessage({ type: '', text: '' }), 5000);
     }
@@ -159,7 +160,7 @@ const ListarProdutos = () => {
 
   const abrirModalEditar = (produto) => {
     setModalEditar(true);
-    setProdutoEditando({...produto});
+    setProdutoEditando({ ...produto });
   };
 
   const salvarEdicao = async () => {
@@ -199,20 +200,23 @@ const ListarProdutos = () => {
   const gerarPaginas = () => {
     const paginas = [];
     const maxPaginasVisiveis = 5;
-    
+
     let inicio = Math.max(1, paginacao.pagina_atual - Math.floor(maxPaginasVisiveis / 2));
     let fim = Math.min(paginacao.total_paginas, inicio + maxPaginasVisiveis - 1);
-    
+
     if (fim - inicio + 1 < maxPaginasVisiveis) {
       inicio = Math.max(1, fim - maxPaginasVisiveis + 1);
     }
-    
+
     for (let i = inicio; i <= fim; i++) {
       paginas.push(i);
     }
-    
+
     return paginas;
   };
+
+  const accent = { color: 'var(--color-accent)' };
+  const muted = { color: 'var(--color-text-muted)' };
 
   return (
     <div className="page-container">
@@ -220,7 +224,7 @@ const ListarProdutos = () => {
       <div className="dashboard-container">
         <div className="dashboard-header">
           <div>
-            <h1>Gerenciar Produtos</h1>
+            <h1>Gerenciar produtos</h1>
             <p>Pesquise e gerencie o estoque de produtos</p>
           </div>
         </div>
@@ -234,58 +238,57 @@ const ListarProdutos = () => {
         {/* Estatísticas Rápidas */}
         <div className="stats-grid" style={{ marginBottom: '30px' }}>
           <div className="stat-card">
-            <div className="stat-icon">📦</div>
+            <span className="stat-icon"><Icon name="package" size={28} style={accent} /></span>
             <div className="stat-content">
               <h3>{paginacao.total_produtos}</h3>
-              <p>Total de Produtos</p>
+              <p>Total de produtos</p>
             </div>
           </div>
-          
+
           <div className="stat-card">
-            <div className="stat-icon">📄</div>
+            <span className="stat-icon"><Icon name="list" size={28} style={accent} /></span>
             <div className="stat-content">
               <h3>{paginacao.total_paginas}</h3>
-              <p>Total de Páginas</p>
+              <p>Total de páginas</p>
             </div>
           </div>
-          
+
           <div className="stat-card">
-            <div className="stat-icon">🔍</div>
+            <span className="stat-icon"><Icon name="chart" size={28} style={accent} /></span>
             <div className="stat-content">
               <h3>{produtos.length}</h3>
-              <p>Produtos Nesta Página</p>
+              <p>Produtos nesta página</p>
             </div>
           </div>
         </div>
 
         {/* Barra de Filtros */}
         <div className="card" style={{ marginBottom: '30px' }}>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: mostrarFiltros ? '20px' : '0'
           }}>
-            <h3 style={{ margin: 0 }}>🔍 Filtros e Busca</h3>
+            <h3 style={{ margin: 0 }}>Filtros e busca</h3>
             <button
               onClick={() => setMostrarFiltros(!mostrarFiltros)}
               className="btn btn-secondary btn-sm"
             >
-              {mostrarFiltros ? '▲ Ocultar' : '▼ Mostrar'} Filtros
+              {mostrarFiltros ? 'Ocultar filtros' : 'Mostrar filtros'}
             </button>
           </div>
 
           {mostrarFiltros && (
             <>
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
                 gap: '15px',
                 marginTop: '20px'
               }}>
-                {/* Filtro por Nome */}
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label>Nome do Produto</label>
+                  <label>Nome do produto</label>
                   <input
                     type="text"
                     value={filtros.nome}
@@ -295,7 +298,6 @@ const ListarProdutos = () => {
                   />
                 </div>
 
-                {/* Filtro por Categoria */}
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label>Categoria</label>
                   <select
@@ -309,7 +311,6 @@ const ListarProdutos = () => {
                   </select>
                 </div>
 
-                {/* Filtro por Status */}
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label>Status</label>
                   <select
@@ -322,9 +323,8 @@ const ListarProdutos = () => {
                   </select>
                 </div>
 
-                {/* Itens por Página */}
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label>Itens por Página</label>
+                  <label>Itens por página</label>
                   <select
                     value={paginacao.por_pagina}
                     onChange={(e) => mudarItensPorPagina(e.target.value)}
@@ -337,19 +337,18 @@ const ListarProdutos = () => {
                 </div>
               </div>
 
-              {/* Botões de Ação */}
-              <div style={{ 
-                display: 'flex', 
-                gap: '10px', 
+              <div style={{
+                display: 'flex',
+                gap: '10px',
                 marginTop: '20px',
                 paddingTop: '20px',
-                borderTop: '1px solid #ecf0f1'
+                borderTop: '1px solid var(--color-border)'
               }}>
                 <button onClick={aplicarFiltros} className="btn btn-primary">
-                  🔍 Aplicar Filtros
+                  Aplicar filtros
                 </button>
                 <button onClick={limparFiltros} className="btn btn-secondary">
-                  🔄 Limpar Filtros
+                  Limpar filtros
                 </button>
               </div>
             </>
@@ -366,7 +365,7 @@ const ListarProdutos = () => {
           <div className="empty-state">
             <p>Nenhum produto encontrado com os filtros aplicados</p>
             <button onClick={limparFiltros} className="btn btn-primary">
-              Limpar Filtros
+              Limpar filtros
             </button>
           </div>
         ) : (
@@ -377,18 +376,16 @@ const ListarProdutos = () => {
                   <div className="card-header">
                     <h3>{produto.nome_produto}</h3>
                     {produto.quantidade_estoque <= produto.minimo_estoque && (
-                      <span className="badge" style={{ backgroundColor: '#f0901bff', textAlign: 'center' }}>
-                        ⚠️ Baixo
-                      </span>
+                      <span className="badge badge-falta">Baixo</span>
                     )}
                   </div>
-                  
+
                   <div className="card-body">
                     <p><strong>Categoria:</strong> {produto.categoria}</p>
                     {produto.descricao && (
-                      <p style={{ fontSize: '13px', color: '#666' }}>
-                        {produto.descricao.length > 80 
-                          ? `${produto.descricao.substring(0, 80)}...` 
+                      <p style={{ fontSize: '13px', ...muted }}>
+                        {produto.descricao.length > 80
+                          ? `${produto.descricao.substring(0, 80)}...`
                           : produto.descricao
                         }
                       </p>
@@ -397,10 +394,10 @@ const ListarProdutos = () => {
                     <p><strong>Venda:</strong> R$ {parseFloat(produto.preco_venda).toFixed(2)}</p>
                     <p>
                       <strong>Estoque:</strong>{' '}
-                      <span style={{ 
-                        color: produto.quantidade_estoque <= produto.minimo_estoque 
-                          ? '#e74c3c' 
-                          : '#27ae60',
+                      <span style={{
+                        color: produto.quantidade_estoque <= produto.minimo_estoque
+                          ? 'var(--color-danger)'
+                          : 'var(--color-success)',
                         fontWeight: 'bold'
                       }}>
                         {produto.quantidade_estoque}
@@ -409,29 +406,29 @@ const ListarProdutos = () => {
                     </p>
                     <p><strong>Status:</strong> {produto.status}</p>
                   </div>
-                  
+
                   <div className="card-footer">
                     <button
                       onClick={() => atualizarEstoque(
-                        produto.id_produto, 
+                        produto.id_produto,
                         produto.nome_produto,
                         produto.quantidade_estoque
                       )}
                       className="btn btn-primary btn-sm"
                     >
-                      📦 Ajustar Estoque
+                      Ajustar estoque
                     </button>
                     <button
                       onClick={() => abrirModalEditar(produto)}
                       className="btn btn-secondary btn-sm"
                     >
-                      ✏️ Editar
+                      Editar
                     </button>
                     <button
                       onClick={() => deletarProduto(produto.id_produto, produto.nome_produto)}
                       className="btn btn-danger btn-sm"
                     >
-                      🗑️ Deletar
+                      Deletar
                     </button>
                   </div>
                 </div>
@@ -440,15 +437,14 @@ const ListarProdutos = () => {
 
             {/* Paginação */}
             <div className="card" style={{ marginTop: '30px' }}>
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
                 alignItems: 'center',
                 flexWrap: 'wrap',
                 gap: '15px'
               }}>
-                {/* Info de Paginação */}
-                <div style={{ color: '#666' }}>
+                <div style={muted}>
                   Mostrando produtos{' '}
                   <strong>
                     {(paginacao.pagina_atual - 1) * paginacao.por_pagina + 1}
@@ -464,9 +460,7 @@ const ListarProdutos = () => {
                   <strong>{paginacao.total_produtos}</strong>
                 </div>
 
-                {/* Controles de Paginação */}
                 <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                  {/* Botão Primeira Página */}
                   <button
                     onClick={() => mudarPagina(1)}
                     disabled={!paginacao.tem_anterior}
@@ -475,7 +469,6 @@ const ListarProdutos = () => {
                     ««
                   </button>
 
-                  {/* Botão Anterior */}
                   <button
                     onClick={() => mudarPagina(paginacao.pagina_atual - 1)}
                     disabled={!paginacao.tem_anterior}
@@ -484,14 +477,13 @@ const ListarProdutos = () => {
                     « Anterior
                   </button>
 
-                  {/* Números de Página */}
                   {gerarPaginas().map(numeroPagina => (
                     <button
                       key={numeroPagina}
                       onClick={() => mudarPagina(numeroPagina)}
                       className={`btn btn-sm ${
-                        numeroPagina === paginacao.pagina_atual 
-                          ? 'btn-primary' 
+                        numeroPagina === paginacao.pagina_atual
+                          ? 'btn-primary'
                           : 'btn-secondary'
                       }`}
                     >
@@ -499,7 +491,6 @@ const ListarProdutos = () => {
                     </button>
                   ))}
 
-                  {/* Botão Próxima */}
                   <button
                     onClick={() => mudarPagina(paginacao.pagina_atual + 1)}
                     disabled={!paginacao.tem_proxima}
@@ -508,7 +499,6 @@ const ListarProdutos = () => {
                     Próxima »
                   </button>
 
-                  {/* Botão Última Página */}
                   <button
                     onClick={() => mudarPagina(paginacao.total_paginas)}
                     disabled={!paginacao.tem_proxima}
@@ -526,14 +516,14 @@ const ListarProdutos = () => {
         {modalEditar && produtoEditando && (
           <div className="modal-overlay" onClick={() => setModalEditar(false)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <h3>Editar Produto</h3>
-              
+              <h3>Editar produto</h3>
+
               <div className="form-group">
-                <label>Nome do Produto</label>
+                <label>Nome do produto</label>
                 <input
                   type="text"
                   value={produtoEditando.nome_produto}
-                  onChange={(e) => setProdutoEditando({...produtoEditando, nome_produto: e.target.value})}
+                  onChange={(e) => setProdutoEditando({ ...produtoEditando, nome_produto: e.target.value })}
                 />
               </div>
 
@@ -541,29 +531,29 @@ const ListarProdutos = () => {
                 <label>Descrição</label>
                 <textarea
                   value={produtoEditando.descricao || ''}
-                  onChange={(e) => setProdutoEditando({...produtoEditando, descricao: e.target.value})}
+                  onChange={(e) => setProdutoEditando({ ...produtoEditando, descricao: e.target.value })}
                   rows="3"
                 />
               </div>
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Preço Compra</label>
+                  <label>Preço compra</label>
                   <input
                     type="number"
                     step="0.01"
                     value={produtoEditando.preco_compra}
-                    onChange={(e) => setProdutoEditando({...produtoEditando, preco_compra: e.target.value})}
+                    onChange={(e) => setProdutoEditando({ ...produtoEditando, preco_compra: e.target.value })}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Preço Venda</label>
+                  <label>Preço venda</label>
                   <input
                     type="number"
                     step="0.01"
                     value={produtoEditando.preco_venda}
-                    onChange={(e) => setProdutoEditando({...produtoEditando, preco_venda: e.target.value})}
+                    onChange={(e) => setProdutoEditando({ ...produtoEditando, preco_venda: e.target.value })}
                   />
                 </div>
               </div>
@@ -573,7 +563,7 @@ const ListarProdutos = () => {
                   <label>Categoria</label>
                   <select
                     value={produtoEditando.categoria}
-                    onChange={(e) => setProdutoEditando({...produtoEditando, categoria: e.target.value})}
+                    onChange={(e) => setProdutoEditando({ ...produtoEditando, categoria: e.target.value })}
                   >
                     {categorias.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
@@ -582,11 +572,11 @@ const ListarProdutos = () => {
                 </div>
 
                 <div className="form-group">
-                  <label>Estoque Mínimo</label>
+                  <label>Estoque mínimo</label>
                   <input
                     type="number"
                     value={produtoEditando.minimo_estoque}
-                    onChange={(e) => setProdutoEditando({...produtoEditando, minimo_estoque: e.target.value})}
+                    onChange={(e) => setProdutoEditando({ ...produtoEditando, minimo_estoque: e.target.value })}
                   />
                 </div>
               </div>
@@ -595,7 +585,7 @@ const ListarProdutos = () => {
                 <label>Status</label>
                 <select
                   value={produtoEditando.status}
-                  onChange={(e) => setProdutoEditando({...produtoEditando, status: e.target.value})}
+                  onChange={(e) => setProdutoEditando({ ...produtoEditando, status: e.target.value })}
                 >
                   <option value="disponivel">Disponível</option>
                   <option value="indisponivel">Indisponível</option>
@@ -604,7 +594,7 @@ const ListarProdutos = () => {
 
               <div className="modal-footer">
                 <button onClick={salvarEdicao} className="btn btn-primary">
-                  Salvar Alterações
+                  Salvar alterações
                 </button>
                 <button onClick={() => setModalEditar(false)} className="btn btn-secondary">
                   Cancelar

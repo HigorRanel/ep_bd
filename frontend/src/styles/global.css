@@ -284,6 +284,8 @@ p { margin-bottom: 1rem; }
 .badge-cancelado  { background-color: var(--color-danger-soft);  color: var(--color-danger-text); }
 .badge-reservado  { background-color: var(--color-info-soft);    color: var(--color-info-text); }
 .badge-comprado   { background-color: var(--color-success-soft); color: var(--color-success-text); }
+.badge-falta      { background-color: var(--color-warning-soft); color: var(--color-warning-text); }
+.badge-retirado   { background-color: var(--color-success-soft); color: var(--color-success-text); }
 
 /* Alerts */
 .alert {

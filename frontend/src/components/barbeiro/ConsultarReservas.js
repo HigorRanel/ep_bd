@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../common/Navbar';
+import Icon from '../common/Icon';
 import api from '../../services/api';
 import '../../styles/dashboard.css';
 
@@ -116,22 +117,19 @@ const ConsultarReservas = () => {
     if (!modalEditar || !novoStatus) return;
 
     try {
-      console.log('Atualizando reserva:', modalEditar.id_reserva, 'para status:', novoStatus);
-      
       const response = await api.put(`/reservas/${modalEditar.id_reserva}/atualizar-status`, {
         status: novoStatus,
       });
 
       console.log('Resposta da API:', response.data);
-      
+
       setMessage({ type: 'success', text: 'Status da reserva alterado com sucesso!' });
       setModalEditar(null);
       carregarDados();
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
       console.error('Erro ao alterar status:', error);
-      console.error('Detalhes do erro:', error.response?.data);
-      
+
       setMessage({
         type: 'error',
         text: error.response?.data?.error || 'Erro ao alterar status'
@@ -162,15 +160,16 @@ const ConsultarReservas = () => {
     return new Date(dataString).toLocaleDateString('pt-BR');
   };
 
+  // Status -> rótulo + classe de badge temática
   const getStatusInfo = (status) => {
-    const statusMap = {
-      reservado: { label: 'Reservado', color: '#3498db', icon: '🔖' },
-      comprado: { label: 'Comprado', color: '#27ae60', icon: '✅' },
-      retirado: { label: 'Retirado', color: '#27ae60', icon: '✅' },
-      cancelado: { label: 'Cancelado', color: '#e74c3c', icon: '❌' },
-      pendente: { label: 'Pendente', color: '#f39c12', icon: '⏳' }
+    const map = {
+      reservado: { label: 'Reservado', classe: 'badge-reservado' },
+      comprado: { label: 'Comprado', classe: 'badge-comprado' },
+      retirado: { label: 'Retirado', classe: 'badge-retirado' },
+      cancelado: { label: 'Cancelado', classe: 'badge-cancelado' },
+      pendente: { label: 'Pendente', classe: 'badge-pendente' },
     };
-    return statusMap[status] || statusMap.reservado;
+    return map[status] || map.reservado;
   };
 
   const categorias = [...new Set(reservas.map(r => r.categoria))];
@@ -187,12 +186,15 @@ const ConsultarReservas = () => {
     );
   }
 
+  const accent = { color: 'var(--color-accent)' };
+  const muted = { color: 'var(--color-text-muted)' };
+
   return (
     <div className="page-container">
       <Navbar />
       <div className="dashboard-container">
         <div className="dashboard-header">
-          <h1>Consultar Reservas de Produtos</h1>
+          <h1>Consultar reservas de produtos</h1>
           <p>Gerencie todas as reservas realizadas pelos clientes</p>
         </div>
 
@@ -205,31 +207,31 @@ const ConsultarReservas = () => {
         {/* Estatísticas */}
         <div className="stats-grid">
           <div className="stat-card">
-            <div className="stat-icon">📊</div>
+            <span className="stat-icon"><Icon name="chart" size={28} style={accent} /></span>
             <div className="stat-content">
               <h3>{stats.total}</h3>
-              <p>Total de Reservas</p>
+              <p>Total de reservas</p>
             </div>
           </div>
 
           <div className="stat-card">
-            <div className="stat-icon">🔖</div>
+            <span className="stat-icon"><Icon name="bookmark" size={28} style={accent} /></span>
             <div className="stat-content">
               <h3>{stats.pendentes}</h3>
-              <p>Reservas Pendentes</p>
+              <p>Reservas pendentes</p>
             </div>
           </div>
 
           <div className="stat-card">
-            <div className="stat-icon">✅</div>
+            <span className="stat-icon"><Icon name="check" size={28} style={accent} /></span>
             <div className="stat-content">
               <h3>{stats.compradas}</h3>
-              <p>Compradas/Retiradas</p>
+              <p>Compradas/retiradas</p>
             </div>
           </div>
 
           <div className="stat-card">
-            <div className="stat-icon">❌</div>
+            <span className="stat-icon"><Icon name="x" size={28} style={accent} /></span>
             <div className="stat-content">
               <h3>{stats.canceladas}</h3>
               <p>Canceladas</p>
@@ -242,12 +244,11 @@ const ConsultarReservas = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3 style={{ margin: 0 }}>Filtros</h3>
             <button onClick={limparFiltros} className="btn btn-secondary btn-sm">
-              Limpar Filtros
+              Limpar filtros
             </button>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-            {/* Filtro Status */}
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label>Status</label>
               <select
@@ -262,7 +263,6 @@ const ConsultarReservas = () => {
               </select>
             </div>
 
-            {/* Filtro Categoria */}
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label>Categoria</label>
               <select
@@ -276,9 +276,8 @@ const ConsultarReservas = () => {
               </select>
             </div>
 
-            {/* Filtro Data Início */}
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label>Data Início</label>
+              <label>Data início</label>
               <input
                 type="date"
                 value={filtros.dataInicio}
@@ -286,9 +285,8 @@ const ConsultarReservas = () => {
               />
             </div>
 
-            {/* Filtro Data Fim */}
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label>Data Fim</label>
+              <label>Data fim</label>
               <input
                 type="date"
                 value={filtros.dataFim}
@@ -296,9 +294,8 @@ const ConsultarReservas = () => {
               />
             </div>
 
-            {/* Filtro Nome Cliente */}
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label>Nome do Cliente</label>
+              <label>Nome do cliente</label>
               <input
                 type="text"
                 value={filtros.nomeCliente}
@@ -308,7 +305,7 @@ const ConsultarReservas = () => {
             </div>
           </div>
 
-          <div style={{ marginTop: '15px', fontSize: '14px', color: '#666' }}>
+          <div style={{ marginTop: '15px', fontSize: '14px', ...muted }}>
             Mostrando <strong>{reservasFiltradas.length}</strong> de <strong>{reservas.length}</strong> reservas
           </div>
         </div>
@@ -328,15 +325,12 @@ const ConsultarReservas = () => {
                   <div className="card-header">
                     <div>
                       <h3>{reserva.cliente_nome}</h3>
-                      <p style={{ margin: '5px 0 0 0', color: '#666', fontSize: '12px' }}>
+                      <p style={{ margin: '5px 0 0 0', ...muted, fontSize: '12px' }}>
                         Reservado em {formatarData(reserva.data_reserva)}
                       </p>
                     </div>
-                    <span
-                      className={`badge`}
-                      style={{ backgroundColor: statusInfo.color }}
-                    >
-                      {statusInfo.icon} {statusInfo.label}
+                    <span className={`badge ${statusInfo.classe}`}>
+                      {statusInfo.label}
                     </span>
                   </div>
 
@@ -345,22 +339,22 @@ const ConsultarReservas = () => {
                     <p><strong>Categoria:</strong> {reserva.categoria}</p>
                     <p><strong>Preço:</strong> R$ {parseFloat(reserva.preco_venda).toFixed(2)}</p>
                     <p><strong>Estoque disponível:</strong> {reserva.quantidade_estoque}</p>
-                    <p style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
-                      <strong>ID da Reserva:</strong> #{reserva.id_reserva}
+                    <p style={{ fontSize: '12px', ...muted, marginTop: '8px' }}>
+                      <strong>ID da reserva:</strong> #{reserva.id_reserva}
                     </p>
 
-                    <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #ecf0f1' }}>
+                    <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid var(--color-border)' }}>
                       <p style={{ fontSize: '13px', marginBottom: '5px' }}>
                         <strong>Contato:</strong>
                       </p>
                       {reserva.cliente_telefone && (
                         <p style={{ fontSize: '13px', margin: '2px 0' }}>
-                          📞 {reserva.cliente_telefone}
+                          Telefone: {reserva.cliente_telefone}
                         </p>
                       )}
                       {reserva.cliente_email && (
                         <p style={{ fontSize: '13px', margin: '2px 0' }}>
-                          📧 {reserva.cliente_email}
+                          Email: {reserva.cliente_email}
                         </p>
                       )}
                     </div>
@@ -373,7 +367,7 @@ const ConsultarReservas = () => {
                           onClick={() => abrirModalEditar(reserva)}
                           className="btn btn-primary btn-sm"
                         >
-                          Alterar Status
+                          Alterar status
                         </button>
                         <button
                           onClick={() => cancelarReserva(reserva.id_reserva, reserva.cliente_nome)}
@@ -389,7 +383,7 @@ const ConsultarReservas = () => {
                         onClick={() => abrirModalEditar(reserva)}
                         className="btn btn-secondary btn-sm"
                       >
-                        Ver Detalhes
+                        Ver detalhes
                       </button>
                     )}
                   </div>
@@ -403,39 +397,40 @@ const ConsultarReservas = () => {
         {modalEditar && (
           <div className="modal-overlay" onClick={() => setModalEditar(null)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <h3>Gerenciar Reserva</h3>
+              <h3>Gerenciar reserva</h3>
 
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                <p><strong>ID da Reserva:</strong> #{modalEditar.id_reserva}</p>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: 'var(--color-surface-2)', borderRadius: '8px' }}>
+                <p><strong>ID da reserva:</strong> #{modalEditar.id_reserva}</p>
                 <p><strong>Cliente:</strong> {modalEditar.cliente_nome}</p>
                 <p><strong>Produto:</strong> {modalEditar.nome_produto}</p>
-                <p><strong>Data da Reserva:</strong> {formatarData(modalEditar.data_reserva)}</p>
+                <p><strong>Data da reserva:</strong> {formatarData(modalEditar.data_reserva)}</p>
                 <p style={{ marginBottom: 0 }}>
-                  <strong>Status Atual:</strong> {getStatusInfo(modalEditar.status).label}
+                  <strong>Status atual:</strong> {getStatusInfo(modalEditar.status).label}
                 </p>
               </div>
 
               <div className="form-group">
-                <label>Alterar Status para:</label>
+                <label>Alterar status para:</label>
                 <select
                   value={novoStatus}
                   onChange={(e) => setNovoStatus(e.target.value)}
                 >
-                  <option value="reservado">🔖 Reservado (aguardando retirada)</option>
-                  <option value="comprado">✅ Comprado (produto retirado)</option>
-                  <option value="retirado">✅ Retirado (confirmado)</option>
-                  <option value="cancelado">❌ Cancelado</option>
+                  <option value="reservado">Reservado (aguardando retirada)</option>
+                  <option value="comprado">Comprado (produto retirado)</option>
+                  <option value="retirado">Retirado (confirmado)</option>
+                  <option value="cancelado">Cancelado</option>
                 </select>
               </div>
 
               <div style={{
                 padding: '15px',
-                backgroundColor: '#fff3cd',
+                backgroundColor: 'var(--color-warning-soft)',
+                color: 'var(--color-warning-text)',
                 borderRadius: '8px',
                 marginBottom: '20px',
                 fontSize: '13px'
               }}>
-                <strong>ℹ️ Informações:</strong>
+                <strong>Informações:</strong>
                 <ul style={{ marginTop: '10px', marginBottom: 0, paddingLeft: '20px' }}>
                   <li><strong>Reservado:</strong> Cliente fez a reserva, aguardando retirada</li>
                   <li><strong>Comprado/Retirado:</strong> Cliente retirou o produto (diminui estoque)</li>
@@ -446,7 +441,7 @@ const ConsultarReservas = () => {
               <div className="modal-footer">
                 {modalEditar.status !== novoStatus && (
                   <button onClick={alterarStatusReserva} className="btn btn-primary">
-                    Confirmar Alteração
+                    Confirmar alteração
                   </button>
                 )}
                 <button onClick={() => setModalEditar(null)} className="btn btn-secondary">

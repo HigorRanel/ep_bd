@@ -88,7 +88,7 @@ const CadastrarServico = () => {
 
   const abrirModalEditar = (servico) => {
     setModalEditar(true);
-    setServicoEditando({...servico});
+    setServicoEditando({ ...servico });
   };
 
   const salvarEdicao = async () => {
@@ -114,7 +114,7 @@ const CadastrarServico = () => {
       <Navbar />
       <div className="form-container">
         <div className="form-card">
-          <h2>Cadastrar Serviço</h2>
+          <h2>Cadastrar serviço</h2>
           <p className="form-subtitle">Adicione um novo serviço ao seu catálogo</p>
 
           {message.text && (
@@ -125,7 +125,7 @@ const CadastrarServico = () => {
 
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label htmlFor="nome">Nome do Serviço *</label>
+              <label htmlFor="nome">Nome do serviço *</label>
               <input
                 type="text"
                 id="nome"
@@ -133,7 +133,7 @@ const CadastrarServico = () => {
                 value={formData.nome}
                 onChange={handleChange}
                 required
-                placeholder="Ex: Corte Masculino, Barba Design"
+                placeholder="Ex: Corte masculino, Barba design"
               />
             </div>
 
@@ -186,7 +186,7 @@ const CadastrarServico = () => {
               className="btn btn-primary btn-block"
               disabled={loading}
             >
-              {loading ? 'Cadastrando...' : 'Cadastrar Serviço'}
+              {loading ? 'Cadastrando...' : 'Cadastrar serviço'}
             </button>
           </form>
         </div>
@@ -194,7 +194,7 @@ const CadastrarServico = () => {
         {/* Lista de Serviços */}
         {meusServicos.length > 0 && (
           <div className="form-card" style={{ marginTop: '30px' }}>
-            <h2>Meus Serviços</h2>
+            <h2>Meus serviços</h2>
             <div className="grid-2">
               {meusServicos.map((servico) => (
                 <div key={servico.id_servico} className="card">
@@ -211,13 +211,13 @@ const CadastrarServico = () => {
                       onClick={() => abrirModalEditar(servico)}
                       className="btn btn-primary btn-sm"
                     >
-                      ✏️ Editar
+                      Editar
                     </button>
                     <button
                       onClick={() => deletarServico(servico.id_servico)}
                       className="btn btn-danger btn-sm"
                     >
-                      🗑️ Deletar
+                      Deletar
                     </button>
                   </div>
                 </div>
@@ -230,14 +230,14 @@ const CadastrarServico = () => {
         {modalEditar && servicoEditando && (
           <div className="modal-overlay" onClick={() => setModalEditar(false)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <h3>Editar Serviço</h3>
-              
+              <h3>Editar serviço</h3>
+
               <div className="form-group">
-                <label>Nome do Serviço *</label>
+                <label>Nome do serviço *</label>
                 <input
                   type="text"
                   value={servicoEditando.nome}
-                  onChange={(e) => setServicoEditando({...servicoEditando, nome: e.target.value})}
+                  onChange={(e) => setServicoEditando({ ...servicoEditando, nome: e.target.value })}
                   required
                 />
               </div>
@@ -246,7 +246,7 @@ const CadastrarServico = () => {
                 <label>Descrição</label>
                 <textarea
                   value={servicoEditando.descricao || ''}
-                  onChange={(e) => setServicoEditando({...servicoEditando, descricao: e.target.value})}
+                  onChange={(e) => setServicoEditando({ ...servicoEditando, descricao: e.target.value })}
                   rows="4"
                 />
               </div>
@@ -259,7 +259,7 @@ const CadastrarServico = () => {
                     step="0.01"
                     min="0"
                     value={servicoEditando.preco}
-                    onChange={(e) => setServicoEditando({...servicoEditando, preco: e.target.value})}
+                    onChange={(e) => setServicoEditando({ ...servicoEditando, preco: e.target.value })}
                     required
                   />
                 </div>
@@ -271,7 +271,7 @@ const CadastrarServico = () => {
                     step="5"
                     min="5"
                     value={servicoEditando.duracao_estimada_min}
-                    onChange={(e) => setServicoEditando({...servicoEditando, duracao_estimada_min: e.target.value})}
+                    onChange={(e) => setServicoEditando({ ...servicoEditando, duracao_estimada_min: e.target.value })}
                     required
                   />
                 </div>
@@ -279,10 +279,10 @@ const CadastrarServico = () => {
 
               <div className="modal-footer">
                 <button onClick={salvarEdicao} className="btn btn-primary">
-                  💾 Salvar Alterações
+                  Salvar alterações
                 </button>
                 <button onClick={() => setModalEditar(false)} className="btn btn-secondary">
-                  ✕ Cancelar
+                  Cancelar
                 </button>
               </div>
             </div>
